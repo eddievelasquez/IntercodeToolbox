@@ -1,0 +1,13 @@
+mode: Mainline
+assembly-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{FullSemVer}'
+assembly-file-versioning-scheme: MajorMinorPatchTag
+major-version-bump-message: '\+semver:\s?(breaking|major)'
+minor-version-bump-message: '\+semver:\s?(feature|minor)'
+patch-version-bump-message: '\+semver:\s?(fix|patch)'
+no-bump-message: '\+semver:\s?(none|skip)'
+commit-date-format: yyMMdd
+branches: {}
+ignore:
+  sha: []
+merge-message-formats: {}

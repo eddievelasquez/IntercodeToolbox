@@ -1,0 +1,16 @@
+<Project>
+
+  <PropertyGroup>
+    <Authors>Eddie Velasquez</Authors>
+    <Company>Intercode Consulting.</Company>
+    <Copyright>(c) 2020-2024, Intercode Consulting</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WriteVersionInfoToBuildLog>true</WriteVersionInfoToBuildLog>
+    <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+      <!-- Reduce source paths See: https://bit.ly/44fmmmf  -->
+    <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
+  </PropertyGroup>
+
+</Project>

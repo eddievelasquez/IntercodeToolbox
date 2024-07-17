@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <PublishTrimmed>true</PublishTrimmed>
+    <EnableAOT>true</EnableAOT>
+    <TrimmerDefaultAction>link</TrimmerDefaultAction>
+    <IsTrimmable>True</IsTrimmable>
+    <IsAotCompatible>True</IsAotCompatible>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageId>Intercode.Toolbox.Collections</PackageId>
+    <Title>Toolbox Collections</Title>
+    <Description>Provides classes that define generic collections and functionality that are not found in the BCL.</Description>
+    <Product>Intercode.Toolbox</Product>
+    <Copyright>Intercode Consulting</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>multimap;multidictionary;mutable lookup;collections;AOT;trim-compatible</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>True</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+</Project>
