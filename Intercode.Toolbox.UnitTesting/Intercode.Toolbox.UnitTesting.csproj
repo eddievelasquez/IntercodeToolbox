@@ -1,10 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
     <PublishTrimmed>true</PublishTrimmed>
     <EnableAOT>true</EnableAOT>
     <TrimmerDefaultAction>link</TrimmerDefaultAction>
@@ -15,13 +14,13 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <PackageId>Intercode.Toolbox.Collections</PackageId>
-    <Title>Toolbox Collections</Title>
-    <Description>Provides classes that define generic collections and functionality that are not found in the BCL.</Description>
+    <PackageId>Intercode.Toolbox.UnitTesting</PackageId>
+    <Title>Toolbox Unit Testing utilities</Title>
+    <Description>Provides classes that enhance unit testing.</Description>
     <Product>Intercode.Toolbox</Product>
     <Copyright>Intercode Consulting</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>multimap;multidictionary;mutable lookup;collections;AOT;trim-compatible</PackageTags>
+    <PackageTags>unit testing;debug assert;dependency injection;DI;AOT;trim-compatible</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -41,6 +40,12 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="True" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+    <PackageReference Include="xunit.abstractions" />
   </ItemGroup>
 
 </Project>

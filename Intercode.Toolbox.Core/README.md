@@ -2,11 +2,11 @@
 
 A trimmable, AOT-compatible .NET library that provides general purpose functionality created for several projects over the years.
 
-## Classes
-
-### `AssemblyExtensions` 
-
 ---
+
+## `AssemblyExtensions` 
+
+### Methods
 
 Provides extension methods for working with assemblies.
 
@@ -16,9 +16,11 @@ Provides extension methods for working with assemblies.
       Console.WriteLine( version );
   ```
 
-### `BaseConverter`
-
 ---
+
+## `BaseConverter`
+
+### Methods
 
 Provides methods for converting numbers between different number bases. It supports bases from *2* to *62*, unlike the built-in `System.Convert.ToString` method, 
 which only supports the *2*, *8*, *10* or *16* bases.
@@ -48,11 +50,13 @@ Base 62 is useful for generating shorter identifiers that are URL-safe and case-
       }
   ```
 
-### `Disposer`
-
 ---
 
+## `Disposer`
+
 `Disposer` will invoke a user-provided action when disposed.
+
+### Usage
 
   ```csharp
       using( new Disposer( static () => Console.WriteLine( "Disposed" ) ) )
@@ -61,11 +65,20 @@ Base 62 is useful for generating shorter identifiers that are URL-safe and case-
       }
   ```
 
-### `EmailAddressListAttribute`
+ Example output:
+ ```
+ Using Disposer
+ Disposed
+ ```
 
----
+ ---
 
-Represents a custom validation attribute that validates a collection of email addresses.
+## `EmailAddressListAttribute`
+
+Represents a custom validation attribute that validates a collection of email addresses. The email validation is performed using 
+the [EmailAddressAttribute](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.emailaddressattribute) class.
+
+### Usage
 
 ```csharp
     public class MyModel
@@ -74,18 +87,20 @@ Represents a custom validation attribute that validates a collection of email ad
       public IEnumerable<string> EmailAddresses { get; set; } = new List<string>();
     }
 ```
-### `EmbeddedResource`
 
 ---
+## `EmbeddedResource`
 
 Provides utility methods for loading embedded resources.
+
+### Methods
 
 - `LoadBytesFromResource` Loads the content of an embedded resource as a byte array.
 ```csharp
     var imageBytes = EmbeddedResource.LoadBytesFromResource( "logo.png" );
 ```
 
--`LoadFromResource`Loads the content of an embedded resource as a stream along with its content type.
+-`LoadFromResource` Loads the content of an embedded resource as a stream along with its content type.
 ```csharp
     var (stream, contentType) = EmbeddedResource.LoadFromResource( "logo.png" );
     Console.WriteLine( contentType );
@@ -93,15 +108,15 @@ Provides utility methods for loading embedded resources.
 
 ---
 
-### `IntegerEncoder`
-
----
+## `IntegerEncoder`
 
 Uses multiplicative inverses to obfuscate identifiers and avoid exposing sequential values that could potentially be exploited.
 The algorithm is not cryptographically strong, but is very fast and cheap. It is suitable for obfuscating identifiers in URLs and similar scenarios; additional
 encoding with the ```BaseConverter``` using base 62 can be used for further obfuscation.
 
 The range of values that can be encoded is between -1,000,000,000 and -1,000,000,000.
+
+### Methods
 
 - `Encode` Encodes the specified integer value.
 ```csharp
@@ -115,24 +130,28 @@ The range of values that can be encoded is between -1,000,000,000 and -1,000,000
     Console.WriteLine( decoded ); // 42
 ```
 
-### `Mime`
-
 ---
+
+## `Mime`
 
 Provides methods for working with MIME types. The list of mappings can be extended by adding new entries to the `Mime.Mappings` dictionary.
 
-`GetContentType` Gets the content type based on the file name.
+### Methods
+
+- `GetContentType` Gets the content type based on the file name.
 
 ```csharp
     var contentType = Mime.GetContentType( "sample.txt" );
     Console.WriteLine( contentType ); // text/plain
 ```
 
-### `ObjectExtensions`
-
 ---
 
+## `ObjectExtensions`
+
 Provides extension methods for the `System.Object` class.
+
+### Methods
 
 - `IsNumber` Determines whether the specified object is a number.
 
@@ -144,11 +163,13 @@ Provides extension methods for the `System.Object` class.
     Console.WriteLine( obj.IsNumber() ); // False
 ```
 
-### `PhoneListAttribute`
-
 ---
 
-Represents a custom validation attribute that validates a list of phone numbers.
+## `PhoneListAttribute`
+
+Represents a custom validation attribute that validates a list of phone numbers; the validation is performed using the [PhoneAttribute](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.phoneattribute) class.
+
+### Usage
 
 ```csharp
     public class MyModel
@@ -158,11 +179,13 @@ Represents a custom validation attribute that validates a list of phone numbers.
     }
 ```
 
-### `ReaderWriterLockExtensions`
-
 ---
 
+## `ReaderWriterLockExtensions`
+
 Extension methods for the `System.Threading.ReaderWriterLockSlim` class.
+
+### Methods
 
 - `ReadLock` Acquires a read lock on the specified `ReaderWriterLockSlim` object. The lock is released when the returned `IDisposable` object is disposed.
 
@@ -198,11 +221,13 @@ Extension methods for the `System.Threading.ReaderWriterLockSlim` class.
     }
 ```
 
-### `StreamExtensions`
-
 ---
 
+## `StreamExtensions`
+
 Provides extension methods to read and write values to and from a `Sytem.Stream` object.
+
+### Methods
 
 - `ToByteArray` Reads the entire stream and returns its content as a byte array. It has an optimization for `MemoryStream` where it behaves exactly as calling `ToArray()`.
 
@@ -214,7 +239,7 @@ Provides extension methods to read and write values to and from a `Sytem.Stream`
     }
 ```
 
-` 'ToByteArrayAsync' Asynchronously converts a stream to a byte array
+- `ToByteArrayAsync` Asynchronously converts a stream to a byte array
 
 ```csharp
     await using( var stream = new MemoryStream( new byte[] { 1, 2, 3, 4, 5 } ) )
@@ -224,11 +249,14 @@ Provides extension methods to read and write values to and from a `Sytem.Stream`
     }
 ```
 
-### `StringExtensions`
-
 ---
 
+## `StringExtensions`
+
+
 Provides extension methods for `System.String` objects.
+
+### Methods
 
 - `RemoveDiacritics` Removes diacritics from the specified string.
 
@@ -238,9 +266,10 @@ Provides extension methods for `System.String` objects.
     Console.WriteLine( normalized ); // Hello, World!
 ```
 
-### `UriBuilderExtensions`
-
 ---
+
+## `UriBuilderExtensions`
+
 
 Provides extension methods for `System.UriBuilder` instances.
 
@@ -268,9 +297,9 @@ Provides extension methods for `System.UriBuilder` instances.
     Console.WriteLine( builder.Uri ); // https://example.com/?%3Ckey%3E=%3Cvalue%3E
 ```
 
-### `VariableIntegerEncoder`
-
 ---
+
+## `VariableIntegerEncoder`
 
 Provides methods for encoding and decoding integers using the Variable Length Quantity (VLQ) encoding scheme. 
 This method is used in several protocols to encode integers in a compact form, such as MIDI and Google Protocol Buffers.
@@ -321,9 +350,7 @@ Supports encoding `sbyte`, `byte`, `short`, `ushort`, and `int` values. The maxi
     }
 ```
 
-## Usage
-
-To use the extension methods provided by this project, simply import the `Intercode.Toolbox.Core` namespace and call the desired method on the target object.
+---
 
 ## License
 

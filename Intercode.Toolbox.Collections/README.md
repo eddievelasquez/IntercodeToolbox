@@ -2,13 +2,15 @@
 
 A trimmable, AOT-compatible .NET library that provides classes that define generic collections and collection-related utilities that are not found in the BCL.
 
-# Collections
+---
 
-## `MutableLookup` classes
+## `MutableLookup` collection classes
 The mutable lookup collections provide a multi-value dictionary-like interface that allows for the storage of multiple values for a single key.
 Note that these collections are not thread-safe and should not be used in multi-threaded scenarios without proper synchronization.
 
 The classes were inspired by the similarly named classes in the [MutableLookup](https://github.com/jussik/MutableLookup/) package.
+
+---
 
 ### `MutableLookup<TKey, TValue>`
 
@@ -18,6 +20,8 @@ must derive from it and implement the following abstract methods:
 - `AddValue`: Adds a value to the underlying container; must return `true` if the value was added, `false` otherwise.
 - `AddValues`: Adds a collection of values to the underlying container.
 - `TrimExcess`: Sets the capacity of the underlying conntainer to what it would be if it had been originally initialized with all its entries.
+
+---
 
 ### `MutableListLookup<TKey, TValue>`
 
@@ -55,6 +59,8 @@ lookup.TryAdd( "a", "One" ); // returns true
 lookup.TryAdd( "a", "Two" ); // return false
 ```
 
+---
+
 ### `MutableHashSetLookup<TKey, TValue>`
 
 The `MutableHashSetLookup` class is a mutable lookup that uses a `HashSet<TValue>` as the underlying collection
@@ -80,6 +86,8 @@ lookup.TryAdd( "a", "One" ); // returns true
 lookup.TryAdd( "a", "Two" ); // return false
 ```
 
+---
+
 ### Helpers
 
 Several extension methods are provided to simplify the creation of mutable lookups from an existing `IEnumerable<T>`:
@@ -94,6 +102,8 @@ Several extension methods are provided to simplify the creation of mutable looku
   var lookup2 = people.ToMutableListLookup( p => p.LastName, p => p.FirstName ); // Mutable lookup of people's names keyed by their last name.
   var lookup3 = people.ToMutableHashSetLookup( p => p.LastName, p => p.FirstName ); // Mutable lookup of people's names keyed by their last name, with no duplicate first names.
   ```
+
+---
 
 ## Extension methods
 
@@ -113,9 +123,7 @@ var source = Enumerable.Range( 1, 10 );
 var batches = source.Batch( 3 ); // batches contains three groups: { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 }, and { 10 }.
 ```
 
-## Usage
-
-To use the extension methods provided by this project, simply import the `Intercode.Toolbox.Collections` namespace and call the desired method on the target object.
+---
 
 ## License
 

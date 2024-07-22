@@ -22,6 +22,8 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>JWT;JSON Web Token;JwtSecurityToken;OpenAPI;OpenApiInfo;builder;AOT;trim-compatible</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Deterministic>true</Deterministic>
