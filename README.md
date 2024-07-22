@@ -14,4 +14,9 @@ There are currently three libraries that are part of the Intercode Toolbox:
 - `Intercode.Toolbox.AspNetCore.Extensions`: A trimmable, AOT-compatible .NET library that contains types that provide functionality commonly used in ASP.NET Core applications.
 It currently exposes the `JsonWebTokenBuilder` and `OpenApiInfoBuilder` classes.
 
+- `Intercode.Toolbox.UnitTesting`: A trimmable, AOT-compatible .NET library that provides tools for unit testing.
+
+- `Intercode.Toolbox.UnitTesting.XUnit`: A trimmable, AOT-compatible .NET library that provides logging and
+dependency injection tools for unit testing using the [XUnit](https://xunit.net/) library.
+
 Several additional libraries are currently being cleaned up and will be added to the toolbox in the future.
