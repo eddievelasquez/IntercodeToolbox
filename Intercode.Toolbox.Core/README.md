@@ -4,6 +4,12 @@ A trimmable, AOT-compatible .NET library that provides general purpose functiona
 
 ---
 
+# Updates
+
+- **Version 2.1.6** - Added the `PathBuilder` class for building file and directory paths using a fluent interface.
+
+---
+
 ## `AssemblyExtensions` 
 
 ### Methods
@@ -162,6 +168,34 @@ Provides extension methods for the `System.Object` class.
     obj = "Hello, World!";
     Console.WriteLine( obj.IsNumber() ); // False
 ```
+
+---
+
+## `PathBuilder`
+
+Provides a fluent interface for building file and directory paths.
+
+### Usage
+
+```csharp
+    var path = new PathBuilder(@"c:\temp\myfile.tmp")
+        .ChangeFilename( filename => $"{DateTime.Now:yyMMdd}-{filename}" )
+        .Build();
+
+    Console.WriteLine( path ); // c:\temp\240820-myfile.tmp
+```
+
+### Methods
+
+- `SetDirectory` sets or replaces the path's directory; if `null` is provided, the directory is removed.
+- `ChangeDirectory` changes the path's directory using a transformation function, which receives the path's current directory.
+- `AppendDirectory` appends a directory to the path.
+- `AppendDirectories` appends one or more directories to the path.
+- `SetFilename` sets or replaces the path's filename; if `null` is provided, the filename is removed.
+- `ChangeFilename` changes the path's filename using a transformation function, which receives the path's current filename.
+- `SetExtension` sets or replaces the path's extension; if `null` is provided, the extension is removed.
+- `ChangeExtension` changes the path's extension using a transformation function, which receives the path's current extension.
+- `Build` builds the final path string.
 
 ---
 
