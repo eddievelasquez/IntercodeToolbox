@@ -81,6 +81,15 @@ public class PathBuilderTests
   }
 
   [Fact]
+  public void DefaultConstructor_ShouldSucceed()
+  {
+    var builder = new PathBuilder();
+    var result = builder.Build();
+    result.Should()
+          .BeEmpty();
+  }
+
+  [Fact]
   public void Constructor_WithDirectoryInfo_ShouldSucceed()
   {
     var builder = new PathBuilder( new DirectoryInfo( @"C:\Temp" ) );

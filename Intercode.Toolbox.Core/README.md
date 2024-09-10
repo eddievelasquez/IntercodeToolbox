@@ -7,6 +7,7 @@ A trimmable, AOT-compatible .NET library that provides general purpose functiona
 # Updates
 
 - **Version 2.1.6** - Added the `PathBuilder` class for building file and directory paths using a fluent interface.
+- **Version 2.1.7** - Added a default constructor to the `PathBuilder` class.
 
 ---
 

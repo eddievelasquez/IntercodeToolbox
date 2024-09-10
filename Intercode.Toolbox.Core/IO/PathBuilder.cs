@@ -20,6 +20,13 @@ public class PathBuilder
   #region Constructors
 
   /// <summary>
+  ///   Initializes a new instance of the <see cref="PathBuilder" /> class.
+  /// </summary>
+  public PathBuilder()
+  {
+  }
+
+  /// <summary>
   ///   Initializes a new instance of the <see cref="PathBuilder" /> class with the specified path.
   /// </summary>
   /// <param name="path">The path to initialize the <see cref="PathBuilder" /> with.</param>
