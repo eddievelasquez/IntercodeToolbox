@@ -1,0 +1,17 @@
+  public class ValueConverter: global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<$FullName$, $TypeKeyword$>
+  {
+    public ValueConverter()
+      : this( null )
+    {
+    }
+
+    public ValueConverter(
+      global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ConverterMappingHints? mappingHints = null )
+      : base(
+        primitive => primitive.Value,
+        value => ( $FullName$ ) value,
+        mappingHints
+      )
+    {
+    }
+  }

@@ -1,0 +1,4 @@
+  public static $FullName$ Create( $TypeKeyword$? value )
+  {
+    return new $FullName$( value );
+  }

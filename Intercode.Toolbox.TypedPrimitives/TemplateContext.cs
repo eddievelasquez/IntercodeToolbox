@@ -1,0 +1,92 @@
+// Module Name: TemplateContext.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
+namespace Intercode.Toolbox.TypedPrimitives;
+
+internal class TemplateContext: IDisposable
+{
+  #region Constants
+
+  private const string MAIN_TEMPLATE_NAME = "PrimitiveType";
+  private const string COMMON_DIRECTORY = "Common";
+
+  #endregion
+
+  #region Fields
+
+  private readonly string _resourceDirectory;
+
+  #endregion
+
+  #region Constructors
+
+  public TemplateContext(
+    GeneratorModel model )
+  {
+    Model = model;
+    UseCommonTemplates = UsesCommonTemplates();
+    TemplateKey = GetTemplateKey();
+
+    _resourceDirectory = GetResourceDirectory( model.PrimitiveType );
+    ContentBuilder = new ContentBuilder();
+    TypeInfo = TypeManager.GetSupportedTypeInfo( model.PrimitiveType );
+    return;
+
+    string GetResourceDirectory(
+      Type type )
+    {
+      return UseCommonTemplates ? COMMON_DIRECTORY : type.FullName!;
+    }
+
+    string GetTemplateKey()
+    {
+      if( UseCommonTemplates )
+      {
+        return $"{Model.Converters}_{Model.ValidationType}";
+      }
+
+      return $"{Model.PrimitiveType.FullName}_{Model.Converters}_{Model.ValidationType}";
+    }
+
+    bool UsesCommonTemplates()
+    {
+      return !EmbeddedResourceManager.DoesResourceExist(
+        Model.PrimitiveType.FullName!,
+        MAIN_TEMPLATE_NAME
+      );
+    }
+  }
+
+  #endregion
+
+  #region Properties
+
+  public string TemplateKey { get; }
+  public GeneratorModel Model { get; }
+  public ContentBuilder ContentBuilder { get; }
+  public bool UseCommonTemplates { get; }
+  public ValidationType ValidationType => Model.ValidationType;
+  public SupportedTypeInfo TypeInfo { get; }
+
+  #endregion
+
+  #region Public Methods
+
+  public string LoadTemplate(
+    string templateName,
+    bool useCommonOverride = false )
+  {
+    var resourceDir = useCommonOverride ? COMMON_DIRECTORY : _resourceDirectory;
+    var template = EmbeddedResourceManager.LoadTemplate( resourceDir, templateName );
+    return template;
+  }
+
+  public void Dispose()
+  {
+    ContentBuilder.Dispose();
+    GC.SuppressFinalize( this );
+  }
+
+  #endregion
+}

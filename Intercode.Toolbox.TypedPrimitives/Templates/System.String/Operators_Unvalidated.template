@@ -1,0 +1,9 @@
+  public static explicit operator $FullName$( string? value )
+  {
+    return $FullName$.Create( value );
+  }
+
+  public static explicit operator $FullName$( global::System.ReadOnlySpan<char> span )
+  {
+    return $FullName$.Create( span );
+  }

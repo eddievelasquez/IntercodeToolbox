@@ -1,0 +1,55 @@
+  public static global::FluentResults.Result<$FullName$> Create(
+    string? value,
+    $ValidationFlagType$ validationMode = $ValidationFlagDefaultValue$ )
+  {
+    var result = $ValidatorType$.Validate( value, validationMode );
+    if( result.IsFailed )
+    {
+      return global::FluentResults.Result.Fail<$FullName$>( result.Errors );
+    }
+
+    return new $FullName$( global::System.MemoryExtensions.Trim( global::System.MemoryExtensions.AsSpan( value ) ).ToString() );
+  }
+
+  public static global::FluentResults.Result<$FullName$> Create(
+    global::System.ReadOnlySpan<char> span,
+    $ValidationFlagType$ validationMode = $ValidationFlagDefaultValue$ )
+  {
+    span = global::System.MemoryExtensions.Trim( span );
+
+    var result = $ValidatorType$.Validate( span, validationMode );
+    if( result.IsFailed )
+    {
+      return global::FluentResults.Result.Fail<$FullName$>( result.Errors );
+    }
+
+    return new $FullName$( span.ToString() );
+  }
+
+  public static global::FluentResults.Result Validate(
+    string? value,
+    $ValidationFlagType$ validationMode = $ValidationFlagDefaultValue$ )
+  {
+    return $ValidatorType$.Validate( value, validationMode );
+  }
+
+  public static global::FluentResults.Result Validate(
+    global::System.ReadOnlySpan<char> span,
+    $ValidationFlagType$ validationMode = $ValidationFlagDefaultValue$ )
+  {
+    return $ValidatorType$.Validate( span, validationMode );
+  }
+
+  public static bool IsValid(
+    string? value,
+    $ValidationFlagType$ validationMode = $ValidationFlagDefaultValue$ )
+  {
+    return $ValidatorType$.Validate( value, validationMode ).IsSuccess;
+  }
+
+  public static bool IsValid(
+    global::System.ReadOnlySpan<char> span,
+    $ValidationFlagType$ validationMode = $ValidationFlagDefaultValue$ )
+  {
+    return $ValidatorType$.Validate( span, validationMode ).IsSuccess;
+  }

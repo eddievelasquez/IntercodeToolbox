@@ -1,0 +1,27 @@
+  public static explicit operator $FullName$( string? value )
+  {
+    var result = $FullName$.Create( value );
+    if( result.IsFailed )
+    {
+      throw new global::System.InvalidOperationException(
+        global::System.Linq.Enumerable.First( result.Errors )
+              .Message
+      );
+    }
+
+    return result.Value;
+  }
+
+  public static explicit operator $FullName$( global::System.ReadOnlySpan<char> span )
+  {
+    var result = $FullName$.Create( span );
+    if( result.IsFailed )
+    {
+      throw new global::System.InvalidOperationException(
+        global::System.Linq.Enumerable.First( result.Errors )
+              .Message
+      );
+    }
+
+    return result.Value;
+  }

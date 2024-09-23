@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>true</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <PackageId>Intercode.Toolbox.TypedPrimitives</PackageId>
+    <Description>A source generator for creating strongly-typed primitive types by decorating with the TypedPrimitive attribute</Description>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Title>Typed Primitives source generator</Title>
+    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <DebugType>none</DebugType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TF_BUILD)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <Optimize>False</Optimize>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <Optimize>True</Optimize>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
+    <EmbeddedResource Include="Templates\Common\Factory_Unvalidated.template" />
+    <EmbeddedResource Include="Templates\Common\Factory_Validated.template" />
+    <EmbeddedResource Include="Templates\Common\Factory_ValidatedWithFlags.template" />
+    <EmbeddedResource Include="Templates\Common\Operators_Unvalidated.template" />
+    <EmbeddedResource Include="Templates\Common\Operators_Validated.template" />
+    <EmbeddedResource Include="Templates\Common\PrimitiveType.template" />
+    <EmbeddedResource Include="Templates\Common\SystemTextJsonConverter_Unvalidated.template" />
+    <EmbeddedResource Include="Templates\Common\SystemTextJsonConverter_Validated.template" />
+    <EmbeddedResource Include="Templates\Common\TypeConverter.template" />
+    <EmbeddedResource Include="Templates\System.String\Factory_Unvalidated.template" />
+    <EmbeddedResource Include="Templates\System.String\Factory_Validated.template" />
+    <EmbeddedResource Include="Templates\System.String\Factory_ValidatedWithFlags.template" />
+    <EmbeddedResource Include="Templates\System.String\Operators_Unvalidated.template" />
+    <EmbeddedResource Include="Templates\System.String\Operators_Validated.template" />
+    <EmbeddedResource Include="Templates\System.String\PrimitiveType.template" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Bcl.HashCode" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Intercode.Toolbox.TypedPrimitives.Annotations\Intercode.Toolbox.TypedPrimitives.Annotations.csproj">
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.Annotations.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
+    <None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>
