@@ -8,7 +8,7 @@ internal static class TypeManager
 {
   #region Constants
 
-  private static readonly Dictionary<Type, SupportedTypeInfo> SupportedTypes = new ()
+  private static readonly Dictionary<Type, SupportedTypeInfo> s_supportedTypes = new ()
   {
     {
       typeof( string ),
@@ -19,8 +19,7 @@ internal static class TypeManager
       new SupportedTypeInfo( "int", "Int32", "Number", "reader.GetInt32()", "writer.WriteNumberValue( value.Value )" )
     },
     {
-      typeof( Guid ),
-      new SupportedTypeInfo(
+      typeof( Guid ), new SupportedTypeInfo(
         "global::System.Guid",
         "Guid",
         "String",
@@ -33,8 +32,7 @@ internal static class TypeManager
       new SupportedTypeInfo( "long", "Int64", "Number", "reader.GetInt64()", "writer.WriteNumberValue( value.Value )" )
     },
     {
-      typeof( DateTime ),
-      new SupportedTypeInfo(
+      typeof( DateTime ), new SupportedTypeInfo(
         "global::System.DateTime",
         "DateTime",
         "String",
@@ -43,8 +41,7 @@ internal static class TypeManager
       )
     },
     {
-      typeof( DateTimeOffset ),
-      new SupportedTypeInfo(
+      typeof( DateTimeOffset ), new SupportedTypeInfo(
         "global::System.DateTimeOffset",
         "DateTimeOffset",
         "String",
@@ -61,13 +58,13 @@ internal static class TypeManager
   public static bool IsTypeSupported(
     Type type )
   {
-    return SupportedTypes.ContainsKey( type );
+    return s_supportedTypes.ContainsKey( type );
   }
 
   public static SupportedTypeInfo GetSupportedTypeInfo(
     Type type )
   {
-    if( !SupportedTypes.TryGetValue( type, out var info ) )
+    if( !s_supportedTypes.TryGetValue( type, out var info ) )
     {
       throw new InvalidOperationException( $"Type {type.FullName} is not supported." );
     }

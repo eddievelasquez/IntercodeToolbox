@@ -12,7 +12,7 @@ internal static class TypedConstantExtensions
 {
   #region Constants
 
-  private static readonly ConcurrentDictionary<string, Type?> CachedTypes;
+  private static readonly ConcurrentDictionary<string, Type?> s_cachedTypes;
 
   #endregion
 
@@ -21,10 +21,10 @@ internal static class TypedConstantExtensions
   static TypedConstantExtensions()
   {
     // Preload well-know types
-    CachedTypes = new ConcurrentDictionary<string, Type?>();
-    CachedTypes.TryAdd( typeof( Guid ).FullName!, typeof( Guid ) );
-    CachedTypes.TryAdd( typeof( DateTime ).FullName!, typeof( DateTime ) );
-    CachedTypes.TryAdd( typeof( DateTimeOffset ).FullName!, typeof( DateTimeOffset ) );
+    s_cachedTypes = new ConcurrentDictionary<string, Type?>();
+    s_cachedTypes.TryAdd( typeof( Guid ).FullName!, typeof( Guid ) );
+    s_cachedTypes.TryAdd( typeof( DateTime ).FullName!, typeof( DateTime ) );
+    s_cachedTypes.TryAdd( typeof( DateTimeOffset ).FullName!, typeof( DateTimeOffset ) );
   }
 
   #endregion
@@ -181,7 +181,7 @@ internal static class TypedConstantExtensions
     INamedTypeSymbol namedTypeSymbol )
   {
     var typeName = namedTypeSymbol.ToDisplayString();
-    var type = CachedTypes.GetOrAdd( typeName, s => GetTypeFromSymbolCore( namedTypeSymbol, s ) );
+    var type = s_cachedTypes.GetOrAdd( typeName, s => GetTypeFromSymbolCore( namedTypeSymbol, s ) );
     return type;
   }
 

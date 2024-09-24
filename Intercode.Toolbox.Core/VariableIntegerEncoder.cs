@@ -1,4 +1,4 @@
-﻿// Module Name: VariableIntegerEncoder.cs
+// Module Name: VariableIntegerEncoder.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
@@ -17,7 +17,7 @@ public static class VariableIntegerEncoder
   #region Constants
 
   // The maximum size in bytes of the buffer required for encoding an 32-bit integer
-  private static readonly int BUFFER_SIZE = Marshal.SizeOf<int>() + 1;
+  private static readonly int s_bufferSize = Marshal.SizeOf<int>() + 1;
 
   #endregion
 
@@ -115,7 +115,7 @@ public static class VariableIntegerEncoder
   public static byte[] Encode(
     int value )
   {
-    Span<byte> bytes = stackalloc byte[BUFFER_SIZE];
+    Span<byte> bytes = stackalloc byte[s_bufferSize];
 
     var succeeded = TryEncode( bytes, value, out var bytesWritten );
     Debug.Assert( succeeded ); // The buffer should never be too small here!

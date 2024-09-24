@@ -11,7 +11,7 @@ internal static class EmbeddedResourceManager
 {
   #region Constants
 
-  private static readonly Assembly ThisAssembly = typeof( EmbeddedResourceManager ).Assembly;
+  private static readonly Assembly s_thisAssembly = typeof( EmbeddedResourceManager ).Assembly;
 
   #endregion
 
@@ -22,7 +22,7 @@ internal static class EmbeddedResourceManager
     string templateName )
   {
     var resourceName = GetResourceName( resourceDirectory, templateName );
-    var info = ThisAssembly.GetManifestResourceInfo( resourceName );
+    var info = s_thisAssembly.GetManifestResourceInfo( resourceName );
     return info is not null;
   }
 
@@ -34,7 +34,7 @@ internal static class EmbeddedResourceManager
     if( !TryLoadTemplate( resourceName, out var template ) )
     {
 #if DEBUG
-      var existingResources = ThisAssembly.GetManifestResourceNames();
+      var existingResources = s_thisAssembly.GetManifestResourceNames();
       throw new ArgumentException(
         $"Could not find embedded resource {resourceName}. Available names: {string.Join( ", ", existingResources )}"
       );
@@ -59,7 +59,7 @@ internal static class EmbeddedResourceManager
     string resourceName,
     out string template )
   {
-    var resourceStream = ThisAssembly.GetManifestResourceStream( resourceName );
+    var resourceStream = s_thisAssembly.GetManifestResourceStream( resourceName );
     if( resourceStream is null )
     {
       template = string.Empty;

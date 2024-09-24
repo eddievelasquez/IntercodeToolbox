@@ -27,11 +27,11 @@ public class OpenApiInfoBuilderTests
   private const string EXPECTED_LICENSE_URL = "https://example.com/license";
   private const string EXPECTED_TERMS_OF_SERVICE_URL = "https://example.com/terms/";
 
-  private static readonly IOpenApiExtension EXPECTED_EXTENSION_VALUE = new OpenApiNull();
+  private static readonly IOpenApiExtension s_expectedExtensionValue = new OpenApiNull();
 
-  private static readonly Dictionary<string, IOpenApiExtension> EXPECTED_EXTENSIONS = new ()
+  private static readonly Dictionary<string, IOpenApiExtension> s_expectedExtensions = new ()
   {
-    { EXPECTED_EXTENSION_KEY, EXPECTED_EXTENSION_VALUE }
+    { EXPECTED_EXTENSION_KEY, s_expectedExtensionValue }
   };
 
   #endregion
@@ -71,7 +71,7 @@ public class OpenApiInfoBuilderTests
   {
     var builder = new OpenApiInfoBuilder( EXPECTED_TITLE, EXPECTED_VERSION );
 
-    var act = () => builder.AddExtension( string.Empty, EXPECTED_EXTENSION_VALUE );
+    var act = () => builder.AddExtension( string.Empty, s_expectedExtensionValue );
 
     act.Should()
        .Throw<ArgumentException>()
@@ -83,7 +83,7 @@ public class OpenApiInfoBuilderTests
   {
     var builder = new OpenApiInfoBuilder( EXPECTED_TITLE, EXPECTED_VERSION );
 
-    var act = () => builder.AddExtension( null!, EXPECTED_EXTENSION_VALUE );
+    var act = () => builder.AddExtension( null!, s_expectedExtensionValue );
 
     act.Should()
        .Throw<ArgumentNullException>()
@@ -210,17 +210,17 @@ public class OpenApiInfoBuilderTests
                                                                               EXPECTED_CONTACT_NAME,
                                                                               EXPECTED_CONTACT_EMAIL,
                                                                               EXPECTED_CONTACT_URL,
-                                                                              EXPECTED_EXTENSIONS
+                                                                              s_expectedExtensions
                                                                             )
                                                                             .AddDescription( EXPECTED_DESCRIPTION )
                                                                             .AddExtension(
                                                                               EXPECTED_EXTENSION_KEY,
-                                                                              EXPECTED_EXTENSION_VALUE
+                                                                              s_expectedExtensionValue
                                                                             )
                                                                             .AddLicense(
                                                                               EXPECTED_LICENSE,
                                                                               EXPECTED_LICENSE_URL,
-                                                                              EXPECTED_EXTENSIONS
+                                                                              s_expectedExtensions
                                                                             )
                                                                             .AddTermsOfService(
                                                                               EXPECTED_TERMS_OF_SERVICE_URL
@@ -258,7 +258,7 @@ public class OpenApiInfoBuilderTests
            .ContainKey( EXPECTED_EXTENSION_KEY )
            .WhoseValue
            .Should()
-           .Be( EXPECTED_EXTENSION_VALUE );
+           .Be( s_expectedExtensionValue );
 
     info.Description.Should()
         .Be( EXPECTED_DESCRIPTION );
@@ -266,7 +266,7 @@ public class OpenApiInfoBuilderTests
     info.Extensions.Should()
         .ContainKey( EXPECTED_EXTENSION_KEY )
         .WhoseValue.Should()
-        .Be( EXPECTED_EXTENSION_VALUE );
+        .Be( s_expectedExtensionValue );
 
     var license = info.License;
     license.Should()
@@ -282,7 +282,7 @@ public class OpenApiInfoBuilderTests
     license.Extensions.Should()
            .ContainKey( EXPECTED_EXTENSION_KEY )
            .WhoseValue.Should()
-           .Be( EXPECTED_EXTENSION_VALUE );
+           .Be( s_expectedExtensionValue );
 
     info.TermsOfService.Should()
         .Be( EXPECTED_TERMS_OF_SERVICE_URL );

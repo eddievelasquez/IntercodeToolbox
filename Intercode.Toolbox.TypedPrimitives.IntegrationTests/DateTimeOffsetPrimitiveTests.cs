@@ -20,10 +20,10 @@ public class DateTimeOffsetPrimitiveTests
 {
   #region Constants
 
-  private static readonly string ExpectedValidationErrorMessage = "Cannot be null or empty";
-  private static readonly string JsonInvalidTokenTypeErrorMessage = "Value must be a String";
-  private static readonly DateTimeOffset ValidValueA = DateTimeOffset.ParseExact( "1995-12-01T15:00:00", "s", null );
-  private static readonly DateTimeOffset ValidValueB = DateTimeOffset.ParseExact( "2018-02-06T12:45:00", "s", null );
+  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
+  private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a String";
+  private static readonly DateTimeOffset s_validValueA = DateTimeOffset.ParseExact( "1995-12-01T15:00:00", "s", null );
+  private static readonly DateTimeOffset s_validValueB = DateTimeOffset.ParseExact( "2018-02-06T12:45:00", "s", null );
 
   #endregion
 
@@ -33,7 +33,7 @@ public class DateTimeOffsetPrimitiveTests
   public void CompareTo_DefaultAndValue_ReturnsLessThanZero()
   {
     // Arrange
-    var a = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var a = ( DateTimeOffsetPrimitive ) s_validValueA;
     var b = ( DateTimeOffsetPrimitive ) default;
 
     // Act
@@ -47,8 +47,8 @@ public class DateTimeOffsetPrimitiveTests
   [Fact]
   public void CompareTo_DifferentObjectValues_ReturnsComparisonResult()
   {
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
 
     // Arrange
     var a = ( DateTimeOffsetPrimitive ) valueA;
@@ -66,7 +66,7 @@ public class DateTimeOffsetPrimitiveTests
   public void CompareTo_ObjectIsNull_ReturnsGreaterThanZero()
   {
     // Arrange
-    var a = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var a = ( DateTimeOffsetPrimitive ) s_validValueA;
 
     // Act
     var result = a.CompareTo( null );
@@ -80,7 +80,7 @@ public class DateTimeOffsetPrimitiveTests
   public void CompareTo_ValueAndDefault_ReturnsGreaterThanZero()
   {
     // Arrange
-    var primitive = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var primitive = ( DateTimeOffsetPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.CompareTo( default );
@@ -94,7 +94,7 @@ public class DateTimeOffsetPrimitiveTests
   public void Equals_DefaultWithValue_ReturnsFalse()
   {
     // Arrange
-    var a = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var a = ( DateTimeOffsetPrimitive ) s_validValueA;
     var b = ( DateTimeOffsetPrimitive ) default;
 
     // Act
@@ -109,8 +109,8 @@ public class DateTimeOffsetPrimitiveTests
   public void Equals_DifferentValues_ReturnsFalse()
   {
     // Arrange
-    var a = ( DateTimeOffsetPrimitive ) ValidValueA;
-    var b = ( DateTimeOffsetPrimitive ) ValidValueB;
+    var a = ( DateTimeOffsetPrimitive ) s_validValueA;
+    var b = ( DateTimeOffsetPrimitive ) s_validValueB;
 
     // Act
     var areEqual = a.Equals( b );
@@ -124,8 +124,8 @@ public class DateTimeOffsetPrimitiveTests
   public void Equals_SameValue_ReturnsTrue()
   {
     // Arrange
-    var a = ( DateTimeOffsetPrimitive ) ValidValueA;
-    var b = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var a = ( DateTimeOffsetPrimitive ) s_validValueA;
+    var b = ( DateTimeOffsetPrimitive ) s_validValueA;
 
     // Act
     var areEqual = a.Equals( b );
@@ -139,7 +139,7 @@ public class DateTimeOffsetPrimitiveTests
   public void Equals_ValueWithDefault_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var primitive = ( DateTimeOffsetPrimitive ) s_validValueA;
 
     // Act
     var areEqual = primitive.Equals( default );
@@ -168,7 +168,7 @@ public class DateTimeOffsetPrimitiveTests
   public void ExplicitOperator_PrimitiveToString_ReturnsString()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( DateTimeOffsetPrimitive ) value;
 
     // Act
@@ -190,14 +190,14 @@ public class DateTimeOffsetPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void ExplicitOperator_ValueToPrimitive_ReturnsPrimitiveWithValue()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( DateTimeOffsetPrimitive ) value;
 
     // Assert
@@ -209,7 +209,7 @@ public class DateTimeOffsetPrimitiveTests
   public void FromInt32_WithValidValue_ReturnsSuccess()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var result = DateTimeOffsetPrimitive.Create( value );
 
     // Assert
@@ -237,7 +237,7 @@ public class DateTimeOffsetPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
@@ -255,8 +255,8 @@ public class DateTimeOffsetPrimitiveTests
   public void GetHashCode_DifferentValues_ReturnsDifferentHashCodes()
   {
     // Arrange
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
     var a = ( DateTimeOffsetPrimitive ) valueA;
     var b = ( DateTimeOffsetPrimitive ) valueB;
 
@@ -273,7 +273,7 @@ public class DateTimeOffsetPrimitiveTests
   public void GetHashCode_SameValue_ReturnsSameHashCode()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var a = ( DateTimeOffsetPrimitive ) value;
     var b = ( DateTimeOffsetPrimitive ) value;
 
@@ -303,7 +303,7 @@ public class DateTimeOffsetPrimitiveTests
   public void IsDefault_WithValue_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var primitive = ( DateTimeOffsetPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.IsDefault;
@@ -329,7 +329,7 @@ public class DateTimeOffsetPrimitiveTests
   public void IsValid_StringValidValue_ReturnsTrue()
   {
     // Act
-    var isValid = DateTimeOffsetPrimitive.IsValid( ValidValueA );
+    var isValid = DateTimeOffsetPrimitive.IsValid( s_validValueA );
 
     // Assert
     isValid.Should()
@@ -346,7 +346,7 @@ public class DateTimeOffsetPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( JsonInvalidTokenTypeErrorMessage );
+       .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
   [Fact]
@@ -359,13 +359,13 @@ public class DateTimeOffsetPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var json = $$"""{"DateTimeOffsetPrimitive":"{{value:O}}"}""";
 
     // The JSON deserializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
@@ -391,7 +391,7 @@ public class DateTimeOffsetPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
@@ -409,7 +409,7 @@ public class DateTimeOffsetPrimitiveTests
   [Fact]
   public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var expected = new JsonTestClass { DateTimeOffsetPrimitive = ( DateTimeOffsetPrimitive ) value };
 
     // The JSON serializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
@@ -444,7 +444,7 @@ public class DateTimeOffsetPrimitiveTests
   public void ToString_ReturnsValue()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( DateTimeOffsetPrimitive ) value;
 
     // Act
@@ -497,7 +497,7 @@ public class DateTimeOffsetPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_SupportedType_Succeeds()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var converter = TypeDescriptor.GetConverter( typeof( DateTimeOffsetPrimitive ) );
     var result = converter.ConvertFrom( value );
 
@@ -524,7 +524,7 @@ public class DateTimeOffsetPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( DateTimeOffsetPrimitive ) );
 
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( DateTimeOffsetPrimitive ) value;
     var result = converter.ConvertTo( null, null, primitive, typeof( DateTimeOffset ) );
 
@@ -539,7 +539,7 @@ public class DateTimeOffsetPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( DateTimeOffsetPrimitive ) );
 
-    var primitive = ( DateTimeOffsetPrimitive ) ValidValueA;
+    var primitive = ( DateTimeOffsetPrimitive ) s_validValueA;
     var act = () => converter.ConvertTo( null, null, primitive, typeof( string ) );
 
     act.Should()
@@ -571,14 +571,14 @@ public class DateTimeOffsetPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void Validate_ValidValue_ReturnsSuccess()
   {
     // Act
-    var result = DateTimeOffsetPrimitive.Validate( ValidValueA );
+    var result = DateTimeOffsetPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()
@@ -593,7 +593,7 @@ public class DateTimeOffsetPrimitiveTests
     context.Database.EnsureCreated();
 
     var id = Guid.NewGuid();
-    var value = ValidValueA;
+    var value = s_validValueA;
     var entity = new TestEntity
     {
       Id = id,
@@ -634,7 +634,7 @@ public class DateTimeOffsetPrimitiveTests
         ValidatorFlags.None => Result.Ok(),
         ValidatorFlags.Simple => Result.FailIf(
           value is null || value.Value == DateTimeOffset.MinValue,
-          ExpectedValidationErrorMessage
+          s_expectedValidationErrorMessage
         ),
         _ => Result.Fail( "Invalid validation flag" )
       };

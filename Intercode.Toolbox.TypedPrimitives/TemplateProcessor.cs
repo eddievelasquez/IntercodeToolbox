@@ -25,7 +25,7 @@ internal class TemplateProcessor
   private const string SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
     $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.FullName}$.SystemTextJsonConverter ) )]";
 
-  private static readonly TemplateCache TEMPLATE_CACHE = new ();
+  private static readonly TemplateCache s_templateCache = new ();
 
   #endregion
 
@@ -37,7 +37,7 @@ internal class TemplateProcessor
     using var context = new TemplateContext( model );
 
     // See if we have already composed and compiled this template
-    var compiledTemplate = TEMPLATE_CACHE.GetOrAddTemplate(
+    var compiledTemplate = s_templateCache.GetOrAddTemplate(
       context,
       ctx =>
       {

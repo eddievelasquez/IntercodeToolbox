@@ -20,10 +20,10 @@ public class LongPrimitiveTests
 {
   #region Constants
 
-  private static readonly string ExpectedValidationErrorMessage = "Cannot be null or zero";
-  private static readonly string JsonInvalidTokenTypeErrorMessage = "Value must be a Number";
-  private static readonly long ValidValueA = 42L;
-  private static readonly long ValidValueB = 43L;
+  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or zero";
+  private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a Number";
+  private static readonly long s_validValueA = 42L;
+  private static readonly long s_validValueB = 43L;
 
   #endregion
 
@@ -33,7 +33,7 @@ public class LongPrimitiveTests
   public void CompareTo_DefaultAndValue_ReturnsLessThanZero()
   {
     // Arrange
-    var a = ( LongPrimitive ) ValidValueA;
+    var a = ( LongPrimitive ) s_validValueA;
     var b = ( LongPrimitive ) default;
 
     // Act
@@ -47,8 +47,8 @@ public class LongPrimitiveTests
   [Fact]
   public void CompareTo_DifferentObjectValues_ReturnsComparisonResult()
   {
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
 
     // Arrange
     var a = ( LongPrimitive ) valueA;
@@ -66,7 +66,7 @@ public class LongPrimitiveTests
   public void CompareTo_ObjectIsNull_ReturnsGreaterThanZero()
   {
     // Arrange
-    var a = ( LongPrimitive ) ValidValueA;
+    var a = ( LongPrimitive ) s_validValueA;
 
     // Act
     var result = a.CompareTo( null );
@@ -80,7 +80,7 @@ public class LongPrimitiveTests
   public void CompareTo_ValueAndDefault_ReturnsGreaterThanZero()
   {
     // Arrange
-    var primitive = ( LongPrimitive ) ValidValueA;
+    var primitive = ( LongPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.CompareTo( default );
@@ -94,7 +94,7 @@ public class LongPrimitiveTests
   public void Equals_DefaultWithValue_ReturnsFalse()
   {
     // Arrange
-    var a = ( LongPrimitive ) ValidValueA;
+    var a = ( LongPrimitive ) s_validValueA;
     var b = ( LongPrimitive ) default;
 
     // Act
@@ -109,8 +109,8 @@ public class LongPrimitiveTests
   public void Equals_DifferentValues_ReturnsFalse()
   {
     // Arrange
-    var a = ( LongPrimitive ) ValidValueA;
-    var b = ( LongPrimitive ) ValidValueB;
+    var a = ( LongPrimitive ) s_validValueA;
+    var b = ( LongPrimitive ) s_validValueB;
 
     // Act
     var areEqual = a.Equals( b );
@@ -124,8 +124,8 @@ public class LongPrimitiveTests
   public void Equals_SameValue_ReturnsTrue()
   {
     // Arrange
-    var a = ( LongPrimitive ) ValidValueA;
-    var b = ( LongPrimitive ) ValidValueA;
+    var a = ( LongPrimitive ) s_validValueA;
+    var b = ( LongPrimitive ) s_validValueA;
 
     // Act
     var areEqual = a.Equals( b );
@@ -139,7 +139,7 @@ public class LongPrimitiveTests
   public void Equals_ValueWithDefault_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( LongPrimitive ) ValidValueA;
+    var primitive = ( LongPrimitive ) s_validValueA;
 
     // Act
     var areEqual = primitive.Equals( default );
@@ -168,7 +168,7 @@ public class LongPrimitiveTests
   public void ExplicitOperator_PrimitiveToString_ReturnsString()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( LongPrimitive ) value;
 
     // Act
@@ -183,7 +183,7 @@ public class LongPrimitiveTests
   public void ExplicitOperator_ValueToPrimitive_ReturnsPrimitiveWithValue()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( LongPrimitive ) value;
 
     // Assert
@@ -202,7 +202,7 @@ public class LongPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Theory]
@@ -222,14 +222,14 @@ public class LongPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void FromInt32_WithValidValue_ReturnsSuccess()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var result = LongPrimitive.Create( value );
 
     // Assert
@@ -255,8 +255,8 @@ public class LongPrimitiveTests
   public void GetHashCode_DifferentValues_ReturnsDifferentHashCodes()
   {
     // Arrange
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
     var a = ( LongPrimitive ) valueA;
     var b = ( LongPrimitive ) valueB;
 
@@ -273,7 +273,7 @@ public class LongPrimitiveTests
   public void GetHashCode_SameValue_ReturnsSameHashCode()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var a = ( LongPrimitive ) value;
     var b = ( LongPrimitive ) value;
 
@@ -303,7 +303,7 @@ public class LongPrimitiveTests
   public void IsDefault_WithValue_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( LongPrimitive ) ValidValueA;
+    var primitive = ( LongPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.IsDefault;
@@ -329,7 +329,7 @@ public class LongPrimitiveTests
   public void IsValid_StringValidValue_ReturnsTrue()
   {
     // Act
-    var isValid = LongPrimitive.IsValid( ValidValueA );
+    var isValid = LongPrimitive.IsValid( s_validValueA );
 
     // Assert
     isValid.Should()
@@ -346,7 +346,7 @@ public class LongPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( JsonInvalidTokenTypeErrorMessage );
+       .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
   [Fact]
@@ -359,13 +359,13 @@ public class LongPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var json = $$"""{"LongPrimitive":{{value}}}""";
 
     // The JSON deserializer should use LongPrimitive's SystemTextJsonConverter
@@ -391,7 +391,7 @@ public class LongPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
@@ -409,7 +409,7 @@ public class LongPrimitiveTests
   [Fact]
   public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var test = new JsonTestClass { LongPrimitive = ( LongPrimitive ) value };
 
     // The JSON serializer should use LongPrimitive's SystemTextJsonConverter
@@ -437,7 +437,7 @@ public class LongPrimitiveTests
   public void ToString_ReturnsValue()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( LongPrimitive ) value;
 
     // Act
@@ -502,7 +502,7 @@ public class LongPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_SupportedType_Succeeds()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
     var result = converter.ConvertFrom( value );
 
@@ -517,7 +517,7 @@ public class LongPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
 
-    var primitive = ( LongPrimitive ) ValidValueA;
+    var primitive = ( LongPrimitive ) s_validValueA;
     var act = () => converter.ConvertTo( null, null, primitive, typeof( string ) );
 
     act.Should()
@@ -529,7 +529,7 @@ public class LongPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
 
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( LongPrimitive ) value;
     var result = converter.ConvertTo( null, null, primitive, typeof( long ) );
 
@@ -564,14 +564,14 @@ public class LongPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void Validate_ValidValue_ReturnsSuccess()
   {
     // Act
-    var result = LongPrimitive.Validate( ValidValueA );
+    var result = LongPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()
@@ -586,7 +586,7 @@ public class LongPrimitiveTests
     context.Database.EnsureCreated();
 
     var id = Guid.NewGuid();
-    var value = ValidValueA;
+    var value = s_validValueA;
     var entity = new TestEntity
     {
       Id = id,
@@ -625,7 +625,7 @@ public class LongPrimitiveTests
       return flags switch
       {
         ValidatorFlags.None   => Result.Ok(),
-        ValidatorFlags.Simple => Result.FailIf( value is null or 0L, ExpectedValidationErrorMessage ),
+        ValidatorFlags.Simple => Result.FailIf( value is null or 0L, s_expectedValidationErrorMessage ),
         _                     => Result.Fail( "Invalid validation flag" )
       };
     }

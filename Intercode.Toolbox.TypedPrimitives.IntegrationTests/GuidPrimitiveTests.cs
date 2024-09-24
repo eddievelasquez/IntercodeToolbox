@@ -20,10 +20,10 @@ public class GuidPrimitiveTests
 {
   #region Constants
 
-  private static readonly string ExpectedValidationErrorMessage = "Cannot be null or empty";
-  private static readonly string JsonInvalidTokenTypeErrorMessage = "Value must be a String";
-  private static readonly Guid ValidValueA = Guid.Parse( "3fe7fbd6-ebd7-447c-95b3-0d5e5026d580" );
-  private static readonly Guid ValidValueB = Guid.Parse( "b8afdeb5-87d2-44e9-ba51-9369cd257170" );
+  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
+  private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a String";
+  private static readonly Guid s_validValueA = Guid.Parse( "3fe7fbd6-ebd7-447c-95b3-0d5e5026d580" );
+  private static readonly Guid s_validValueB = Guid.Parse( "b8afdeb5-87d2-44e9-ba51-9369cd257170" );
 
   #endregion
 
@@ -33,7 +33,7 @@ public class GuidPrimitiveTests
   public void CompareTo_DefaultAndValue_ReturnsLessThanZero()
   {
     // Arrange
-    var a = ( GuidPrimitive ) ValidValueA;
+    var a = ( GuidPrimitive ) s_validValueA;
     var b = ( GuidPrimitive ) default;
 
     // Act
@@ -47,8 +47,8 @@ public class GuidPrimitiveTests
   [Fact]
   public void CompareTo_DifferentObjectValues_ReturnsComparisonResult()
   {
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
 
     // Arrange
     var a = ( GuidPrimitive ) valueA;
@@ -66,7 +66,7 @@ public class GuidPrimitiveTests
   public void CompareTo_ObjectIsNull_ReturnsGreaterThanZero()
   {
     // Arrange
-    var a = ( GuidPrimitive ) ValidValueA;
+    var a = ( GuidPrimitive ) s_validValueA;
 
     // Act
     var result = a.CompareTo( null );
@@ -80,7 +80,7 @@ public class GuidPrimitiveTests
   public void CompareTo_ValueAndDefault_ReturnsGreaterThanZero()
   {
     // Arrange
-    var primitive = ( GuidPrimitive ) ValidValueA;
+    var primitive = ( GuidPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.CompareTo( default );
@@ -94,7 +94,7 @@ public class GuidPrimitiveTests
   public void Equals_DefaultWithValue_ReturnsFalse()
   {
     // Arrange
-    var a = ( GuidPrimitive ) ValidValueA;
+    var a = ( GuidPrimitive ) s_validValueA;
     var b = ( GuidPrimitive ) default;
 
     // Act
@@ -109,8 +109,8 @@ public class GuidPrimitiveTests
   public void Equals_DifferentValues_ReturnsFalse()
   {
     // Arrange
-    var a = ( GuidPrimitive ) ValidValueA;
-    var b = ( GuidPrimitive ) ValidValueB;
+    var a = ( GuidPrimitive ) s_validValueA;
+    var b = ( GuidPrimitive ) s_validValueB;
 
     // Act
     var areEqual = a.Equals( b );
@@ -124,8 +124,8 @@ public class GuidPrimitiveTests
   public void Equals_SameValue_ReturnsTrue()
   {
     // Arrange
-    var a = ( GuidPrimitive ) ValidValueA;
-    var b = ( GuidPrimitive ) ValidValueA;
+    var a = ( GuidPrimitive ) s_validValueA;
+    var b = ( GuidPrimitive ) s_validValueA;
 
     // Act
     var areEqual = a.Equals( b );
@@ -139,7 +139,7 @@ public class GuidPrimitiveTests
   public void Equals_ValueWithDefault_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( GuidPrimitive ) ValidValueA;
+    var primitive = ( GuidPrimitive ) s_validValueA;
 
     // Act
     var areEqual = primitive.Equals( default );
@@ -168,7 +168,7 @@ public class GuidPrimitiveTests
   public void ExplicitOperator_PrimitiveToString_ReturnsString()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( GuidPrimitive ) value;
 
     // Act
@@ -190,14 +190,14 @@ public class GuidPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void ExplicitOperator_ValueToPrimitive_ReturnsPrimitiveWithValue()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( GuidPrimitive ) value;
 
     // Assert
@@ -209,7 +209,7 @@ public class GuidPrimitiveTests
   public void FromInt32_WithValidValue_ReturnsSuccess()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var result = GuidPrimitive.Create( value );
 
     // Assert
@@ -237,7 +237,7 @@ public class GuidPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
@@ -255,8 +255,8 @@ public class GuidPrimitiveTests
   public void GetHashCode_DifferentValues_ReturnsDifferentHashCodes()
   {
     // Arrange
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
     var a = ( GuidPrimitive ) valueA;
     var b = ( GuidPrimitive ) valueB;
 
@@ -273,7 +273,7 @@ public class GuidPrimitiveTests
   public void GetHashCode_SameValue_ReturnsSameHashCode()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var a = ( GuidPrimitive ) value;
     var b = ( GuidPrimitive ) value;
 
@@ -303,7 +303,7 @@ public class GuidPrimitiveTests
   public void IsDefault_WithValue_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( GuidPrimitive ) ValidValueA;
+    var primitive = ( GuidPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.IsDefault;
@@ -329,7 +329,7 @@ public class GuidPrimitiveTests
   public void IsValid_StringValidValue_ReturnsTrue()
   {
     // Act
-    var isValid = GuidPrimitive.IsValid( ValidValueA );
+    var isValid = GuidPrimitive.IsValid( s_validValueA );
 
     // Assert
     isValid.Should()
@@ -346,7 +346,7 @@ public class GuidPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( JsonInvalidTokenTypeErrorMessage );
+       .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
   [Fact]
@@ -359,13 +359,13 @@ public class GuidPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var json = $$"""{"GuidPrimitive":"{{value}}"}""";
 
     // The JSON deserializer should use GuidPrimitive's SystemTextJsonConverter
@@ -391,7 +391,7 @@ public class GuidPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
@@ -409,7 +409,7 @@ public class GuidPrimitiveTests
   [Fact]
   public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var test = new JsonTestClass { GuidPrimitive = ( GuidPrimitive ) value };
 
     // The JSON serializer should use GuidPrimitive's SystemTextJsonConverter
@@ -437,7 +437,7 @@ public class GuidPrimitiveTests
   public void ToString_ReturnsValue()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( GuidPrimitive ) value;
 
     // Act
@@ -490,7 +490,7 @@ public class GuidPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_SupportedType_Succeeds()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var converter = TypeDescriptor.GetConverter( typeof( GuidPrimitive ) );
     var result = converter.ConvertFrom( value );
 
@@ -517,7 +517,7 @@ public class GuidPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( GuidPrimitive ) );
 
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( GuidPrimitive ) value;
     var result = converter.ConvertTo( null, null, primitive, typeof( Guid ) );
 
@@ -532,7 +532,7 @@ public class GuidPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( GuidPrimitive ) );
 
-    var primitive = ( GuidPrimitive ) ValidValueA;
+    var primitive = ( GuidPrimitive ) s_validValueA;
     var act = () => converter.ConvertTo( null, null, primitive, typeof( string ) );
 
     act.Should()
@@ -564,14 +564,14 @@ public class GuidPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void Validate_ValidValue_ReturnsSuccess()
   {
     // Act
-    var result = GuidPrimitive.Validate( ValidValueA );
+    var result = GuidPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()
@@ -586,7 +586,7 @@ public class GuidPrimitiveTests
     context.Database.EnsureCreated();
 
     var id = Guid.NewGuid();
-    var value = ValidValueA;
+    var value = s_validValueA;
     var entity = new TestEntity
     {
       Id = id,
@@ -627,7 +627,7 @@ public class GuidPrimitiveTests
         ValidatorFlags.None => Result.Ok(),
         ValidatorFlags.Simple => Result.FailIf(
           value is null || value.Value.Equals( Guid.Empty ),
-          ExpectedValidationErrorMessage
+          s_expectedValidationErrorMessage
         ),
         _ => Result.Fail( "Invalid validation flag" )
       };

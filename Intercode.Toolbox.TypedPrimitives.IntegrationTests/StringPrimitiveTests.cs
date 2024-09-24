@@ -104,10 +104,10 @@ public class StringPrimitiveTests
 {
   #region Constants
 
-  private static readonly string ExpectedValidationErrorMessage = "Cannot be null or empty";
-  private static readonly string JsonInvalidTokenTypeErrorMessage = "Value must be a string";
-  private static readonly string ValidValueA = "valueA";
-  private static readonly string ValidValueB = "valueB";
+  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
+  private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a string";
+  private static readonly string s_validValueA = "valueA";
+  private static readonly string s_validValueB = "valueB";
 
   #endregion
 
@@ -117,7 +117,7 @@ public class StringPrimitiveTests
   public void CompareTo_DefaultAndValue_ReturnsLessThanZero()
   {
     // Arrange
-    var a = ( StringPrimitive ) ValidValueA;
+    var a = ( StringPrimitive ) s_validValueA;
     var b = ( StringPrimitive ) default;
 
     // Act
@@ -131,8 +131,8 @@ public class StringPrimitiveTests
   [Fact]
   public void CompareTo_DifferentObjectValues_ReturnsComparisonResult()
   {
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
 
     // Arrange
     var a = ( StringPrimitive ) valueA;
@@ -150,7 +150,7 @@ public class StringPrimitiveTests
   public void CompareTo_ObjectIsNull_ReturnsGreaterThanZero()
   {
     // Arrange
-    var a = ( StringPrimitive ) ValidValueA;
+    var a = ( StringPrimitive ) s_validValueA;
 
     // Act
     var result = a.CompareTo( null );
@@ -164,7 +164,7 @@ public class StringPrimitiveTests
   public void CompareTo_ValueAndDefault_ReturnsGreaterThanZero()
   {
     // Arrange
-    var primitive = ( StringPrimitive ) ValidValueA;
+    var primitive = ( StringPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.CompareTo( default );
@@ -178,7 +178,7 @@ public class StringPrimitiveTests
   public void Equals_DefaultWithValue_ReturnsFalse()
   {
     // Arrange
-    var a = ( StringPrimitive ) ValidValueA;
+    var a = ( StringPrimitive ) s_validValueA;
     var b = ( StringPrimitive ) default;
 
     // Act
@@ -193,8 +193,8 @@ public class StringPrimitiveTests
   public void Equals_DifferentValues_ReturnsFalse()
   {
     // Arrange
-    var a = ( StringPrimitive ) ValidValueA;
-    var b = ( StringPrimitive ) ValidValueB;
+    var a = ( StringPrimitive ) s_validValueA;
+    var b = ( StringPrimitive ) s_validValueB;
 
     // Act
     var areEqual = a.Equals( b );
@@ -208,8 +208,8 @@ public class StringPrimitiveTests
   public void Equals_SameValue_ReturnsTrue()
   {
     // Arrange
-    var a = ( StringPrimitive ) ValidValueA;
-    var b = ( StringPrimitive ) ValidValueA;
+    var a = ( StringPrimitive ) s_validValueA;
+    var b = ( StringPrimitive ) s_validValueA;
 
     // Act
     var areEqual = a.Equals( b );
@@ -223,7 +223,7 @@ public class StringPrimitiveTests
   public void Equals_ValueWithDefault_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( StringPrimitive ) ValidValueA;
+    var primitive = ( StringPrimitive ) s_validValueA;
 
     // Act
     var areEqual = primitive.Equals( default );
@@ -252,7 +252,7 @@ public class StringPrimitiveTests
   public void ExplicitOperator_PrimitiveToString_ReturnsValue()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( StringPrimitive ) value;
 
     // Act
@@ -267,7 +267,7 @@ public class StringPrimitiveTests
   public void ExplicitOperator_SpanToPrimitive_ReturnsValue()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( StringPrimitive ) value.AsSpan();
 
     // Assert
@@ -286,14 +286,14 @@ public class StringPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void ExplicitOperator_StringToPrimitive_ReturnsPrimitiveWithValue()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( StringPrimitive ) value;
 
     // Assert
@@ -312,7 +312,7 @@ public class StringPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Theory]
@@ -332,14 +332,14 @@ public class StringPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void FromSpan_ValidValue_ReturnsSuccess()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var result = StringPrimitive.Create( value );
 
     // Assert
@@ -367,14 +367,14 @@ public class StringPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void FromString_WithValidValue_ReturnsSuccess()
   {
     // Act
-    var value = ValidValueA;
+    var value = s_validValueA;
     var result = StringPrimitive.Create( value );
 
     // Assert
@@ -400,8 +400,8 @@ public class StringPrimitiveTests
   public void GetHashCode_DifferentValues_ReturnsDifferentHashCodes()
   {
     // Arrange
-    var valueA = ValidValueA;
-    var valueB = ValidValueB;
+    var valueA = s_validValueA;
+    var valueB = s_validValueB;
     var a = ( StringPrimitive ) valueA;
     var b = ( StringPrimitive ) valueB;
 
@@ -418,7 +418,7 @@ public class StringPrimitiveTests
   public void GetHashCode_SameValue_ReturnsSameHashCode()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var a = ( StringPrimitive ) value;
     var b = ( StringPrimitive ) value;
 
@@ -448,7 +448,7 @@ public class StringPrimitiveTests
   public void IsDefault_WithValue_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( StringPrimitive ) ValidValueA;
+    var primitive = ( StringPrimitive ) s_validValueA;
 
     // Act
     var result = primitive.IsDefault;
@@ -474,7 +474,7 @@ public class StringPrimitiveTests
   public void IsValid_SpanValidValue_ReturnsTrue()
   {
     // Act
-    var isValid = StringPrimitive.IsValid( ValidValueA.AsSpan() );
+    var isValid = StringPrimitive.IsValid( s_validValueA.AsSpan() );
 
     // Assert
     isValid.Should()
@@ -498,7 +498,7 @@ public class StringPrimitiveTests
   public void IsValid_StringValidValue_ReturnsTrue()
   {
     // Act
-    var isValid = StringPrimitive.IsValid( ValidValueA );
+    var isValid = StringPrimitive.IsValid( s_validValueA );
 
     // Assert
     isValid.Should()
@@ -515,7 +515,7 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( JsonInvalidTokenTypeErrorMessage );
+       .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
   [Fact]
@@ -544,13 +544,13 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var json = $$"""{"StringPrimitive":"{{value}}"}""";
 
     // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
@@ -575,7 +575,7 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( ExpectedValidationErrorMessage );
+       .WithMessage( s_expectedValidationErrorMessage );
   }
 
   [Fact]
@@ -593,7 +593,7 @@ public class StringPrimitiveTests
   [Fact]
   public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var test = new JsonTestClass { StringPrimitive = ( StringPrimitive ) value };
 
     // The JSON serializer should use StringPrimitive's SystemTextJsonConverter
@@ -621,7 +621,7 @@ public class StringPrimitiveTests
   public void ToString_ReturnsValue()
   {
     // Arrange
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( StringPrimitive ) value;
 
     // Act
@@ -705,7 +705,7 @@ public class StringPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_SupportedType_Succeeds()
   {
-    var value = ValidValueA;
+    var value = s_validValueA;
     var converter = TypeDescriptor.GetConverter( typeof( StringPrimitive ) );
     var result = converter.ConvertFrom( value );
 
@@ -747,7 +747,7 @@ public class StringPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( StringPrimitive ) );
 
-    var value = ValidValueA;
+    var value = s_validValueA;
     var primitive = ( StringPrimitive ) value;
     var result = converter.ConvertTo( null, null, primitive, typeof( string ) );
 
@@ -762,7 +762,7 @@ public class StringPrimitiveTests
   {
     var converter = TypeDescriptor.GetConverter( typeof( StringPrimitive ) );
 
-    var primitive = ( StringPrimitive ) ValidValueA;
+    var primitive = ( StringPrimitive ) s_validValueA;
     var act = () => converter.ConvertTo( null, null, primitive, typeof( DateTimeOffset ) );
 
     act.Should()
@@ -794,14 +794,14 @@ public class StringPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( ExpectedValidationErrorMessage );
+          .Be( s_expectedValidationErrorMessage );
   }
 
   [Fact]
   public void Validate_ValidValue_ReturnsSuccess()
   {
     // Act
-    var result = StringPrimitive.Validate( ValidValueA );
+    var result = StringPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()
@@ -816,7 +816,7 @@ public class StringPrimitiveTests
     context.Database.EnsureCreated();
 
     var id = Guid.NewGuid();
-    var value = ValidValueA;
+    var value = s_validValueA;
     var entity = new TestEntity
     {
       Id = id,
