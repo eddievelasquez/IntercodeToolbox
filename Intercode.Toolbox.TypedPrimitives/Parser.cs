@@ -60,6 +60,7 @@ internal static class Parser
 
     foreach( var attributeData in recordSymbol.GetAttributes() )
     {
+      // Skip attributes that are not the marker attribute
       if( attributeData.AttributeClass?.Name != MarkerAttributeName )
       {
         continue;
@@ -193,8 +194,7 @@ internal static class Parser
     // The first argument should always be the primitive type
     if( args.Length > 0 )
     {
-      return args[0]
-        .GetTypeValue();
+      return args[0].GetTypeValue();
     }
 
     return null;

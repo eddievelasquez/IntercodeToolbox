@@ -12,6 +12,7 @@ internal static class TypedConstantExtensions
 {
   #region Constants
 
+  // We use a nullable Type value so we don't have to lookup unknown types multiple times
   private static readonly ConcurrentDictionary<string, Type?> s_cachedTypes;
 
   #endregion
@@ -20,10 +21,9 @@ internal static class TypedConstantExtensions
 
   static TypedConstantExtensions()
   {
-    // Preload well-know types
+    // Preload well-known types
     s_cachedTypes = new ConcurrentDictionary<string, Type?>();
     s_cachedTypes.TryAdd( typeof( Guid ).FullName!, typeof( Guid ) );
-    s_cachedTypes.TryAdd( typeof( DateTime ).FullName!, typeof( DateTime ) );
     s_cachedTypes.TryAdd( typeof( DateTimeOffset ).FullName!, typeof( DateTimeOffset ) );
   }
 
@@ -78,21 +78,22 @@ internal static class TypedConstantExtensions
     {
       return namedTypeSymbol.SpecialType switch
       {
-        SpecialType.System_Boolean => typeof( bool ).FullName!,
-        SpecialType.System_Byte    => typeof( byte ).FullName!,
-        SpecialType.System_Char    => typeof( char ).FullName!,
-        SpecialType.System_Decimal => typeof( decimal ).FullName!,
-        SpecialType.System_Double  => typeof( double ).FullName!,
-        SpecialType.System_Int16   => typeof( short ).FullName!,
-        SpecialType.System_Int32   => typeof( int ).FullName!,
-        SpecialType.System_Int64   => typeof( long ).FullName!,
-        SpecialType.System_SByte   => typeof( sbyte ).FullName!,
-        SpecialType.System_Single  => typeof( float ).FullName!,
-        SpecialType.System_String  => typeof( string ).FullName!,
-        SpecialType.System_UInt16  => typeof( ushort ).FullName!,
-        SpecialType.System_UInt32  => typeof( uint ).FullName!,
-        SpecialType.System_UInt64  => typeof( ulong ).FullName!,
-        _                          => namedTypeSymbol.ToDisplayString()
+        SpecialType.System_Boolean  => typeof( bool ).FullName!,
+        SpecialType.System_Byte     => typeof( byte ).FullName!,
+        SpecialType.System_Char     => typeof( char ).FullName!,
+        SpecialType.System_DateTime => typeof( DateTime ).FullName!,
+        SpecialType.System_Decimal  => typeof( decimal ).FullName!,
+        SpecialType.System_Double   => typeof( double ).FullName!,
+        SpecialType.System_Int16    => typeof( short ).FullName!,
+        SpecialType.System_Int32    => typeof( int ).FullName!,
+        SpecialType.System_Int64    => typeof( long ).FullName!,
+        SpecialType.System_SByte    => typeof( sbyte ).FullName!,
+        SpecialType.System_Single   => typeof( float ).FullName!,
+        SpecialType.System_String   => typeof( string ).FullName!,
+        SpecialType.System_UInt16   => typeof( ushort ).FullName!,
+        SpecialType.System_UInt32   => typeof( uint ).FullName!,
+        SpecialType.System_UInt64   => typeof( ulong ).FullName!,
+        _                           => namedTypeSymbol.ToDisplayString()
       };
     }
 
@@ -125,21 +126,22 @@ internal static class TypedConstantExtensions
     {
       var type = namedTypeSymbol.SpecialType switch
       {
-        SpecialType.System_Boolean => typeof( bool ),
-        SpecialType.System_Byte    => typeof( byte ),
-        SpecialType.System_Char    => typeof( char ),
-        SpecialType.System_Decimal => typeof( decimal ),
-        SpecialType.System_Double  => typeof( double ),
-        SpecialType.System_Int16   => typeof( short ),
-        SpecialType.System_Int32   => typeof( int ),
-        SpecialType.System_Int64   => typeof( long ),
-        SpecialType.System_SByte   => typeof( sbyte ),
-        SpecialType.System_Single  => typeof( float ),
-        SpecialType.System_String  => typeof( string ),
-        SpecialType.System_UInt16  => typeof( ushort ),
-        SpecialType.System_UInt32  => typeof( uint ),
-        SpecialType.System_UInt64  => typeof( ulong ),
-        _                          => GetTypeFromSymbol( namedTypeSymbol )
+        SpecialType.System_Boolean  => typeof( bool ),
+        SpecialType.System_Byte     => typeof( byte ),
+        SpecialType.System_Char     => typeof( char ),
+        SpecialType.System_DateTime => typeof( DateTime ),
+        SpecialType.System_Decimal  => typeof( decimal ),
+        SpecialType.System_Double   => typeof( double ),
+        SpecialType.System_Int16    => typeof( short ),
+        SpecialType.System_Int32    => typeof( int ),
+        SpecialType.System_Int64    => typeof( long ),
+        SpecialType.System_SByte    => typeof( sbyte ),
+        SpecialType.System_Single   => typeof( float ),
+        SpecialType.System_String   => typeof( string ),
+        SpecialType.System_UInt16   => typeof( ushort ),
+        SpecialType.System_UInt32   => typeof( uint ),
+        SpecialType.System_UInt64   => typeof( ulong ),
+        _                           => GetTypeFromSymbol( namedTypeSymbol )
       };
 
       return type;
