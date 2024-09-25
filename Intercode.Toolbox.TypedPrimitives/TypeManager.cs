@@ -8,48 +8,50 @@ internal static class TypeManager
 {
   #region Constants
 
-  private static readonly Dictionary<Type, SupportedTypeInfo> s_supportedTypes = new ()
+  private static readonly Dictionary<Type, SupportedTypeInfo> s_supportedTypes = new ();
+
+  #endregion
+
+  #region Constructors
+
+  static TypeManager()
   {
+    Add( typeof( string ), "string", "String", "reader.GetString()", "writer.WriteStringValue( value.Value )" );
+    Add( typeof( int ), "int", "Number", "reader.GetInt32()", "writer.WriteNumberValue( value.Value )" );
+    Add(
+      typeof( Guid ),
+      "global::System.Guid",
+      "String",
+      "reader.GetGuid()",
+      "writer.WriteStringValue( value.ToString() )"
+    );
+    Add( typeof( long ), "long", "Number", "reader.GetInt64()", "writer.WriteNumberValue( value.Value )" );
+    Add(
+      typeof( DateTime ),
+      "global::System.DateTime",
+      "String",
+      "DateTime.Parse( reader.GetString()! )",
+      "writer.WriteStringValue( value.ToString(\"O\") )"
+    );
+    Add(
+      typeof( DateTimeOffset ),
+      "global::System.DateTimeOffset",
+      "String",
+      "DateTimeOffset.Parse( reader.GetString()! )",
+      "writer.WriteStringValue( value.ToString(\"O\") )"
+    );
+    return;
+
+    static void Add(
+      Type type,
+      string keyword,
+      string jsonTokenType,
+      string jsonReader,
+      string jsonWriter )
     {
-      typeof( string ),
-      new SupportedTypeInfo( "string", "String", "String", "reader.GetString()", "writer.WriteStringValue( value.Value )" )
-    },
-    {
-      typeof( int ),
-      new SupportedTypeInfo( "int", "Int32", "Number", "reader.GetInt32()", "writer.WriteNumberValue( value.Value )" )
-    },
-    {
-      typeof( Guid ), new SupportedTypeInfo(
-        "global::System.Guid",
-        "Guid",
-        "String",
-        "reader.GetGuid()",
-        "writer.WriteStringValue( value.ToString() )"
-      )
-    },
-    {
-      typeof( long ),
-      new SupportedTypeInfo( "long", "Int64", "Number", "reader.GetInt64()", "writer.WriteNumberValue( value.Value )" )
-    },
-    {
-      typeof( DateTime ), new SupportedTypeInfo(
-        "global::System.DateTime",
-        "DateTime",
-        "String",
-        "DateTime.Parse( reader.GetString()! )",
-        "writer.WriteStringValue( value.ToString(\"O\") )"
-      )
-    },
-    {
-      typeof( DateTimeOffset ), new SupportedTypeInfo(
-        "global::System.DateTimeOffset",
-        "DateTimeOffset",
-        "String",
-        "DateTimeOffset.Parse( reader.GetString()! )",
-        "writer.WriteStringValue( value.ToString(\"O\") )"
-      )
+      s_supportedTypes.Add( type, new SupportedTypeInfo( keyword, jsonTokenType, jsonReader, jsonWriter ) );
     }
-  };
+  }
 
   #endregion
 

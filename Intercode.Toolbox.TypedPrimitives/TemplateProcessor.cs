@@ -81,7 +81,6 @@ internal class TemplateProcessor
 
     // Set the common macros for all templates
     builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
-    builder.AddMacro( Macros.TypeName, typeInfo.Name );
     builder.AddMacro( Macros.Namespace, context.Model.Namespace );
     builder.AddMacro( Macros.Name, context.Model.Name );
     builder.AddMacro( Macros.FullName, $"{context.Model.Namespace}.{context.Model.Name}" );
