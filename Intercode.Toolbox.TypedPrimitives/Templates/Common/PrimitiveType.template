@@ -97,7 +97,6 @@ $Factory$
   }
 
 $Operators$
-$Converters$
   static partial void Normalize(
     ref $TypeKeyword$? value );
 }

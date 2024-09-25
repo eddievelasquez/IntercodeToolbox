@@ -687,7 +687,7 @@ public class LongPrimitiveTests
     {
       modelBuilder.Entity<TestEntity>()
                   .Property( e => e.LongPrimitive )
-                  .HasConversion( new LongPrimitive.ValueConverter() )
+                  .HasConversion( new LongPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }
 

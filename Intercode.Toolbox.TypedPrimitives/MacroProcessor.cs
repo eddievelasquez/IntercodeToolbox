@@ -56,7 +56,12 @@ internal class MacroProcessor
             // yet span lookup support; however it might come in .NET 9.
             // See: https://github.com/dotnet/runtime/issues/27229
             var macroName = segment.Text;
-            outputBuilder.Append( _macros.TryGetValue( macroName, out var macroValue ) ? macroValue : macroName );
+            if( !_macros.TryGetValue( macroName, out var macroValue ) )
+            {
+              macroValue = macroName;
+            }
+
+            outputBuilder.Append( macroValue );
             break;
           }
 

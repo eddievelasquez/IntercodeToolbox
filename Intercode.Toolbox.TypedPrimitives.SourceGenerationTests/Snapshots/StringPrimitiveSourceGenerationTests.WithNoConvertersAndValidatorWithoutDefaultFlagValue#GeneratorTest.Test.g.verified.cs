@@ -172,7 +172,6 @@ public readonly partial record struct Test
     return result.Value;
   }
 
-
   static partial void Normalize(
     ref string? value );
 }

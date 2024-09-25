@@ -697,7 +697,7 @@ public class DateTimeOffsetPrimitiveTests
     {
       modelBuilder.Entity<TestEntity>()
                   .Property( e => e.DateTimeOffsetPrimitive )
-                  .HasConversion( new DateTimeOffsetPrimitive.ValueConverter() )
+                  .HasConversion( new DateTimeOffsetPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }
 

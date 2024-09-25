@@ -20,10 +20,10 @@ internal class TemplateProcessor
   private const string OPERATORS_VALIDATED_TEMPLATE_NAME = "Operators_Validated";
 
   private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.FullName}$.TypeConverter ) )]";
+    $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.FullName}$TypeConverter ) )]";
 
   private const string SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.FullName}$.SystemTextJsonConverter ) )]";
+    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.FullName}$SystemTextJsonConverter ) )]";
 
   private static readonly TemplateCache s_templateCache = new ();
 
@@ -31,36 +31,20 @@ internal class TemplateProcessor
 
   #region Public Methods
 
-  public string ProcessTemplate(
+  public IEnumerable<(string TypeName, string Content)> ProcessTemplate(
     GeneratorModel model )
   {
     using var context = new TemplateContext( model );
-
-    // See if we have already composed and compiled this template
-    var compiledTemplate = s_templateCache.GetOrAddTemplate(
-      context,
-      ctx =>
-      {
-        // Nope! Compose the template and cache it
-        var mainTemplate = ctx.LoadTemplate( MAIN_TEMPLATE_NAME );
-
-        var attributeBlock = GenerateAttributeBlock( ctx );
-        var converterBlock = GenerateConverterBlock( ctx );
-        return ComposeTemplate( ctx, mainTemplate, attributeBlock, converterBlock );
-      }
-    );
 
     // Set the macros needed for the primitive type
     var builder = new MacroProcessorBuilder();
     var typeInfo = context.TypeInfo;
 
-    // If the template uses the System.Text.Json converter, set the JSON macros
-    if( context.Model.HasConverter( TypedPrimitiveConverter.SystemTextJson ) )
-    {
-      builder.AddMacro( Macros.JsonTokenType, typeInfo.JsonTokenType );
-      builder.AddMacro( Macros.JsonReader, typeInfo.JsonReader );
-      builder.AddMacro( Macros.JsonWriter, typeInfo.JsonWriter );
-    }
+    // Set the common macros for all templates
+    builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
+    builder.AddMacro( Macros.Namespace, context.Model.Namespace );
+    builder.AddMacro( Macros.Name, context.Model.Name );
+    builder.AddMacro( Macros.FullName, $"{context.Model.Namespace}.{context.Model.Name}" );
 
     // If the template uses a validator, set the validator macros
     if( context.Model.ValidatorTypeName is not null )
@@ -79,16 +63,76 @@ internal class TemplateProcessor
       builder.AddMacro( Macros.StringComparison, context.Model.StringComparison! );
     }
 
-    // Set the common macros for all templates
-    builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
-    builder.AddMacro( Macros.Namespace, context.Model.Namespace );
-    builder.AddMacro( Macros.Name, context.Model.Name );
-    builder.AddMacro( Macros.FullName, $"{context.Model.Namespace}.{context.Model.Name}" );
+    // If the template uses a System.Text.Json converter, set the JSON macros
+    if( context.Model.HasConverter( TypedPrimitiveConverter.SystemTextJson ) )
+    {
+      builder.AddMacro( Macros.JsonTokenType, typeInfo.JsonTokenType );
+      builder.AddMacro( Macros.JsonReader, typeInfo.JsonReader );
+      builder.AddMacro( Macros.JsonWriter, typeInfo.JsonWriter );
+    }
+
+    var macroProcessor = builder.Build();
+
+    // Create the EFCore ValueConverter if requested
+    if( context.Model.HasConverter( TypedPrimitiveConverter.EfCoreValueConverter ) )
+    {
+      var content = GenerateContent( EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME );
+      yield return ( $"{model.Namespace}.{model.Name}ValueConverter", content );
+    }
+
+    // Create the TypeConverter if requested
+    if( context.Model.HasConverter( TypedPrimitiveConverter.TypeConverter ) )
+    {
+      var content = GenerateContent( TYPE_CONVERTER_TEMPLATE_NAME );
+      yield return ( $"{model.Namespace}.{model.Name}TypeConverter", content );
+    }
+
+    // Create the System.Text.Json converter if requested
+    if( context.Model.HasConverter( TypedPrimitiveConverter.SystemTextJson ) )
+    {
+      var templateKey = context.ValidationType == ValidationType.Unvalidated
+        ? SYSTEM_TEXT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME
+        : SYSTEM_TEXT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME;
+
+      var content = GenerateContent( templateKey );
+      yield return ( $"{model.Namespace}.{model.Name}SystemTextJsonConverter", content );
+    }
+
+    // See if we have already composed and compiled this template
+    var compiledTemplate = s_templateCache.GetOrAddTemplate(
+      context,
+      ctx =>
+      {
+        // Nope! Compose the template and cache it
+        var mainTemplate = ctx.LoadTemplate( MAIN_TEMPLATE_NAME );
+
+        var attributeBlock = GenerateAttributeBlock( ctx );
+        return ComposeTemplate( ctx, mainTemplate, attributeBlock );
+      }
+    );
 
     // Apply the macro values to the context's content
-    var macroProcessor = builder.Build();
     var processed = macroProcessor.ProcessMacros( compiledTemplate );
-    return processed;
+    yield return ( $"{model.Namespace}.{model.Name}", processed );
+
+    yield break;
+
+    string GenerateContent(
+      string templateKey )
+    {
+      var compiled = s_templateCache.GetOrAddTemplate(
+        templateKey,
+        context,
+        ctx =>
+        {
+          var template = ctx.LoadTemplate( templateKey, true );
+          return new TemplateCompiler().Compile( template );
+        }
+      );
+
+      var content = macroProcessor.ProcessMacros( compiled );
+      return content;
+    }
   }
 
   #endregion
@@ -114,50 +158,14 @@ internal class TemplateProcessor
     return builder.ToString();
   }
 
-  private static string GenerateConverterBlock(
-    TemplateContext context )
-  {
-    var builder = context.ContentBuilder;
-    builder.Clear();
-
-    if( context.Model.HasConverter( TypedPrimitiveConverter.TypeConverter ) )
-    {
-      ContentLoadAndAppendTemplate( TYPE_CONVERTER_TEMPLATE_NAME );
-    }
-
-    if( context.Model.HasConverter( TypedPrimitiveConverter.SystemTextJson ) )
-    {
-      ContentLoadAndAppendTemplate(
-        context.ValidationType == ValidationType.Unvalidated
-          ? SYSTEM_TEXT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME
-          : SYSTEM_TEXT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME
-      );
-    }
-
-    if( context.Model.HasConverter( TypedPrimitiveConverter.EfCoreValueConverter ) )
-    {
-      ContentLoadAndAppendTemplate( EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME );
-    }
-
-    return builder.ToString();
-
-    void ContentLoadAndAppendTemplate(
-      string templateName )
-    {
-      var template = context.LoadTemplate( templateName, true );
-      builder.AppendLine( template );
-    }
-  }
-
   private static CompiledTemplate ComposeTemplate(
     TemplateContext context,
     string mainTemplate,
-    string attributeBlock,
-    string converterBlock )
+    string attributeBlock )
   {
     // Compose the template and preprocess to evaluate the initial macros
     var contentBuilder = context.ContentBuilder;
-    contentBuilder.EnsureCapacity( mainTemplate.Length + attributeBlock.Length + converterBlock.Length );
+    contentBuilder.EnsureCapacity( mainTemplate.Length + attributeBlock.Length );
     contentBuilder.Clear();
     contentBuilder.Append( mainTemplate );
 
@@ -174,7 +182,6 @@ internal class TemplateProcessor
     {
       var builder = new MacroProcessorBuilder();
       builder.AddMacro( Macros.Attributes, attributeBlock );
-      builder.AddMacro( Macros.Converters, converterBlock );
 
       if( context.Model.ValidatorTypeName is null )
       {

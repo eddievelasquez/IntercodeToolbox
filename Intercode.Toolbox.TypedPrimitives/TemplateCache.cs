@@ -23,5 +23,13 @@ internal class TemplateCache
     return _cache.GetOrAdd( context.TemplateKey, _ => factory( context ) );
   }
 
+  public CompiledTemplate GetOrAddTemplate(
+    string templateKey,
+    TemplateContext context,
+    Func<TemplateContext, CompiledTemplate> factory )
+  {
+    return _cache.GetOrAdd( templateKey, _ => factory( context ) );
+  }
+
   #endregion
 }

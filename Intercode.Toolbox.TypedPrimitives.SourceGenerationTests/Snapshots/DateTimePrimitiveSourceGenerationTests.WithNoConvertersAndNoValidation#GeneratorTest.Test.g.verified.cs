@@ -106,7 +106,6 @@ public readonly partial record struct Test
     return GeneratorTest.Test.Create( value );
   }
 
-
   static partial void Normalize(
     ref global::System.DateTime? value );
 }

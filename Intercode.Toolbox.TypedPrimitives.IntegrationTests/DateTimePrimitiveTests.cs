@@ -697,7 +697,7 @@ public class DateTimePrimitiveTests
     {
       modelBuilder.Entity<TestEntity>()
                   .Property( e => e.DateTimePrimitive )
-                  .HasConversion( new DateTimePrimitive.ValueConverter() )
+                  .HasConversion( new DateTimePrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }
 

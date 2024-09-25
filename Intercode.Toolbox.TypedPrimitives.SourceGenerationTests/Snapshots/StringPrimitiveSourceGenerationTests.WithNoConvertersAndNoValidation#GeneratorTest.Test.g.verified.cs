@@ -108,7 +108,6 @@ public readonly partial record struct Test
     return GeneratorTest.Test.Create( span );
   }
 
-
   static partial void Normalize(
     ref string? value );
 }

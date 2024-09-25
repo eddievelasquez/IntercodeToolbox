@@ -690,7 +690,7 @@ public class GuidPrimitiveTests
     {
       modelBuilder.Entity<TestEntity>()
                   .Property( e => e.GuidPrimitive )
-                  .HasConversion( new GuidPrimitive.ValueConverter() )
+                  .HasConversion( new GuidPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }
 

@@ -17,84 +17,77 @@ using Microsoft.EntityFrameworkCore;
 )]
 public readonly partial record struct StringPrimitive;
 
-public readonly partial record struct StringPrimitive
+public partial class StringPrimitiveSystemTextJsonConverter
 {
-  #region Nested Types
+  #region Implementation
 
-  public partial class SystemTextJsonConverter
+  partial void ConvertToPartial(
+    ref Utf8JsonReader reader,
+    Type typeToConvert,
+    JsonSerializerOptions options,
+    ref string? value,
+    ref bool converted )
   {
-    #region Implementation
-
-    partial void ConvertToPartial(
-      ref Utf8JsonReader reader,
-      Type typeToConvert,
-      JsonSerializerOptions options,
-      ref string? value,
-      ref bool converted )
+    if( reader.TokenType != JsonTokenType.Number )
     {
-      if( reader.TokenType != JsonTokenType.Number )
-      {
-        return;
-      }
-
-      var l = reader.GetInt64();
-      value = l.ToString( "D9" );
-      converted = true;
+      return;
     }
 
-    #endregion
+    var l = reader.GetInt64();
+    value = l.ToString( "D9" );
+    converted = true;
   }
 
-  public partial class TypeConverter
+  #endregion
+}
+
+public partial class StringPrimitiveTypeConverter
+{
+  #region Implementation
+
+  partial void CanConvertFromPartial(
+    ITypeDescriptorContext? context,
+    Type sourceType,
+    ref bool canConvert )
   {
-    #region Implementation
+    canConvert = sourceType == typeof( long );
+  }
 
-    partial void CanConvertFromPartial(
-      ITypeDescriptorContext? context,
-      Type sourceType,
-      ref bool canConvert )
+  partial void ConvertFromPartial(
+    ITypeDescriptorContext? context,
+    CultureInfo? culture,
+    object value,
+    ref string? convertedValue,
+    ref bool converted )
+  {
+    if( value is long l )
     {
-      canConvert = sourceType == typeof( long );
+      convertedValue = l.ToString( "D9" );
+      converted = true;
     }
+  }
 
-    partial void ConvertFromPartial(
-      ITypeDescriptorContext? context,
-      CultureInfo? culture,
-      object value,
-      ref string? convertedValue,
-      ref bool converted )
+  partial void CanConvertToPartial(
+    ITypeDescriptorContext? context,
+    Type? destinationType,
+    ref bool canConvert )
+  {
+    canConvert = destinationType == typeof( long );
+  }
+
+  partial void ConvertToPartial(
+    ITypeDescriptorContext? context,
+    CultureInfo? culture,
+    string? value,
+    Type destinationType,
+    ref object? convertedValue,
+    ref bool converted )
+  {
+    if( value is string s && destinationType == typeof( long ) )
     {
-      if( value is long l )
-      {
-        convertedValue = l.ToString( "D9" );
-        converted = true;
-      }
+      convertedValue = long.Parse( s );
+      converted = true;
     }
-
-    partial void CanConvertToPartial(
-      ITypeDescriptorContext? context,
-      Type? destinationType,
-      ref bool canConvert )
-    {
-      canConvert = destinationType == typeof( long );
-    }
-
-    partial void ConvertToPartial(
-      ITypeDescriptorContext? context,
-      CultureInfo? culture,
-      string? value,
-      Type destinationType,
-      ref object? convertedValue,
-      ref bool converted )
-    {
-      if( value is string s && destinationType == typeof( long ) )
-      {
-        convertedValue = long.Parse( s );
-        converted = true;
-      }
-    }
-
-    #endregion
   }
 
   #endregion
@@ -936,7 +929,7 @@ public class StringPrimitiveTests
                   .Property( e => e.StringPrimitive )
                   .IsUnicode( false )
                   .HasMaxLength( 9 )
-                  .HasConversion( new StringPrimitive.ValueConverter() )
+                  .HasConversion( new StringPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }
 

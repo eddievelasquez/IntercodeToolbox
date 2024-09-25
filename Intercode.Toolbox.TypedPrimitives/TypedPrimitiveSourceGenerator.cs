@@ -50,8 +50,11 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
 
     var model = primitiveToGenerate.Value;
     var processor = new TemplateProcessor();
-    var content = processor.ProcessTemplate( model );
-    context.AddSource( $"{model.Namespace}.{model.Name}.g.cs", content );
+
+    foreach( var (typeName, content) in processor.ProcessTemplate( model ) )
+    {
+      context.AddSource( $"{typeName}.g.cs", content );
+    }
   }
 
   #endregion

@@ -131,7 +131,6 @@ public readonly partial record struct Test
     return result.Value;
   }
 
-
   static partial void Normalize(
     ref global::System.Guid? value );
 }

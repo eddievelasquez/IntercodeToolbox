@@ -687,7 +687,7 @@ public class IntPrimitiveTests
     {
       modelBuilder.Entity<TestEntity>()
                   .Property( e => e.IntPrimitive )
-                  .HasConversion( new IntPrimitive.ValueConverter() )
+                  .HasConversion( new IntPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }
 
