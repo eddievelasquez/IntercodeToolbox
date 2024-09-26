@@ -8,4 +8,5 @@ internal record SupportedTypeInfo(
   string Keyword,
   string JsonTokenType,
   string JsonReader,
-  string JsonWriter );
+  string JsonWriter,
+  string NewtonsoftJsonTokenType );

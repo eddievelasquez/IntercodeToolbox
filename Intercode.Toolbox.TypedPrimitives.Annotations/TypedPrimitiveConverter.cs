@@ -9,5 +9,6 @@ public enum TypedPrimitiveConverter
   TypeConverter = 1,
   SystemTextJson = 2,
   EfCoreValueConverter = 4,
+  NewtonsoftJson = 8,
   Default = TypeConverter | SystemTextJson | EfCoreValueConverter
 }

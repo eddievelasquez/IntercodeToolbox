@@ -36,10 +36,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Templates\Common\NewtonsoftJsonConverter_Unvalidated.template" />
+    <None Remove="Templates\Common\NewtonsoftJsonConverter_Validated.template" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
     <EmbeddedResource Include="Templates\Common\Factory_Unvalidated.template" />
     <EmbeddedResource Include="Templates\Common\Factory_Validated.template" />
     <EmbeddedResource Include="Templates\Common\Factory_ValidatedWithFlags.template" />
+    <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter_Unvalidated.template" />
+    <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter_Validated.template" />
     <EmbeddedResource Include="Templates\Common\Operators_Unvalidated.template" />
     <EmbeddedResource Include="Templates\Common\Operators_Validated.template" />
     <EmbeddedResource Include="Templates\Common\PrimitiveType.template" />

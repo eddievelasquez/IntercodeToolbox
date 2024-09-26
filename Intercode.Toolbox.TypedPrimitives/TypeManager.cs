@@ -16,30 +16,60 @@ internal static class TypeManager
 
   static TypeManager()
   {
-    Add( typeof( string ), "string", "String", "reader.GetString()", "writer.WriteStringValue( value.Value )" );
-    Add( typeof( int ), "int", "Number", "reader.GetInt32()", "writer.WriteNumberValue( value.Value )" );
+    Add(
+      typeof( string ),
+      "string",
+      "String",
+      "reader.GetString()",
+      "writer.WriteStringValue( value.Value )",
+      "String"
+    );
+
+    Add(
+      typeof( int ),
+      "int",
+      "Number",
+      "reader.GetInt32()",
+      "writer.WriteNumberValue( value.Value )",
+      "Integer"
+    );
+
     Add(
       typeof( Guid ),
       "global::System.Guid",
       "String",
       "reader.GetGuid()",
-      "writer.WriteStringValue( value.ToString() )"
+      "writer.WriteStringValue( value.ToString() )",
+      "String"
     );
-    Add( typeof( long ), "long", "Number", "reader.GetInt64()", "writer.WriteNumberValue( value.Value )" );
+
+    Add(
+      typeof( long ),
+      "long",
+      "Number",
+      "reader.GetInt64()",
+      "writer.WriteNumberValue( value.Value )",
+      "Integer"
+    );
+
     Add(
       typeof( DateTime ),
       "global::System.DateTime",
       "String",
       "DateTime.Parse( reader.GetString()! )",
-      "writer.WriteStringValue( value.ToString(\"O\") )"
+      "writer.WriteStringValue( value.ToString(\"O\") )",
+      "String"
     );
+
     Add(
       typeof( DateTimeOffset ),
       "global::System.DateTimeOffset",
       "String",
       "DateTimeOffset.Parse( reader.GetString()! )",
-      "writer.WriteStringValue( value.ToString(\"O\") )"
+      "writer.WriteStringValue( value.ToString(\"O\") )",
+      "String"
     );
+
     return;
 
     static void Add(
@@ -47,9 +77,13 @@ internal static class TypeManager
       string keyword,
       string jsonTokenType,
       string jsonReader,
-      string jsonWriter )
+      string jsonWriter,
+      string newtonsoftJsonTokenType )
     {
-      s_supportedTypes.Add( type, new SupportedTypeInfo( keyword, jsonTokenType, jsonReader, jsonWriter ) );
+      s_supportedTypes.Add(
+        type,
+        new SupportedTypeInfo( keyword, jsonTokenType, jsonReader, jsonWriter, newtonsoftJsonTokenType )
+      );
     }
   }
 

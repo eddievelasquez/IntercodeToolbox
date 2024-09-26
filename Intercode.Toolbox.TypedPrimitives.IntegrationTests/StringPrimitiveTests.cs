@@ -1,3 +1,7 @@
+// Module Name: StringPrimitiveTests.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
@@ -5,18 +9,46 @@ using System.Globalization;
 using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
-using Intercode.Toolbox.TypedPrimitives;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using SystemTextJsonException = System.Text.Json.JsonException;
+using SystemTextJsonSerializer = System.Text.Json.JsonSerializer;
 
 [TypedPrimitive(
   typeof( string ),
+  Converters = TypedPrimitiveConverter.Default | TypedPrimitiveConverter.NewtonsoftJson,
   ValidatorType = typeof( StringPrimitiveTests.Validator ),
   ValidatorFlagsType = typeof( StringPrimitiveTests.ValidatorFlags ),
   ValidatorFlagsDefaultValue = StringPrimitiveTests.ValidatorFlags.Simple
 )]
 public readonly partial record struct StringPrimitive;
 
+// A Newtonsoft JSON converter for StringPrimitive to support long values
+public partial class StringPrimitiveNewtonsoftJsonConverter
+{
+  #region Implementation
+
+  partial void ConvertToPartial(
+    ref JsonReader reader,
+    Type typeToConvert,
+    ref string? convertedValue,
+    ref bool converted )
+  {
+    if( reader.TokenType != JsonToken.Integer )
+    {
+      return;
+    }
+
+    var l = ( long ) reader.Value!;
+    convertedValue = l.ToString( "D9" );
+    converted = true;
+  }
+
+  #endregion
+}
+
+// A System.Text JSON converter for StringPrimitive to support long values
 public partial class StringPrimitiveSystemTextJsonConverter
 {
   #region Implementation
@@ -41,6 +73,7 @@ public partial class StringPrimitiveSystemTextJsonConverter
   #endregion
 }
 
+// A Type converter for StringPrimitive to support long values
 public partial class StringPrimitiveTypeConverter
 {
   #region Implementation
@@ -83,9 +116,9 @@ public partial class StringPrimitiveTypeConverter
     ref object? convertedValue,
     ref bool converted )
   {
-    if( value is string s && destinationType == typeof( long ) )
+    if( value is not null && destinationType == typeof( long ) )
     {
-      convertedValue = long.Parse( s );
+      convertedValue = long.Parse( value );
       converted = true;
     }
   }
@@ -499,15 +532,113 @@ public class StringPrimitiveTests
   }
 
   [Fact]
+  public void NewtonsoftJson_Deserialization_WithInvalidType_ShouldThrow()
+  {
+    var json = """{"StringPrimitive":true}""";
+
+    // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<JsonSerializationException>()
+       .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithLongValue_ShouldSucceed()
+  {
+    var value = 049541698L;
+    var json = $$"""{"StringPrimitive":{{value}}}""";
+
+    // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
+    var result = JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    result.Should()
+          .NotBeNull();
+
+    result!.StringPrimitive.Value.Should()
+           .Be( value.ToString( "D9" ) );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithNull_ShouldThrow()
+  {
+    var json = """{"StringPrimitive":null}""";
+
+    // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<JsonSerializationException>()
+       .WithMessage( s_expectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithValidValue_ShouldSucceed()
+  {
+    var value = s_validValueA;
+    var json = $$"""{"StringPrimitive":"{{value}}"}""";
+
+    // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
+    var result = JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    result.Should()
+          .NotBeNull();
+
+    result!.StringPrimitive.Value.Should()
+           .Be( value );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void NewtonsoftJson_DeserializationInvalidValue_ShouldThrow(
+    string? value )
+  {
+    var json = $$"""{"StringPrimitive":"{{value}}"}""";
+
+    // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<JsonSerializationException>()
+       .WithMessage( s_expectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Serialization_WithDefault_ShouldSucceed()
+  {
+    var test = new JsonTestClass { StringPrimitive = default };
+
+    // The JSON serializer should use StringPrimitive's SystemTextJsonConverter
+    var json = JsonConvert.SerializeObject( test );
+
+    json.Should()
+        .Be( """{"StringPrimitive":null}""" );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Serialization_WithValidValue_ShouldSucceed()
+  {
+    var value = s_validValueA;
+    var test = new JsonTestClass { StringPrimitive = ( StringPrimitive ) value };
+
+    // The JSON serializer should use StringPrimitive's SystemTextJsonConverter
+    var json = JsonConvert.SerializeObject( test );
+
+    json.Should()
+        .Be( $$"""{"StringPrimitive":"{{value}}"}""" );
+  }
+
+  [Fact]
   public void SystemTextJson_Deserialization_WithInvalidType_ShouldThrow()
   {
     var json = """{"StringPrimitive":true}""";
 
     // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => SystemTextJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<SystemTextJsonException>()
        .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
@@ -518,7 +649,7 @@ public class StringPrimitiveTests
     var json = $$"""{"StringPrimitive":{{value}}}""";
 
     // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
-    var result = JsonSerializer.Deserialize<JsonTestClass>( json );
+    var result = SystemTextJsonSerializer.Deserialize<JsonTestClass>( json );
 
     result.Should()
           .NotBeNull();
@@ -533,10 +664,10 @@ public class StringPrimitiveTests
     var json = """{"StringPrimitive":null}""";
 
     // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => SystemTextJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<SystemTextJsonException>()
        .WithMessage( s_expectedValidationErrorMessage );
   }
 
@@ -547,7 +678,7 @@ public class StringPrimitiveTests
     var json = $$"""{"StringPrimitive":"{{value}}"}""";
 
     // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
-    var result = JsonSerializer.Deserialize<JsonTestClass>( json );
+    var result = SystemTextJsonSerializer.Deserialize<JsonTestClass>( json );
 
     result.Should()
           .NotBeNull();
@@ -564,10 +695,10 @@ public class StringPrimitiveTests
     var json = $$"""{"StringPrimitive":"{{value}}"}""";
 
     // The JSON deserializer should use StringPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => SystemTextJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<SystemTextJsonException>()
        .WithMessage( s_expectedValidationErrorMessage );
   }
 
@@ -577,7 +708,7 @@ public class StringPrimitiveTests
     var test = new JsonTestClass { StringPrimitive = default };
 
     // The JSON serializer should use StringPrimitive's SystemTextJsonConverter
-    var json = JsonSerializer.Serialize( test );
+    var json = SystemTextJsonSerializer.Serialize( test );
 
     json.Should()
         .Be( """{"StringPrimitive":null}""" );
@@ -590,7 +721,7 @@ public class StringPrimitiveTests
     var test = new JsonTestClass { StringPrimitive = ( StringPrimitive ) value };
 
     // The JSON serializer should use StringPrimitive's SystemTextJsonConverter
-    var json = JsonSerializer.Serialize( test );
+    var json = SystemTextJsonSerializer.Serialize( test );
 
     json.Should()
         .Be( $$"""{"StringPrimitive":"{{value}}"}""" );

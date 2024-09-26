@@ -1,8 +1,9 @@
+// Module Name: StringPrimitiveSourceGenerationTests.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
 namespace Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
-using System.Threading.Tasks;
-using Intercode.Toolbox.TypedPrimitives;
-using Xunit;
 using Xunit.Abstractions;
 
 public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
@@ -98,6 +99,63 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
 
         [TypedPrimitive(typeof( string ),
                         Converters = TypedPrimitiveConverter.Default,
+                        ValidatorType = typeof( StringValidator ),
+                        ValidatorFlagsType = typeof( ValidatorFlags ))]
+        public readonly partial record struct Test;
+      """;
+
+    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+  }
+
+  [Fact]
+  public Task WithExplicitConvertersAndNoValidation()
+  {
+    var source = """
+        namespace GeneratorTest;
+
+        using Intercode.Toolbox.TypedPrimitives;
+
+
+        [TypedPrimitive(typeof( string ), Converters = TypedPrimitiveConverter.NewtonsoftJson)]
+        public readonly partial record struct Test;
+      """;
+
+    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+  }
+
+  [Fact]
+  public Task WithExplicitConvertersAndValidatorWithDefaultFlagValue()
+  {
+    var source = """
+        namespace GeneratorTest;
+
+        using Intercode.Toolbox.TypedPrimitives;
+
+        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
+
+        [TypedPrimitive(typeof( string ),
+                        Converters = TypedPrimitiveConverter.NewtonsoftJson,
+                        ValidatorType = typeof( StringValidator ),
+                        ValidatorFlagsType = typeof( ValidatorFlags ),
+                        ValidatorFlagsDefaultValue = ValidatorFlags.Full )]
+        public readonly partial record struct Test;
+      """;
+
+    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+  }
+
+  [Fact]
+  public Task WithExplicitConvertersAndValidatorWithoutDefaultFlagValue()
+  {
+    var source = """
+        namespace GeneratorTest;
+
+        using Intercode.Toolbox.TypedPrimitives;
+
+        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
+
+        [TypedPrimitive(typeof( string ),
+                        Converters = TypedPrimitiveConverter.NewtonsoftJson,
                         ValidatorType = typeof( StringValidator ),
                         ValidatorFlagsType = typeof( ValidatorFlags ))]
         public readonly partial record struct Test;

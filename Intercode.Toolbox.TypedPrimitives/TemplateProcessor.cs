@@ -12,6 +12,8 @@ internal class TemplateProcessor
   private const string TYPE_CONVERTER_TEMPLATE_NAME = "TypeConverter";
   private const string SYSTEM_TEXT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME = "SystemTextJsonConverter_Unvalidated";
   private const string SYSTEM_TEXT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME = "SystemTextJsonConverter_Validated";
+  private const string NEWTONSOFT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME = "NewtonsoftJsonConverter_Unvalidated";
+  private const string NEWTONSOFT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME = "NewtonsoftJsonConverter_Validated";
   private const string EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME = "EFCoreValueConverter";
   private const string FACTORY_UNVALIDATED_TEMPLATE_NAME = "Factory_Unvalidated";
   private const string OPERATORS_UNVALIDATED_TEMPLATE_NAME = "Operators_Unvalidated";
@@ -24,6 +26,9 @@ internal class TemplateProcessor
 
   private const string SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
     $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.FullName}$SystemTextJsonConverter ) )]";
+
+  private const string NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
+    $"[global::Newtonsoft.Json.JsonConverter( typeof( ${Macros.FullName}$NewtonsoftJsonConverter ) )]";
 
   private static readonly TemplateCache s_templateCache = new ();
 
@@ -41,6 +46,7 @@ internal class TemplateProcessor
     var typeInfo = context.TypeInfo;
 
     // Set the common macros for all templates
+    builder.AddMacro( Macros.EscapedDelimiter, "$" );
     builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
     builder.AddMacro( Macros.Namespace, context.Model.Namespace );
     builder.AddMacro( Macros.Name, context.Model.Name );
@@ -71,6 +77,11 @@ internal class TemplateProcessor
       builder.AddMacro( Macros.JsonWriter, typeInfo.JsonWriter );
     }
 
+    if( context.Model.HasConverter( TypedPrimitiveConverter.NewtonsoftJson ) )
+    {
+      builder.AddMacro( Macros.NewtonsoftJsonTokenType,typeInfo.NewtonsoftJsonTokenType );
+    }
+
     var macroProcessor = builder.Build();
 
     // Create the EFCore ValueConverter if requested
@@ -96,6 +107,17 @@ internal class TemplateProcessor
 
       var content = GenerateContent( templateKey );
       yield return ( $"{model.Namespace}.{model.Name}SystemTextJsonConverter", content );
+    }
+
+    // Create the Newtonsoft.Json converter if requested
+    if( context.Model.HasConverter( TypedPrimitiveConverter.NewtonsoftJson ) )
+    {
+      var templateKey = context.ValidationType == ValidationType.Unvalidated
+        ? NEWTONSOFT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME
+        : NEWTONSOFT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME;
+
+      var content = GenerateContent( templateKey );
+      yield return ( $"{model.Namespace}.{model.Name}NewtonsoftJsonConverter", content );
     }
 
     // See if we have already composed and compiled this template
@@ -153,6 +175,11 @@ internal class TemplateProcessor
     if( context.Model.HasConverter( TypedPrimitiveConverter.SystemTextJson ) )
     {
       builder.AppendLine( SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE );
+    }
+
+    if( context.Model.HasConverter( TypedPrimitiveConverter.NewtonsoftJson ) )
+    {
+      builder.AppendLine( NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE );
     }
 
     return builder.ToString();
