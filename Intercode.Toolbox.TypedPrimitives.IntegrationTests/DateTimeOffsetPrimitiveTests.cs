@@ -11,17 +11,37 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive(
-  typeof( DateTimeOffset ),
-  ValidatorType = typeof( DateTimeOffsetPrimitiveTests.Validator )
-)]
-public readonly partial record struct DateTimeOffsetPrimitive;
+[TypedPrimitive( typeof( DateTimeOffset ) )]
+public readonly partial record struct UnvalidatedDateTimeOffsetPrimitive;
+
+[TypedPrimitive( typeof( DateTimeOffset ) )]
+public readonly partial record struct DateTimeOffsetPrimitive
+{
+  #region Constants
+
+  public const string ExpectedValidationErrorMessage = "Cannot be null or empty";
+
+  #endregion
+
+  #region Implementation
+
+  static partial void ValidatePartial(
+    DateTimeOffset? value,
+    ref Result result )
+  {
+    result = Result.FailIf(
+      value is null || value.Value == DateTimeOffset.MinValue,
+      ExpectedValidationErrorMessage
+    );
+  }
+
+  #endregion
+}
 
 public class DateTimeOffsetPrimitiveTests
 {
   #region Constants
 
-  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
   private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a String";
   private static readonly DateTimeOffset s_validValueA = DateTimeOffset.ParseExact( "1995-12-01T15:00:00", "s", null );
   private static readonly DateTimeOffset s_validValueB = DateTimeOffset.ParseExact( "2018-02-06T12:45:00", "s", null );
@@ -191,7 +211,7 @@ public class DateTimeOffsetPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -238,7 +258,7 @@ public class DateTimeOffsetPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -360,7 +380,7 @@ public class DateTimeOffsetPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -392,7 +412,7 @@ public class DateTimeOffsetPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -572,7 +592,20 @@ public class DateTimeOffsetPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    DateTimeOffset? value )
+  {
+    // Act
+    var result = UnvalidatedDateTimeOffsetPrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
@@ -615,22 +648,6 @@ public class DateTimeOffsetPrimitiveTests
   #endregion
 
   #region Implementation
-
-  public static class Validator
-  {
-    #region Public Methods
-
-    public static Result Validate(
-      DateTimeOffset? value )
-    {
-      return Result.FailIf(
-        value is null || value.Value == DateTimeOffset.MinValue,
-        s_expectedValidationErrorMessage
-      );
-    }
-
-    #endregion
-  }
 
   public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
   {

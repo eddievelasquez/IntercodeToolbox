@@ -10,15 +10,9 @@ internal class TemplateProcessor
 
   private const string MAIN_TEMPLATE_NAME = "PrimitiveType";
   private const string TYPE_CONVERTER_TEMPLATE_NAME = "TypeConverter";
-  private const string SYSTEM_TEXT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME = "SystemTextJsonConverter_Unvalidated";
-  private const string SYSTEM_TEXT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME = "SystemTextJsonConverter_Validated";
-  private const string NEWTONSOFT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME = "NewtonsoftJsonConverter_Unvalidated";
-  private const string NEWTONSOFT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME = "NewtonsoftJsonConverter_Validated";
+  private const string SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME = "SystemTextJsonConverter";
+  private const string NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME = "NewtonsoftJsonConverter";
   private const string EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME = "EFCoreValueConverter";
-  private const string FACTORY_UNVALIDATED_TEMPLATE_NAME = "Factory_Unvalidated";
-  private const string OPERATORS_UNVALIDATED_TEMPLATE_NAME = "Operators_Unvalidated";
-  private const string FACTORY_VALIDATED_TEMPLATE_NAME = "Factory_Validated";
-  private const string OPERATORS_VALIDATED_TEMPLATE_NAME = "Operators_Validated";
 
   private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
     $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.FullName}$TypeConverter ) )]";
@@ -50,12 +44,6 @@ internal class TemplateProcessor
     builder.AddMacro( Macros.Namespace, context.Model.Namespace );
     builder.AddMacro( Macros.Name, context.Model.Name );
     builder.AddMacro( Macros.FullName, $"{context.Model.Namespace}.{context.Model.Name}" );
-
-    // If the template uses a validator, set the validator macros
-    if( context.Model.ValidatorTypeName is not null )
-    {
-      builder.AddMacro( Macros.ValidatorType, context.Model.ValidatorTypeName );
-    }
 
     // If the template uses a non-default StringComparison, set the StringComparison macro
     if( context.Model.StringComparison is not null )
@@ -95,22 +83,14 @@ internal class TemplateProcessor
     // Create the System.Text.Json converter if requested
     if( context.Model.HasConverter( TypedPrimitiveConverter.SystemTextJson ) )
     {
-      var templateKey = context.ValidationType == ValidationType.Unvalidated
-        ? SYSTEM_TEXT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME
-        : SYSTEM_TEXT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME;
-
-      var content = GenerateContent( templateKey );
+      var content = GenerateContent( SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME );
       yield return ( $"{model.Namespace}.{model.Name}SystemTextJsonConverter", content );
     }
 
     // Create the Newtonsoft.Json converter if requested
     if( context.Model.HasConverter( TypedPrimitiveConverter.NewtonsoftJson ) )
     {
-      var templateKey = context.ValidationType == ValidationType.Unvalidated
-        ? NEWTONSOFT_JSON_CONVERTER_UNVALIDATED_TEMPLATE_NAME
-        : NEWTONSOFT_JSON_CONVERTER_VALIDATED_TEMPLATE_NAME;
-
-      var content = GenerateContent( templateKey );
+      var content = GenerateContent( NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME );
       yield return ( $"{model.Namespace}.{model.Name}NewtonsoftJsonConverter", content );
     }
 
@@ -203,23 +183,6 @@ internal class TemplateProcessor
     {
       var builder = new MacroProcessorBuilder();
       builder.AddMacro( Macros.Attributes, attributeBlock );
-
-      if( context.Model.ValidatorTypeName is null )
-      {
-        var factoryTemplate = context.LoadTemplate( FACTORY_UNVALIDATED_TEMPLATE_NAME );
-        builder.AddMacro( Macros.Factory, factoryTemplate );
-
-        var operatorTemplate = context.LoadTemplate( OPERATORS_UNVALIDATED_TEMPLATE_NAME );
-        builder.AddMacro( Macros.Operators, operatorTemplate );
-      }
-      else
-      {
-        var factoryTemplate = context.LoadTemplate( FACTORY_VALIDATED_TEMPLATE_NAME );
-
-        var operatorTemplate = context.LoadTemplate( OPERATORS_VALIDATED_TEMPLATE_NAME );
-        builder.AddMacro( Macros.Factory, factoryTemplate );
-        builder.AddMacro( Macros.Operators, operatorTemplate );
-      }
 
       var processor = builder.Build();
       return processor;

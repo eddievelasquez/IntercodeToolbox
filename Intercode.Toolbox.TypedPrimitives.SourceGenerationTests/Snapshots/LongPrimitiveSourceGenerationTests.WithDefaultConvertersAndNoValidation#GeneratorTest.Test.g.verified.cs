@@ -36,9 +36,27 @@ public readonly partial record struct Test
   public long? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static GeneratorTest.Test Create( long? value )
+  public static global::FluentResults.Result<GeneratorTest.Test> Create( long? value )
   {
+    var result = Validate( value );
+    if( result.IsFailed )
+    {
+      return global::FluentResults.Result.Fail<GeneratorTest.Test>( result.Errors );
+    }
+
     return new GeneratorTest.Test( value );
+  }
+
+  public static global::FluentResults.Result Validate( long? value )
+  {
+    global::FluentResults.Result result = global::FluentResults.Result.Ok();
+    ValidatePartial( value, ref result );
+    return result;
+  }
+
+  public static bool IsValid( long? value )
+  {
+    return Validate( value ).IsSuccess;
   }
 
   public bool Equals(
@@ -105,9 +123,21 @@ public readonly partial record struct Test
 
   public static explicit operator GeneratorTest.Test( long? value )
   {
-    return GeneratorTest.Test.Create( value );
+    var result = GeneratorTest.Test.Create( value );
+    if( result.IsFailed )
+    {
+      throw new global::System.InvalidOperationException(
+        global::System.Linq.Enumerable.First( result.Errors )
+              .Message
+      );
+    }
+
+    return result.Value;
   }
 
   static partial void Normalize(
     ref long? value );
+
+  static partial void ValidatePartial(
+    long? value, ref global::FluentResults.Result result );
 }

@@ -37,7 +37,13 @@ public partial class TestNewtonsoftJsonConverter: global::Newtonsoft.Json.JsonCo
       }
     }
 
-    return GeneratorTest.Test.Create( value );
+    var result = GeneratorTest.Test.Create( value );
+    if( result.IsFailed )
+    {
+      throw new global::Newtonsoft.Json.JsonSerializationException( global::System.Linq.Enumerable.First( result.Errors ).Message );
+    }
+
+    return result.Value;
   }
 
   public override void WriteJson(

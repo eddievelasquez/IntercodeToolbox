@@ -11,17 +11,34 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive(
-  typeof( int ),
-  ValidatorType = typeof( IntPrimitiveTests.Validator )
-)]
-public readonly partial record struct IntPrimitive;
+[TypedPrimitive( typeof( int ) )]
+public readonly partial record struct UnvalidatedIntPrimitive;
+
+[TypedPrimitive( typeof( int ) )]
+public readonly partial record struct IntPrimitive
+{
+  #region Constants
+
+  public const string ExpectedValidationErrorMessage = "Cannot be null or zero";
+
+  #endregion
+
+  #region Implementation
+
+  static partial void ValidatePartial(
+    int? value,
+    ref Result result )
+  {
+    result = Result.FailIf( value is null or 0, ExpectedValidationErrorMessage );
+  }
+
+  #endregion
+}
 
 public class IntPrimitiveTests
 {
   #region Constants
 
-  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or zero";
   private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a Number";
   private static readonly int s_validValueA = 42;
   private static readonly int s_validValueB = 43;
@@ -191,7 +208,7 @@ public class IntPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( IntPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -238,7 +255,7 @@ public class IntPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( IntPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -360,7 +377,7 @@ public class IntPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( IntPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -392,7 +409,7 @@ public class IntPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( IntPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -565,7 +582,20 @@ public class IntPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( IntPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    int? value )
+  {
+    // Act
+    var result = UnvalidatedIntPrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
@@ -608,19 +638,6 @@ public class IntPrimitiveTests
   #endregion
 
   #region Implementation
-
-  public static class Validator
-  {
-    #region Public Methods
-
-    public static Result Validate(
-      int? value )
-    {
-      return Result.FailIf( value is null or 0, s_expectedValidationErrorMessage );
-    }
-
-    #endregion
-  }
 
   public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
   {

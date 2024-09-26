@@ -17,7 +17,6 @@ internal static class Parser
   public static readonly string MarkerAttributeName = nameof( TypedPrimitiveAttribute )!;
   public static readonly string MarkerAttributeFullName = typeof( TypedPrimitiveAttribute ).FullName!;
   public static readonly string ConvertersKey = nameof( TypedPrimitiveAttribute.Converters );
-  public static readonly string ValidatorTypeKey = nameof( TypedPrimitiveAttribute.ValidatorType );
   public static readonly string StringComparisonKey = nameof( TypedPrimitiveAttribute.StringComparison );
 
   #endregion
@@ -113,7 +112,6 @@ internal static class Parser
     var namedArguments = attributeData.NamedArguments;
     var converters = namedArguments.GetEnumValue<TypedPrimitiveConverter>( ConvertersKey ) ??
                      TypedPrimitiveConverter.Default;
-    var validatorTypeName = namedArguments.GetTypeName( ValidatorTypeKey );
     var nameSpace = recordSymbol.ContainingNamespace.ToDisplayString();
     var name = recordSymbol.Name;
 
@@ -135,7 +133,6 @@ internal static class Parser
       name,
       nameSpace,
       converters,
-      validatorTypeName,
       stringComparison
     );
 

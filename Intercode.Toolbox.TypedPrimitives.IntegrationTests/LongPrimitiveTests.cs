@@ -11,17 +11,34 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive(
-  typeof( long ),
-  ValidatorType = typeof( LongPrimitiveTests.Validator )
-)]
-public readonly partial record struct LongPrimitive;
+[TypedPrimitive( typeof( long ) )]
+public readonly partial record struct UnvalidatedLongPrimitive;
+
+[TypedPrimitive( typeof( long ) )]
+public readonly partial record struct LongPrimitive
+{
+  #region Constants
+
+  public const string ExpectedValidationErrorMessage = "Cannot be null or zero";
+
+  #endregion
+
+  #region Implementation
+
+  static partial void ValidatePartial(
+    long? value,
+    ref Result result )
+  {
+    result = Result.FailIf( value is null or 0L, ExpectedValidationErrorMessage );
+  }
+
+  #endregion
+}
 
 public class LongPrimitiveTests
 {
   #region Constants
 
-  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or zero";
   private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a Number";
   private static readonly long s_validValueA = 42L;
   private static readonly long s_validValueB = 43L;
@@ -191,7 +208,7 @@ public class LongPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( LongPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -238,7 +255,7 @@ public class LongPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( LongPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -360,7 +377,7 @@ public class LongPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( LongPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -392,7 +409,7 @@ public class LongPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( LongPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -565,7 +582,20 @@ public class LongPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( LongPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    long? value )
+  {
+    // Act
+    var result = UnvalidatedLongPrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
@@ -608,19 +638,6 @@ public class LongPrimitiveTests
   #endregion
 
   #region Implementation
-
-  public static class Validator
-  {
-    #region Public Methods
-
-    public static Result Validate(
-      long? value )
-    {
-      return Result.FailIf( value is null or 0L, s_expectedValidationErrorMessage );
-    }
-
-    #endregion
-  }
 
   public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
   {

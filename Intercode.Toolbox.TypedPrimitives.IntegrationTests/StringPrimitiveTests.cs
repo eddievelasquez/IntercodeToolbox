@@ -15,12 +15,32 @@ using Newtonsoft.Json;
 using SystemTextJsonException = System.Text.Json.JsonException;
 using SystemTextJsonSerializer = System.Text.Json.JsonSerializer;
 
+[TypedPrimitive( typeof( string ) )]
+public readonly partial record struct UnvalidatedStringPrimitive;
+
 [TypedPrimitive(
   typeof( string ),
-  Converters = TypedPrimitiveConverter.Default | TypedPrimitiveConverter.NewtonsoftJson,
-  ValidatorType = typeof( StringPrimitiveTests.Validator )
+  Converters = TypedPrimitiveConverter.Default | TypedPrimitiveConverter.NewtonsoftJson
 )]
-public readonly partial record struct StringPrimitive;
+public readonly partial record struct StringPrimitive
+{
+  #region Constants
+
+  public const string ExpectedValidationErrorMessage = "Cannot be null or empty";
+
+  #endregion
+
+  #region Implementation
+
+  static partial void ValidatePartial(
+    string? value,
+    ref Result result )
+  {
+    result = Result.FailIf( string.IsNullOrWhiteSpace( value ), ExpectedValidationErrorMessage );
+  }
+
+  #endregion
+}
 
 // A Newtonsoft JSON converter for StringPrimitive to support long values
 public partial class StringPrimitiveNewtonsoftJsonConverter
@@ -128,7 +148,6 @@ public class StringPrimitiveTests
 {
   #region Constants
 
-  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
   private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a string";
   private static readonly string s_validValueA = "valueA";
   private static readonly string s_validValueB = "valueB";
@@ -288,32 +307,6 @@ public class StringPrimitiveTests
   }
 
   [Fact]
-  public void ExplicitOperator_SpanToPrimitive_ReturnsValue()
-  {
-    // Act
-    var value = s_validValueA;
-    var primitive = ( StringPrimitive ) value.AsSpan();
-
-    // Assert
-    primitive.Value.Should()
-             .Be( value );
-  }
-
-  [Theory]
-  [MemberData( nameof( InvalidValues ) )]
-  public void ExplicitOperator_SpanToPrimitive_WithInvalidValue_Throws(
-    string? value )
-  {
-    // Act
-    var act = () => ( StringPrimitive ) value.AsSpan();
-
-    // Assert
-    act.Should()
-       .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
-  }
-
-  [Fact]
   public void ExplicitOperator_StringToPrimitive_ReturnsPrimitiveWithValue()
   {
     // Act
@@ -336,7 +329,7 @@ public class StringPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Theory]
@@ -356,7 +349,7 @@ public class StringPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -391,7 +384,7 @@ public class StringPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -483,30 +476,6 @@ public class StringPrimitiveTests
 
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
-  public void IsValid_SpanInvalidValue_ReturnsFalse(
-    string? value )
-  {
-    // Act
-    var isValid = StringPrimitive.IsValid( value.AsSpan() );
-
-    // Assert
-    isValid.Should()
-           .BeFalse();
-  }
-
-  [Fact]
-  public void IsValid_SpanValidValue_ReturnsTrue()
-  {
-    // Act
-    var isValid = StringPrimitive.IsValid( s_validValueA.AsSpan() );
-
-    // Assert
-    isValid.Should()
-           .BeTrue();
-  }
-
-  [Theory]
-  [MemberData( nameof( InvalidValues ) )]
   public void IsValid_StringInvalidValued_ReturnsFalse(
     string? value )
   {
@@ -568,7 +537,7 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<JsonSerializationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -599,7 +568,7 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<JsonSerializationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -666,7 +635,7 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<SystemTextJsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -697,7 +666,7 @@ public class StringPrimitiveTests
 
     act.Should()
        .Throw<SystemTextJsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -916,7 +885,20 @@ public class StringPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( StringPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    string? value )
+  {
+    // Act
+    var result = UnvalidatedStringPrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
@@ -959,29 +941,6 @@ public class StringPrimitiveTests
   #endregion
 
   #region Implementation
-
-  public static class Validator
-  {
-    #region Public Methods
-
-    public static Result Validate(
-      string? value )
-    {
-      return Result.FailIf( string.IsNullOrWhiteSpace( value ), "Cannot be null or empty" );
-    }
-
-    public static Result Validate(
-      ReadOnlySpan<char> span )
-    {
-      return Result.FailIf(
-        span.Trim()
-            .IsEmpty,
-        "Cannot be null or empty"
-      );
-    }
-
-    #endregion
-  }
 
   public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
   {

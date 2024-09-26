@@ -1,9 +1,0 @@
-  public static $FullName$ Create( string? value )
-  {
-    return new $FullName$( global::System.MemoryExtensions.Trim( global::System.MemoryExtensions.AsSpan( value ) ).ToString() );
-  }
-
-  public static $FullName$ Create( global::System.ReadOnlySpan<char> span )
-  {
-    return new $FullName$( global::System.MemoryExtensions.Trim( span ).ToString() );
-  }

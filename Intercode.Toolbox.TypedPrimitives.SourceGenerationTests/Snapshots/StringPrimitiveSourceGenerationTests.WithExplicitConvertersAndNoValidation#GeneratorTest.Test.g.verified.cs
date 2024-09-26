@@ -34,14 +34,27 @@ public readonly partial record struct Test
   public string? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static GeneratorTest.Test Create( string? value )
+  public static global::FluentResults.Result<GeneratorTest.Test> Create( string? value )
   {
-    return new GeneratorTest.Test( global::System.MemoryExtensions.Trim( global::System.MemoryExtensions.AsSpan( value ) ).ToString() );
+    var result = Validate( value );
+    if( result.IsFailed )
+    {
+      return global::FluentResults.Result.Fail<GeneratorTest.Test>( result.Errors );
+    }
+
+    return new GeneratorTest.Test( value );
   }
 
-  public static GeneratorTest.Test Create( global::System.ReadOnlySpan<char> span )
+  public static global::FluentResults.Result Validate( string? value )
   {
-    return new GeneratorTest.Test( global::System.MemoryExtensions.Trim( span ).ToString() );
+    global::FluentResults.Result result = global::FluentResults.Result.Ok();
+    ValidatePartial( value, ref result );
+    return result;
+  }
+
+  public static bool IsValid( string? value )
+  {
+    return Validate( value ).IsSuccess;
   }
 
   public bool Equals(
@@ -101,14 +114,21 @@ public readonly partial record struct Test
 
   public static explicit operator GeneratorTest.Test( string? value )
   {
-    return GeneratorTest.Test.Create( value );
-  }
+    var result = GeneratorTest.Test.Create( value );
+    if( result.IsFailed )
+    {
+      throw new global::System.InvalidOperationException(
+        global::System.Linq.Enumerable.First( result.Errors )
+              .Message
+      );
+    }
 
-  public static explicit operator GeneratorTest.Test( global::System.ReadOnlySpan<char> span )
-  {
-    return GeneratorTest.Test.Create( span );
+    return result.Value;
   }
 
   static partial void Normalize(
     ref string? value );
+
+  static partial void ValidatePartial(
+    string? value, ref global::FluentResults.Result result );
 }

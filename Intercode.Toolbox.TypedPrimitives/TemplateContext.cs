@@ -43,10 +43,10 @@ internal class TemplateContext: IDisposable
     {
       if( UseCommonTemplates )
       {
-        return $"{Model.Converters}_{Model.ValidationType}";
+        return $"{Model.Converters}";
       }
 
-      return $"{Model.PrimitiveType.FullName}_{Model.Converters}_{Model.ValidationType}";
+      return $"{Model.PrimitiveType.FullName}_{Model.Converters}";
     }
 
     bool UsesCommonTemplates()
@@ -66,7 +66,6 @@ internal class TemplateContext: IDisposable
   public GeneratorModel Model { get; }
   public ContentBuilder ContentBuilder { get; }
   public bool UseCommonTemplates { get; }
-  public ValidationType ValidationType => Model.ValidationType;
   public SupportedTypeInfo TypeInfo { get; }
 
   #endregion

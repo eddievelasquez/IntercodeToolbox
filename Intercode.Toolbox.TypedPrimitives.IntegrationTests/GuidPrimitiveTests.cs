@@ -11,17 +11,37 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive(
-  typeof( Guid ),
-  ValidatorType = typeof( GuidPrimitiveTests.Validator )
-)]
-public readonly partial record struct GuidPrimitive;
+[TypedPrimitive( typeof( Guid ) )]
+public readonly partial record struct UnvalidatedGuidPrimitive;
+
+[TypedPrimitive( typeof( Guid ) )]
+public readonly partial record struct GuidPrimitive
+{
+  #region Constants
+
+  public const string ExpectedValidationErrorMessage = "Cannot be null or empty";
+
+  #endregion
+
+  #region Implementation
+
+  static partial void ValidatePartial(
+    Guid? value,
+    ref Result result )
+  {
+    result = Result.FailIf(
+      value is null || value.Value.Equals( Guid.Empty ),
+      ExpectedValidationErrorMessage
+    );
+  }
+
+  #endregion
+}
 
 public class GuidPrimitiveTests
 {
   #region Constants
 
-  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
   private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a String";
   private static readonly Guid s_validValueA = Guid.Parse( "3fe7fbd6-ebd7-447c-95b3-0d5e5026d580" );
   private static readonly Guid s_validValueB = Guid.Parse( "b8afdeb5-87d2-44e9-ba51-9369cd257170" );
@@ -191,7 +211,7 @@ public class GuidPrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -238,7 +258,7 @@ public class GuidPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -360,7 +380,7 @@ public class GuidPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -392,7 +412,7 @@ public class GuidPrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -565,7 +585,20 @@ public class GuidPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( GuidPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    Guid? value )
+  {
+    // Act
+    var result = UnvalidatedGuidPrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
@@ -608,22 +641,6 @@ public class GuidPrimitiveTests
   #endregion
 
   #region Implementation
-
-  public static class Validator
-  {
-    #region Public Methods
-
-    public static Result Validate(
-      Guid? value )
-    {
-      return Result.FailIf(
-        value is null || value.Value.Equals( Guid.Empty ),
-        s_expectedValidationErrorMessage
-      );
-    }
-
-    #endregion
-  }
 
   public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
   {

@@ -27,24 +27,6 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
   }
 
   [Fact]
-  public Task WithDefaultConvertersAndValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.DateTimeOffset ),
-                        Converters = TypedPrimitiveConverter.Default,
-                        ValidatorType = typeof( DateTimeOffsetValidator ) )]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
   public Task WithNoConvertersAndNoValidation()
   {
     var source = """
@@ -60,24 +42,6 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
   }
 
   [Fact]
-  public Task WithNoConvertersAndValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.DateTimeOffset ),
-                        Converters = TypedPrimitiveConverter.None,
-                        ValidatorType = typeof( DateTimeOffsetValidator ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
   public Task WithoutExplicitConvertersAndNoValidation()
   {
     var source = """
@@ -86,23 +50,6 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( System.DateTimeOffset ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithoutExplicitConvertersAndValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.DateTimeOffset ),
-                        ValidatorType = typeof( DateTimeOffsetValidator ))]
         public readonly partial record struct Test;
       """;
 

@@ -33,7 +33,29 @@ public readonly partial record struct $Name$
   public $TypeKeyword$? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-$Factory$
+  public static global::FluentResults.Result<$FullName$> Create( $TypeKeyword$? value )
+  {
+    var result = Validate( value );
+    if( result.IsFailed )
+    {
+      return global::FluentResults.Result.Fail<$FullName$>( result.Errors );
+    }
+
+    return new $FullName$( value );
+  }
+
+  public static global::FluentResults.Result Validate( $TypeKeyword$? value )
+  {
+    global::FluentResults.Result result = global::FluentResults.Result.Ok();
+    ValidatePartial( value, ref result );
+    return result;
+  }
+
+  public static bool IsValid( $TypeKeyword$? value )
+  {
+    return Validate( value ).IsSuccess;
+  }
+
   public bool Equals(
     $FullName$ other )
   {
@@ -96,7 +118,23 @@ $Factory$
     return primitive.Value;
   }
 
-$Operators$
+  public static explicit operator $FullName$( $TypeKeyword$? value )
+  {
+    var result = $FullName$.Create( value );
+    if( result.IsFailed )
+    {
+      throw new global::System.InvalidOperationException(
+        global::System.Linq.Enumerable.First( result.Errors )
+              .Message
+      );
+    }
+
+    return result.Value;
+  }
+
   static partial void Normalize(
     ref $TypeKeyword$? value );
+
+  static partial void ValidatePartial(
+    $TypeKeyword$? value, ref global::FluentResults.Result result );
 }

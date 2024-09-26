@@ -11,17 +11,37 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive(
-  typeof( DateTime ),
-  ValidatorType = typeof( DateTimePrimitiveTests.Validator )
-)]
-public readonly partial record struct DateTimePrimitive;
+[TypedPrimitive( typeof( DateTime ) )]
+public readonly partial record struct UnvalidatedDateTimePrimitive;
+
+[TypedPrimitive( typeof( DateTime ) )]
+public readonly partial record struct DateTimePrimitive
+{
+  #region Constants
+
+  public const string ExpectedValidationErrorMessage = "Cannot be null or empty";
+
+  #endregion
+
+  #region Implementation
+
+  static partial void ValidatePartial(
+    DateTime? value,
+    ref Result result )
+  {
+    result = Result.FailIf(
+      value is null || value.Value == DateTime.MinValue,
+      ExpectedValidationErrorMessage
+    );
+  }
+
+  #endregion
+}
 
 public class DateTimePrimitiveTests
 {
   #region Constants
 
-  private static readonly string s_expectedValidationErrorMessage = "Cannot be null or empty";
   private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a String";
   private static readonly DateTime s_validValueA = DateTime.ParseExact( "1995-12-01T15:00:00", "s", null );
   private static readonly DateTime s_validValueB = DateTime.ParseExact( "2018-02-06T12:45:00", "s", null );
@@ -191,7 +211,7 @@ public class DateTimePrimitiveTests
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( DateTimePrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -238,7 +258,7 @@ public class DateTimePrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( DateTimePrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -360,7 +380,7 @@ public class DateTimePrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( DateTimePrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -392,7 +412,7 @@ public class DateTimePrimitiveTests
 
     act.Should()
        .Throw<JsonException>()
-       .WithMessage( s_expectedValidationErrorMessage );
+       .WithMessage( DateTimePrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
@@ -572,7 +592,20 @@ public class DateTimePrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( s_expectedValidationErrorMessage );
+          .Be( DateTimePrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    DateTime? value )
+  {
+    // Act
+    var result = UnvalidatedDateTimePrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
@@ -625,7 +658,7 @@ public class DateTimePrimitiveTests
     {
       return Result.FailIf(
         value is null || value.Value == DateTime.MinValue,
-        s_expectedValidationErrorMessage
+        DateTimePrimitive.ExpectedValidationErrorMessage
       );
     }
 

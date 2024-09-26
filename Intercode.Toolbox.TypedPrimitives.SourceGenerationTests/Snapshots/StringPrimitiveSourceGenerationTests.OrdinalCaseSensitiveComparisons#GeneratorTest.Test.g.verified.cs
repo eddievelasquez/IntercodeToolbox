@@ -37,46 +37,25 @@ public readonly partial record struct Test
 
   public static global::FluentResults.Result<GeneratorTest.Test> Create( string? value )
   {
-    var result = Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.StringValidator.Validate( value );
+    var result = Validate( value );
     if( result.IsFailed )
     {
       return global::FluentResults.Result.Fail<GeneratorTest.Test>( result.Errors );
     }
 
-    return new GeneratorTest.Test( global::System.MemoryExtensions.Trim( global::System.MemoryExtensions.AsSpan( value ) ).ToString() );
-  }
-
-  public static global::FluentResults.Result<GeneratorTest.Test> Create( global::System.ReadOnlySpan<char> span )
-  {
-    span = global::System.MemoryExtensions.Trim( span );
-
-    var result = Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.StringValidator.Validate( span );
-    if( result.IsFailed )
-    {
-      return global::FluentResults.Result.Fail<GeneratorTest.Test>( result.Errors );
-    }
-
-    return new GeneratorTest.Test( span.ToString() );
+    return new GeneratorTest.Test( value );
   }
 
   public static global::FluentResults.Result Validate( string? value )
   {
-    return Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.StringValidator.Validate( value );
-  }
-
-  public static global::FluentResults.Result Validate( global::System.ReadOnlySpan<char> span )
-  {
-    return Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.StringValidator.Validate( span );
+    global::FluentResults.Result result = global::FluentResults.Result.Ok();
+    ValidatePartial( value, ref result );
+    return result;
   }
 
   public static bool IsValid( string? value )
   {
-    return Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.StringValidator.Validate( value ).IsSuccess;
-  }
-
-  public static bool IsValid( global::System.ReadOnlySpan<char> span )
-  {
-    return Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.StringValidator.Validate( span ).IsSuccess;
+    return Validate( value ).IsSuccess;
   }
 
   public bool Equals(
@@ -148,20 +127,9 @@ public readonly partial record struct Test
     return result.Value;
   }
 
-  public static explicit operator GeneratorTest.Test( global::System.ReadOnlySpan<char> span )
-  {
-    var result = GeneratorTest.Test.Create( span );
-    if( result.IsFailed )
-    {
-      throw new global::System.InvalidOperationException(
-        global::System.Linq.Enumerable.First( result.Errors )
-              .Message
-      );
-    }
-
-    return result.Value;
-  }
-
   static partial void Normalize(
     ref string? value );
+
+  static partial void ValidatePartial(
+    string? value, ref global::FluentResults.Result result );
 }

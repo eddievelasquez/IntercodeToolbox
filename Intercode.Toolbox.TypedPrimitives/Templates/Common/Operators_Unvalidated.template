@@ -1,4 +1,0 @@
-  public static explicit operator $FullName$( $TypeKeyword$? value )
-  {
-    return $FullName$.Create( value );
-  }

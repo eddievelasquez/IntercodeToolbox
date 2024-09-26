@@ -26,24 +26,6 @@ public class LongPrimitiveSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public Task WithDefaultConvertersAndValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( long ),
-                        Converters = TypedPrimitiveConverter.Default,
-                        ValidatorType = typeof( LongValidator ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
   public Task WithNoConvertersAndNoValidation()
   {
     var source = """
@@ -59,24 +41,6 @@ public class LongPrimitiveSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public Task WithNoConvertersAndValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( long ),
-                        Converters = TypedPrimitiveConverter.None,
-                        ValidatorType = typeof( LongValidator ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
   public Task WithoutExplicitConvertersAndNoValidation()
   {
     var source = """
@@ -85,23 +49,6 @@ public class LongPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( long ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithoutExplicitConvertersAndValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( long ),
-                        ValidatorType = typeof( LongValidator ))]
         public readonly partial record struct Test;
       """;
 

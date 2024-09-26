@@ -36,7 +36,16 @@ public partial class TestSystemTextJsonConverter: global::System.Text.Json.Seria
       }
     }
 
-    return GeneratorTest.Test.Create( value );
+    var result = GeneratorTest.Test.Create( value );
+    if( result.IsFailed )
+    {
+      throw new global::System.Text.Json.JsonException(
+        global::System.Linq.Enumerable.First( result.Errors )
+              .Message
+      );
+    }
+
+    return result.Value;
   }
 
   public override void Write(
