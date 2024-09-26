@@ -1,18 +1,19 @@
+// Module Name: LongPrimitiveTests.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
 using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
-using Intercode.Toolbox.TypedPrimitives;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 [TypedPrimitive(
   typeof( long ),
-  ValidatorType = typeof( LongPrimitiveTests.Validator ),
-  ValidatorFlagsType = typeof( LongPrimitiveTests.ValidatorFlags ),
-  ValidatorFlagsDefaultValue = LongPrimitiveTests.ValidatorFlags.Simple
+  ValidatorType = typeof( LongPrimitiveTests.Validator )
 )]
 public readonly partial record struct LongPrimitive;
 
@@ -179,18 +180,6 @@ public class LongPrimitiveTests
           .Be( value );
   }
 
-  [Fact]
-  public void ExplicitOperator_ValueToPrimitive_ReturnsPrimitiveWithValue()
-  {
-    // Act
-    var value = s_validValueA;
-    var primitive = ( LongPrimitive ) value;
-
-    // Assert
-    primitive.Value.Should()
-             .Be( value );
-  }
-
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void ExplicitOperator_StringToPrimitive_WithInvalidValue_Throws(
@@ -203,6 +192,33 @@ public class LongPrimitiveTests
     act.Should()
        .Throw<InvalidOperationException>()
        .WithMessage( s_expectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void ExplicitOperator_ValueToPrimitive_ReturnsPrimitiveWithValue()
+  {
+    // Act
+    var value = s_validValueA;
+    var primitive = ( LongPrimitive ) value;
+
+    // Assert
+    primitive.Value.Should()
+             .Be( value );
+  }
+
+  [Fact]
+  public void FromInt32_WithValidValue_ReturnsSuccess()
+  {
+    // Act
+    var value = s_validValueA;
+    var result = LongPrimitive.Create( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+
+    result.Value.Value.Should()
+          .Be( value );
   }
 
   [Theory]
@@ -223,21 +239,6 @@ public class LongPrimitiveTests
           .Which
           .Should()
           .Be( s_expectedValidationErrorMessage );
-  }
-
-  [Fact]
-  public void FromInt32_WithValidValue_ReturnsSuccess()
-  {
-    // Act
-    var value = s_validValueA;
-    var result = LongPrimitive.Create( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-
-    result.Value.Value.Should()
-          .Be( value );
   }
 
   [Fact]
@@ -476,18 +477,6 @@ public class LongPrimitiveTests
   }
 
   [Fact]
-  public void TypeConverter_ConvertFrom_UnsupportedType_Throws()
-  {
-    var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
-
-    var value = "12345";
-    var act = () => converter.ConvertFrom( value );
-
-    act.Should()
-       .Throw<NotSupportedException>();
-  }
-
-  [Fact]
   public void TypeConverter_ConvertFrom_NullValue_ReturnsDefault()
   {
     var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
@@ -513,12 +502,12 @@ public class LongPrimitiveTests
   }
 
   [Fact]
-  public void TypeConverter_ConvertTo_UnsupportedType_Throws()
+  public void TypeConverter_ConvertFrom_UnsupportedType_Throws()
   {
     var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
 
-    var primitive = ( LongPrimitive ) s_validValueA;
-    var act = () => converter.ConvertTo( null, null, primitive, typeof( string ) );
+    var value = "12345";
+    var act = () => converter.ConvertFrom( value );
 
     act.Should()
        .Throw<NotSupportedException>();
@@ -537,6 +526,18 @@ public class LongPrimitiveTests
           .BeOfType<long>()
           .Which.Should()
           .Be( value );
+  }
+
+  [Fact]
+  public void TypeConverter_ConvertTo_UnsupportedType_Throws()
+  {
+    var converter = TypeDescriptor.GetConverter( typeof( LongPrimitive ) );
+
+    var primitive = ( LongPrimitive ) s_validValueA;
+    var act = () => converter.ConvertTo( null, null, primitive, typeof( string ) );
+
+    act.Should()
+       .Throw<NotSupportedException>();
   }
 
   [Fact]
@@ -608,26 +609,14 @@ public class LongPrimitiveTests
 
   #region Implementation
 
-  public enum ValidatorFlags
-  {
-    None = 0,
-    Simple = 1
-  }
-
   public static class Validator
   {
     #region Public Methods
 
     public static Result Validate(
-      long? value,
-      ValidatorFlags flags = default )
+      long? value )
     {
-      return flags switch
-      {
-        ValidatorFlags.None   => Result.Ok(),
-        ValidatorFlags.Simple => Result.FailIf( value is null or 0L, s_expectedValidationErrorMessage ),
-        _                     => Result.Fail( "Invalid validation flag" )
-      };
+      return Result.FailIf( value is null or 0L, s_expectedValidationErrorMessage );
     }
 
     #endregion
@@ -636,7 +625,7 @@ public class LongPrimitiveTests
   public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
   {
     new object?[] { null },
-    new object?[] { 0L },
+    new object?[] { 0L }
   };
 
   internal class JsonTestClass

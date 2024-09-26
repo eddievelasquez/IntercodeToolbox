@@ -10,13 +10,12 @@ public class GuidPrimitiveSourceGenerationTests( ITestOutputHelper output )
   #region Tests
 
   [Fact]
-  public Task WithDefaultConvertersAndFlaglessValidator()
+  public Task WithDefaultConvertersAndValidator()
   {
     var source = """
         namespace GeneratorTest;
 
         using Intercode.Toolbox.TypedPrimitives;
-
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
         [TypedPrimitive(typeof( System.Guid ),
@@ -36,7 +35,6 @@ public class GuidPrimitiveSourceGenerationTests( ITestOutputHelper output )
 
         using Intercode.Toolbox.TypedPrimitives;
 
-
         [TypedPrimitive(typeof( System.Guid ), Converters = TypedPrimitiveConverter.Default)]
         public readonly partial record struct Test;
       """;
@@ -45,54 +43,12 @@ public class GuidPrimitiveSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public Task WithDefaultConvertersAndValidatorWithDefaultFlagValue()
+  public Task WithNoConvertersAndValidator()
   {
     var source = """
         namespace GeneratorTest;
 
         using Intercode.Toolbox.TypedPrimitives;
-
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.Guid ),
-                        Converters = TypedPrimitiveConverter.Default,
-                        ValidatorType = typeof( GuidValidator ),
-                        ValidatorFlagsType = typeof( ValidatorFlags ),
-                        ValidatorFlagsDefaultValue = ValidatorFlags.Full )]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithDefaultConvertersAndValidatorWithoutDefaultFlagValue()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.Guid ),
-                        Converters = TypedPrimitiveConverter.Default,
-                        ValidatorType = typeof( GuidValidator ),
-                        ValidatorFlagsType = typeof( ValidatorFlags ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithNoConvertersAndFlaglessValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
         [TypedPrimitive(typeof( System.Guid ),
@@ -112,7 +68,6 @@ public class GuidPrimitiveSourceGenerationTests( ITestOutputHelper output )
 
         using Intercode.Toolbox.TypedPrimitives;
 
-
         [TypedPrimitive(typeof( System.Guid ), Converters = TypedPrimitiveConverter.None)]
         public readonly partial record struct Test;
       """;
@@ -120,55 +75,14 @@ public class GuidPrimitiveSourceGenerationTests( ITestOutputHelper output )
     return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
   }
 
+
   [Fact]
-  public Task WithNoConvertersAndValidatorWithDefaultFlagValue()
+  public Task WithoutExplicitConvertersAndValidator()
   {
     var source = """
         namespace GeneratorTest;
 
         using Intercode.Toolbox.TypedPrimitives;
-
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.Guid ),
-                        Converters = TypedPrimitiveConverter.None,
-                        ValidatorType = typeof( GuidValidator ),
-                        ValidatorFlagsType = typeof( ValidatorFlags ),
-                        ValidatorFlagsDefaultValue = ValidatorFlags.Full )]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithNoConvertersAndValidatorWithoutDefaultFlagValue()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.Guid ),
-                        Converters = TypedPrimitiveConverter.None,
-                        ValidatorType = typeof( GuidValidator ),
-                        ValidatorFlagsType = typeof( ValidatorFlags ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithoutExplicitConvertersAndFlaglessValidator()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
         [TypedPrimitive(typeof( System.Guid ),
@@ -187,47 +101,7 @@ public class GuidPrimitiveSourceGenerationTests( ITestOutputHelper output )
 
         using Intercode.Toolbox.TypedPrimitives;
 
-
         [TypedPrimitive(typeof( System.Guid ))]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithoutExplicitConvertersAndValidatorWithDefaultFlagValue()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.Guid ),
-                        ValidatorType = typeof( GuidValidator ),
-                        ValidatorFlagsType = typeof( ValidatorFlags ),
-                        ValidatorFlagsDefaultValue = ValidatorFlags.Full )]
-        public readonly partial record struct Test;
-      """;
-
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
-  }
-
-  [Fact]
-  public Task WithoutExplicitConvertersAndValidatorWithoutDefaultFlagValue()
-  {
-    var source = """
-        namespace GeneratorTest;
-
-        using Intercode.Toolbox.TypedPrimitives;
-
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
-        [TypedPrimitive(typeof( System.Guid ),
-                        ValidatorType = typeof( GuidValidator ),
-                        ValidatorFlagsType = typeof( ValidatorFlags ))]
         public readonly partial record struct Test;
       """;
 

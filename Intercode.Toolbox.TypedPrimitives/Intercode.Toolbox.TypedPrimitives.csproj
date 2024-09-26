@@ -44,7 +44,6 @@
     <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
     <EmbeddedResource Include="Templates\Common\Factory_Unvalidated.template" />
     <EmbeddedResource Include="Templates\Common\Factory_Validated.template" />
-    <EmbeddedResource Include="Templates\Common\Factory_ValidatedWithFlags.template" />
     <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter_Unvalidated.template" />
     <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter_Validated.template" />
     <EmbeddedResource Include="Templates\Common\Operators_Unvalidated.template" />
@@ -55,7 +54,6 @@
     <EmbeddedResource Include="Templates\Common\TypeConverter.template" />
     <EmbeddedResource Include="Templates\System.String\Factory_Unvalidated.template" />
     <EmbeddedResource Include="Templates\System.String\Factory_Validated.template" />
-    <EmbeddedResource Include="Templates\System.String\Factory_ValidatedWithFlags.template" />
     <EmbeddedResource Include="Templates\System.String\Operators_Unvalidated.template" />
     <EmbeddedResource Include="Templates\System.String\Operators_Validated.template" />
     <EmbeddedResource Include="Templates\System.String\PrimitiveType.template" />

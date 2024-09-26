@@ -1,18 +1,19 @@
+// Module Name: DateTimePrimitiveTests.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
 using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
-using Intercode.Toolbox.TypedPrimitives;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 [TypedPrimitive(
   typeof( DateTime ),
-  ValidatorType = typeof( DateTimePrimitiveTests.Validator ),
-  ValidatorFlagsType = typeof( DateTimePrimitiveTests.ValidatorFlags ),
-  ValidatorFlagsDefaultValue = DateTimePrimitiveTests.ValidatorFlags.Simple
+  ValidatorType = typeof( DateTimePrimitiveTests.Validator )
 )]
 public readonly partial record struct DateTimePrimitive;
 
@@ -615,29 +616,17 @@ public class DateTimePrimitiveTests
 
   #region Implementation
 
-  public enum ValidatorFlags
-  {
-    None = 0,
-    Simple = 1
-  }
-
   public static class Validator
   {
     #region Public Methods
 
     public static Result Validate(
-      DateTime? value,
-      ValidatorFlags flags = default )
+      DateTime? value )
     {
-      return flags switch
-      {
-        ValidatorFlags.None => Result.Ok(),
-        ValidatorFlags.Simple => Result.FailIf(
-          value is null || value.Value == DateTime.MinValue,
-          s_expectedValidationErrorMessage
-        ),
-        _ => Result.Fail( "Invalid validation flag" )
-      };
+      return Result.FailIf(
+        value is null || value.Value == DateTime.MinValue,
+        s_expectedValidationErrorMessage
+      );
     }
 
     #endregion

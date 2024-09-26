@@ -1,18 +1,19 @@
+// Module Name: DateTimeOffsetPrimitiveTests.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
 using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
-using Intercode.Toolbox.TypedPrimitives;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 [TypedPrimitive(
   typeof( DateTimeOffset ),
-  ValidatorType = typeof( DateTimeOffsetPrimitiveTests.Validator ),
-  ValidatorFlagsType = typeof( DateTimeOffsetPrimitiveTests.ValidatorFlags ),
-  ValidatorFlagsDefaultValue = DateTimeOffsetPrimitiveTests.ValidatorFlags.Simple
+  ValidatorType = typeof( DateTimeOffsetPrimitiveTests.Validator )
 )]
 public readonly partial record struct DateTimeOffsetPrimitive;
 
@@ -423,7 +424,7 @@ public class DateTimeOffsetPrimitiveTests
           .NotBeNull();
 
     actual!.DateTimeOffsetPrimitive.Value.Should()
-         .Be( value );
+           .Be( value );
   }
 
   [Fact]
@@ -615,29 +616,17 @@ public class DateTimeOffsetPrimitiveTests
 
   #region Implementation
 
-  public enum ValidatorFlags
-  {
-    None = 0,
-    Simple = 1
-  }
-
   public static class Validator
   {
     #region Public Methods
 
     public static Result Validate(
-      DateTimeOffset? value,
-      ValidatorFlags flags = default )
+      DateTimeOffset? value )
     {
-      return flags switch
-      {
-        ValidatorFlags.None => Result.Ok(),
-        ValidatorFlags.Simple => Result.FailIf(
-          value is null || value.Value == DateTimeOffset.MinValue,
-          s_expectedValidationErrorMessage
-        ),
-        _ => Result.Fail( "Invalid validation flag" )
-      };
+      return Result.FailIf(
+        value is null || value.Value == DateTimeOffset.MinValue,
+        s_expectedValidationErrorMessage
+      );
     }
 
     #endregion

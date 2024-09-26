@@ -9,8 +9,6 @@ public class TypedPrimitiveAttribute( Type primitiveType ): Attribute
   public Type PrimitiveType { get; } = primitiveType;
   public TypedPrimitiveConverter Converters { get; set; }
   public Type? ValidatorType { get; set; }
-  public Type? ValidatorFlagsType { get; set; }
-  public object? ValidatorFlagsDefaultValue { get; set; }
   public object? StringComparison { get; set; }
 
   #endregion

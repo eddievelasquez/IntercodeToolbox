@@ -18,8 +18,6 @@ internal static class Parser
   public static readonly string MarkerAttributeFullName = typeof( TypedPrimitiveAttribute ).FullName!;
   public static readonly string ConvertersKey = nameof( TypedPrimitiveAttribute.Converters );
   public static readonly string ValidatorTypeKey = nameof( TypedPrimitiveAttribute.ValidatorType );
-  public static readonly string ValidatorFlagsTypeKey = nameof( TypedPrimitiveAttribute.ValidatorFlagsType );
-  public static readonly string ValidatorFlagsDefaultValueKey = nameof( TypedPrimitiveAttribute.ValidatorFlagsDefaultValue );
   public static readonly string StringComparisonKey = nameof( TypedPrimitiveAttribute.StringComparison );
 
   #endregion
@@ -116,48 +114,8 @@ internal static class Parser
     var converters = namedArguments.GetEnumValue<TypedPrimitiveConverter>( ConvertersKey ) ??
                      TypedPrimitiveConverter.Default;
     var validatorTypeName = namedArguments.GetTypeName( ValidatorTypeKey );
-    var validatorFlagsType = namedArguments.GetTypeValue( ValidatorFlagsTypeKey );
-    var validatorFlagsDefaultValue = namedArguments.GetValue( ValidatorFlagsDefaultValueKey );
     var nameSpace = recordSymbol.ContainingNamespace.ToDisplayString();
     var name = recordSymbol.Name;
-    string? validatorFlagsTypeName;
-
-    string? defaultValue = null;
-    if( validatorFlagsType is not null )
-    {
-      // The validator flags must be an enum
-      if( !validatorFlagsType.IsEnum )
-      {
-        return Result.Fail<GeneratorModel>( ValidatorFlagsMustBeEnum.Create( attributeSyntax ) );
-      }
-
-      validatorFlagsTypeName = validatorFlagsType.FullName;
-
-      // Find the default value if one was defined; otherwise use "default"
-      if( validatorFlagsDefaultValue is not null )
-      {
-        var value = Enum.GetName( validatorFlagsType, validatorFlagsDefaultValue );
-        defaultValue = $"{validatorFlagsType.FullName}.{value}";
-      }
-      else
-      {
-        defaultValue = "default";
-      }
-    }
-    else
-    {
-      // The validator flags type assembly is not loaded in the current AppDomain,
-      // We just use the type name directly and cast the default value if present
-      validatorFlagsTypeName = namedArguments.GetTypeName( ValidatorFlagsTypeKey );
-
-      // NO need for a default value if not using the validation flags
-      if( validatorFlagsTypeName is not null )
-      {
-        defaultValue = validatorFlagsDefaultValue is not null
-          ? $"({validatorFlagsTypeName}) {validatorFlagsDefaultValue}"
-          : "default";
-      }
-    }
 
     string? stringComparison = null;
     if( primitiveType == typeof( string ) )
@@ -178,8 +136,6 @@ internal static class Parser
       nameSpace,
       converters,
       validatorTypeName,
-      validatorFlagsTypeName,
-      defaultValue,
       stringComparison
     );
 

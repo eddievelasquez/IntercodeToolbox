@@ -10,11 +10,9 @@ internal static class DiagnosticId
 
   public const string Prefix = "TPR";
   public const string NotPartial = $"{Prefix}001";
-  public const string NotSupported = $"{Prefix}002";
-  public const string ValidatorFlagsMustBeEnum = $"{Prefix}003";
-  public const string MissingPrimitiveType = $"{Prefix}004";
-  public const string Unexpected = $"{Prefix}005";
-  public const string UnsupportedPrimitiveTypeDiagnostic = $"{Prefix}006";
+  public const string MissingPrimitiveType = $"{Prefix}002";
+  public const string Unexpected = $"{Prefix}003";
+  public const string UnsupportedPrimitiveTypeDiagnostic = $"{Prefix}004";
 
   #endregion
 }

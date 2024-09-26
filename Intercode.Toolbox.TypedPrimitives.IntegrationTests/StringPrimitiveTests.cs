@@ -18,9 +18,7 @@ using SystemTextJsonSerializer = System.Text.Json.JsonSerializer;
 [TypedPrimitive(
   typeof( string ),
   Converters = TypedPrimitiveConverter.Default | TypedPrimitiveConverter.NewtonsoftJson,
-  ValidatorType = typeof( StringPrimitiveTests.Validator ),
-  ValidatorFlagsType = typeof( StringPrimitiveTests.ValidatorFlags ),
-  ValidatorFlagsDefaultValue = StringPrimitiveTests.ValidatorFlags.Simple
+  ValidatorType = typeof( StringPrimitiveTests.Validator )
 )]
 public readonly partial record struct StringPrimitive;
 
@@ -962,42 +960,24 @@ public class StringPrimitiveTests
 
   #region Implementation
 
-  public enum ValidatorFlags
-  {
-    None = 0,
-    Simple = 1
-  }
-
   public static class Validator
   {
     #region Public Methods
 
     public static Result Validate(
-      string? value,
-      ValidatorFlags flags = default )
+      string? value )
     {
-      return flags switch
-      {
-        ValidatorFlags.None   => Result.Ok(),
-        ValidatorFlags.Simple => Result.FailIf( string.IsNullOrWhiteSpace( value ), "Cannot be null or empty" ),
-        _                     => Result.Fail( "Invalid validation flag" )
-      };
+      return Result.FailIf( string.IsNullOrWhiteSpace( value ), "Cannot be null or empty" );
     }
 
     public static Result Validate(
-      ReadOnlySpan<char> span,
-      ValidatorFlags flags = default )
+      ReadOnlySpan<char> span )
     {
-      return flags switch
-      {
-        ValidatorFlags.None => Result.Ok(),
-        ValidatorFlags.Simple => Result.FailIf(
-          span.Trim()
-              .IsEmpty,
-          "Cannot be null or empty"
-        ),
-        _ => Result.Fail( "Invalid validation flag" )
-      };
+      return Result.FailIf(
+        span.Trim()
+            .IsEmpty,
+        "Cannot be null or empty"
+      );
     }
 
     #endregion

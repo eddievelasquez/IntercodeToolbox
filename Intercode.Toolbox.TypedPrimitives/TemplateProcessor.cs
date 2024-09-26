@@ -18,7 +18,6 @@ internal class TemplateProcessor
   private const string FACTORY_UNVALIDATED_TEMPLATE_NAME = "Factory_Unvalidated";
   private const string OPERATORS_UNVALIDATED_TEMPLATE_NAME = "Operators_Unvalidated";
   private const string FACTORY_VALIDATED_TEMPLATE_NAME = "Factory_Validated";
-  private const string FACTORY_VALIDATED_WITH_FLAGS_TEMPLATE_NAME = "Factory_ValidatedWithFlags";
   private const string OPERATORS_VALIDATED_TEMPLATE_NAME = "Operators_Validated";
 
   private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
@@ -56,11 +55,6 @@ internal class TemplateProcessor
     if( context.Model.ValidatorTypeName is not null )
     {
       builder.AddMacro( Macros.ValidatorType, context.Model.ValidatorTypeName );
-      if( context.Model.ValidatorFlagsTypeName is not null )
-      {
-        builder.AddMacro( Macros.ValidationFlagType, context.Model.ValidatorFlagsTypeName );
-        builder.AddMacro( Macros.ValidationFlagDefaultValue, context.Model.ValidatorFlagsDefaultValue! );
-      }
     }
 
     // If the template uses a non-default StringComparison, set the StringComparison macro
@@ -220,11 +214,7 @@ internal class TemplateProcessor
       }
       else
       {
-        var factoryTemplate = context.LoadTemplate(
-          context.Model.ValidatorFlagsTypeName is null
-            ? FACTORY_VALIDATED_TEMPLATE_NAME
-            : FACTORY_VALIDATED_WITH_FLAGS_TEMPLATE_NAME
-        );
+        var factoryTemplate = context.LoadTemplate( FACTORY_VALIDATED_TEMPLATE_NAME );
 
         var operatorTemplate = context.LoadTemplate( OPERATORS_VALIDATED_TEMPLATE_NAME );
         builder.AddMacro( Macros.Factory, factoryTemplate );

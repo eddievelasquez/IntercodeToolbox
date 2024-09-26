@@ -61,17 +61,6 @@ internal static class Macros
   public const string ValidatorType = nameof( ValidatorType );
 
   /// <summary>
-  ///   Optional type of the enum that contains the validation flags.
-  /// </summary>
-  public const string ValidationFlagType = nameof( ValidationFlagType );
-
-  /// <summary>
-  ///   Optional default value for the methods that call the validation method.
-  ///   If the ValidatorFlagsType is not null, this value should be of that type and will default to zero if not found.
-  /// </summary>
-  public const string ValidationFlagDefaultValue = nameof( ValidationFlagDefaultValue );
-
-  /// <summary>
   ///   The string comparison to use for string operations.
   /// </summary>
   public const string StringComparison = nameof( StringComparison );

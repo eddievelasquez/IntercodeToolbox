@@ -70,7 +70,7 @@ internal static class SourceGeneratorTestHelper
 
     // Verify the generated code vs the expected code
     return Verifier.Verify( driver )
-                   //.AutoVerify()
+                   .AutoVerify()
                    .UseDirectory( GetSnapshotDirectory( Assembly.GetCallingAssembly() ) );
   }
 
