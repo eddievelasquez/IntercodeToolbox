@@ -13,7 +13,7 @@ public readonly partial record struct $Name$
   private $Name$( $TypeKeyword$? value )
   {
     _value = value;
-    Normalize( ref _value );
+    NormalizePartial( ref _value );
   }
 
   public $TypeKeyword$ Value
@@ -124,7 +124,7 @@ public readonly partial record struct $Name$
     return result.Value;
   }
 
-  static partial void Normalize(
+  static partial void NormalizePartial(
     ref $TypeKeyword$? value );
 
   static partial void ValidatePartial(

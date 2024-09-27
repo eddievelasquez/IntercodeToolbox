@@ -15,7 +15,7 @@ public readonly partial record struct Test
   private Test( global::System.Guid? value )
   {
     _value = value;
-    Normalize( ref _value );
+    NormalizePartial( ref _value );
   }
 
   public global::System.Guid Value
@@ -133,7 +133,7 @@ public readonly partial record struct Test
     return result.Value;
   }
 
-  static partial void Normalize(
+  static partial void NormalizePartial(
     ref global::System.Guid? value );
 
   static partial void ValidatePartial(

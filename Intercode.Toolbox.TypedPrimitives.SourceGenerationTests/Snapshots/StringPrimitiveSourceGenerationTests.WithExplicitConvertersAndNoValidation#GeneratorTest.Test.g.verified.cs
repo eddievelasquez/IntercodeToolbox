@@ -15,7 +15,7 @@ public readonly partial record struct Test
   private Test( string? value )
   {
     _value = value;
-    Normalize( ref _value );
+    NormalizePartial( ref _value );
   }
 
   public string Value
@@ -126,7 +126,7 @@ public readonly partial record struct Test
     return result.Value;
   }
 
-  static partial void Normalize(
+  static partial void NormalizePartial(
     ref string? value );
 
   static partial void ValidatePartial(
