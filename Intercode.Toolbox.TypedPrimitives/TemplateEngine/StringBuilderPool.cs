@@ -2,16 +2,22 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
-namespace Intercode.Toolbox.TypedPrimitives;
+namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 using System.Text;
 
-internal class StringBuilderPool
+public class StringBuilderPool
 {
   #region Fields
 
   private readonly LinkedList<StringBuilder> _pool = new ();
   private readonly ReaderWriterLockSlim _lock = new ();
+
+  #endregion
+
+  #region Properties
+
+  public static StringBuilderPool Default { get; } = new ();
 
   #endregion
 

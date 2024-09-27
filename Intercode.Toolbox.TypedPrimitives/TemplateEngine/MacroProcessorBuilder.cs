@@ -2,9 +2,9 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
-namespace Intercode.Toolbox.TypedPrimitives;
+namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
-internal class MacroProcessorBuilder
+public class MacroProcessorBuilder
 {
   #region Fields
 

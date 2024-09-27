@@ -4,6 +4,9 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using System.Collections.Concurrent;
+using Intercode.Toolbox.TypedPrimitives.TemplateEngine;
+
 internal class TemplateProcessor
 {
   #region Constants
@@ -23,7 +26,11 @@ internal class TemplateProcessor
   private const string NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
     $"[global::Newtonsoft.Json.JsonConverter( typeof( ${Macros.FullName}$NewtonsoftJsonConverter ) )]";
 
-  private static readonly TemplateCache s_templateCache = new ();
+  #endregion
+
+  #region Fields
+
+  private readonly ConcurrentDictionary<string, CompiledTemplate> s_templateCache = new ();
 
   #endregion
 
@@ -61,7 +68,7 @@ internal class TemplateProcessor
 
     if( context.Model.HasConverter( TypedPrimitiveConverter.NewtonsoftJson ) )
     {
-      builder.AddMacro( Macros.NewtonsoftJsonTokenType,typeInfo.NewtonsoftJsonTokenType );
+      builder.AddMacro( Macros.NewtonsoftJsonTokenType, typeInfo.NewtonsoftJsonTokenType );
     }
 
     var macroProcessor = builder.Build();
@@ -95,15 +102,15 @@ internal class TemplateProcessor
     }
 
     // See if we have already composed and compiled this template
-    var compiledTemplate = s_templateCache.GetOrAddTemplate(
-      context,
-      ctx =>
+    var compiledTemplate = s_templateCache.GetOrAdd(
+      context.TemplateKey,
+      _ =>
       {
         // Nope! Compose the template and cache it
-        var mainTemplate = ctx.LoadTemplate( MAIN_TEMPLATE_NAME );
+        var mainTemplate = context.LoadTemplate( MAIN_TEMPLATE_NAME );
 
-        var attributeBlock = GenerateAttributeBlock( ctx );
-        return ComposeTemplate( ctx, mainTemplate, attributeBlock );
+        var attributeBlock = GenerateAttributeBlock( context );
+        return ComposeTemplate( context, mainTemplate, attributeBlock );
       }
     );
 
@@ -116,12 +123,11 @@ internal class TemplateProcessor
     string GenerateContent(
       string templateKey )
     {
-      var compiled = s_templateCache.GetOrAddTemplate(
+      var compiled = s_templateCache.GetOrAdd(
         templateKey,
-        context,
-        ctx =>
+        key =>
         {
-          var template = ctx.LoadTemplate( templateKey, true );
+          var template = context.LoadTemplate( key, true );
           return new TemplateCompiler().Compile( template );
         }
       );

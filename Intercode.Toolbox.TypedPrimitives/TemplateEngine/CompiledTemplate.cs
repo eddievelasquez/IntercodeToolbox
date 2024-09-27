@@ -2,7 +2,7 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
-namespace Intercode.Toolbox.TypedPrimitives;
+namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 public record CompiledTemplate(
   string Template,

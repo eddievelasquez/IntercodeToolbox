@@ -5,6 +5,7 @@
 namespace Intercode.Toolbox.TypedPrimitives.Tests;
 
 using FluentAssertions;
+using Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 public class TemplateCompilerTests
 {

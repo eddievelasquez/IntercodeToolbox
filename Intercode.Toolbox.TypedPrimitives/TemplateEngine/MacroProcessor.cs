@@ -2,11 +2,11 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
-namespace Intercode.Toolbox.TypedPrimitives;
+namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 using System.Collections.Frozen;
 
-internal class MacroProcessor
+public class MacroProcessor
 {
   #region Fields
 
@@ -16,7 +16,7 @@ internal class MacroProcessor
 
   #region Constructors
 
-  public MacroProcessor(
+  internal MacroProcessor(
     IDictionary<string, string> macros )
   {
     _macros = macros.ToFrozenDictionary( StringComparer.OrdinalIgnoreCase );
@@ -29,7 +29,7 @@ internal class MacroProcessor
   public string ProcessMacros(
     CompiledTemplate compiledTemplate )
   {
-    var outputBuilder = ContentBuilder.StringBuilderPool.Get();
+    var outputBuilder = StringBuilderPool.Default.Get();
 
     // This assumes that every macro value is used in the template. It doesn't account for
     // the fact that a macro can be used several times in a template, but it's a good
@@ -75,7 +75,7 @@ internal class MacroProcessor
     }
     finally
     {
-      ContentBuilder.StringBuilderPool.Return( outputBuilder );
+      StringBuilderPool.Default.Return( outputBuilder );
     }
   }
 

@@ -1,8 +1,8 @@
-﻿// Module Name: Segment.cs
+// Module Name: Segment.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
-namespace Intercode.Toolbox.TypedPrimitives;
+namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 using System.Diagnostics;
 
@@ -14,7 +14,6 @@ public readonly record struct Segment(
   #region Properties
 
   public string Text => Memory.Span.ToString();
-  public ReadOnlySpan<char> Span => Memory.Span;
 
   #endregion
 }

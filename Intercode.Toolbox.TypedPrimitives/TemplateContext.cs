@@ -4,6 +4,9 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using System.Text;
+using Intercode.Toolbox.TypedPrimitives.TemplateEngine;
+
 internal class TemplateContext: IDisposable
 {
   #region Constants
@@ -29,7 +32,7 @@ internal class TemplateContext: IDisposable
     TemplateKey = GetTemplateKey();
 
     _resourceDirectory = GetResourceDirectory( model.PrimitiveType );
-    ContentBuilder = new ContentBuilder();
+    ContentBuilder = StringBuilderPool.Default.Get();
     TypeInfo = TypeManager.GetSupportedTypeInfo( model.PrimitiveType );
     return;
 
@@ -64,7 +67,7 @@ internal class TemplateContext: IDisposable
 
   public string TemplateKey { get; }
   public GeneratorModel Model { get; }
-  public ContentBuilder ContentBuilder { get; }
+  public StringBuilder ContentBuilder { get; }
   public bool UseCommonTemplates { get; }
   public SupportedTypeInfo TypeInfo { get; }
 
@@ -83,7 +86,7 @@ internal class TemplateContext: IDisposable
 
   public void Dispose()
   {
-    ContentBuilder.Dispose();
+    StringBuilderPool.Default.Return( ContentBuilder );
     GC.SuppressFinalize( this );
   }
 
