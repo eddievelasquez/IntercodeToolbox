@@ -34,23 +34,23 @@ public class MacroProcessor
     // This assumes that every macro value is used in the template. It doesn't account for
     // the fact that a macro can be used several times in a template, but it's a good
     // heuristic for now.
-    var bufferLength = _macros.Values.Sum( s => s.Length ) + compiledTemplate.ConstantTextLength;
+    var bufferLength = _macros.Values.Sum( s => s.Length ) + compiledTemplate.Template.Length;
     outputBuilder.EnsureCapacity( bufferLength );
 
     try
     {
       foreach( var segment in compiledTemplate.Segments )
       {
-        switch( segment.Type )
+        switch( segment.Kind )
         {
-          case SegmentType.ConstantText:
+          case SegmentKind.Constant:
 
             // NOTE: StringBuilder in NetStandard2.0 doesn't have an Append method
             // that takes a ReadOnlySpan<char>, unfortunately we must first convert the span to text.
             outputBuilder.Append( segment.Text );
             break;
 
-          case SegmentType.Macro:
+          case SegmentKind.Macro:
           {
             // Unfortunately we cannot use a span for the macro as Dictionary does not
             // yet span lookup support; however it might come in .NET 9.
@@ -66,7 +66,7 @@ public class MacroProcessor
           }
 
           default:
-            throw new InvalidOperationException( $"Unknown segment type '{segment.Type}'" );
+            throw new InvalidOperationException( $"Unknown segment type '{segment.Kind}'" );
         }
       }
 

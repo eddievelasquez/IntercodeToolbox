@@ -6,5 +6,4 @@ namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 public record CompiledTemplate(
   string Template,
-  Segment[] Segments,
-  int ConstantTextLength );
+  Segment[] Segments );

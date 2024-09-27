@@ -6,14 +6,14 @@ namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 using System.Diagnostics;
 
-[DebuggerDisplay( "Type = {Type}, Text = {Memory}" )]
+[DebuggerDisplay( "Kind = {Kind}, Text = {Memory}" )]
 public readonly record struct Segment(
-  SegmentType Type,
+  SegmentKind Kind,
   ReadOnlyMemory<char> Memory )
 {
   #region Properties
 
-  public string Text => Memory.Span.ToString();
+  public string Text => Memory.ToString();
 
   #endregion
 }

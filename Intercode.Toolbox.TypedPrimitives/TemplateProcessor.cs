@@ -46,7 +46,6 @@ internal class TemplateProcessor
     var typeInfo = context.TypeInfo;
 
     // Set the common macros for all templates
-    builder.AddMacro( Macros.EscapedDelimiter, "$" );
     builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
     builder.AddMacro( Macros.Namespace, context.Model.Namespace );
     builder.AddMacro( Macros.Name, context.Model.Name );

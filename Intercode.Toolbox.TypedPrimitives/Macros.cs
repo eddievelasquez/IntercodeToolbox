@@ -9,11 +9,6 @@ internal static class Macros
   #region Constants
 
   /// <summary>
-  ///   An escaped delimiter.
-  /// </summary>
-  public const string EscapedDelimiter = "";
-
-  /// <summary>
   ///   The namespace of the generated type.
   /// </summary>
   public const string Namespace = nameof( Namespace );
