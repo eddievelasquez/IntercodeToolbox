@@ -6,7 +6,7 @@ namespace GeneratorTest;
 
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial record struct Test
-  : global::System.IComparable<GeneratorTest.Test>,
+  : global::System.IComparable<Test>,
     global::System.IComparable,
     global::System.IFormattable
 {
@@ -34,15 +34,15 @@ public readonly partial record struct Test
   public long? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<GeneratorTest.Test> Create( long? value )
+  public static global::FluentResults.Result<Test> Create( long? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
     {
-      return global::FluentResults.Result.Fail<GeneratorTest.Test>( result.Errors );
+      return global::FluentResults.Result.Fail<Test>( result.Errors );
     }
 
-    return new GeneratorTest.Test( value );
+    return new Test( value );
   }
 
   public static global::FluentResults.Result Validate( long? value )
@@ -58,7 +58,7 @@ public readonly partial record struct Test
   }
 
   public bool Equals(
-    GeneratorTest.Test other )
+    Test other )
   {
     return CompareTo( other ) == 0;
   }
@@ -89,7 +89,7 @@ public readonly partial record struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is GeneratorTest.Test primitive )
+    if( obj is Test primitive )
     {
       return CompareTo( primitive );
     }
@@ -98,7 +98,7 @@ public readonly partial record struct Test
   }
 
   public int CompareTo(
-    GeneratorTest.Test other )
+    Test other )
   {
     if( _value is null )
     {
@@ -114,14 +114,14 @@ public readonly partial record struct Test
   }
 
   public static explicit operator long(
-    GeneratorTest.Test primitive )
+    Test primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator GeneratorTest.Test( long? value )
+  public static explicit operator Test( long? value )
   {
-    var result = GeneratorTest.Test.Create( value );
+    var result = Test.Create( value );
     if( result.IsFailed )
     {
       throw new global::System.InvalidOperationException(

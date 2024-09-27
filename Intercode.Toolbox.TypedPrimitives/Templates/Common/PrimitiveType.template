@@ -5,7 +5,7 @@ namespace $Namespace$;
 
 $Attributes$[global::System.Diagnostics.DebuggerDisplay( "$Name$ = {_value}" )]
 public readonly partial record struct $Name$
-  : global::System.IComparable<$FullName$>,
+  : global::System.IComparable<$Name$>,
     global::System.IComparable,
     global::System.IFormattable
 {
@@ -33,15 +33,15 @@ public readonly partial record struct $Name$
   public $TypeKeyword$? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<$FullName$> Create( $TypeKeyword$? value )
+  public static global::FluentResults.Result<$Name$> Create( $TypeKeyword$? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
     {
-      return global::FluentResults.Result.Fail<$FullName$>( result.Errors );
+      return global::FluentResults.Result.Fail<$Name$>( result.Errors );
     }
 
-    return new $FullName$( value );
+    return new $Name$( value );
   }
 
   public static global::FluentResults.Result Validate( $TypeKeyword$? value )
@@ -57,7 +57,7 @@ public readonly partial record struct $Name$
   }
 
   public bool Equals(
-    $FullName$ other )
+    $Name$ other )
   {
     return CompareTo( other ) == 0;
   }
@@ -88,7 +88,7 @@ public readonly partial record struct $Name$
   public int CompareTo(
     object? obj )
   {
-    if( obj is $FullName$ primitive )
+    if( obj is $Name$ primitive )
     {
       return CompareTo( primitive );
     }
@@ -97,7 +97,7 @@ public readonly partial record struct $Name$
   }
 
   public int CompareTo(
-    $FullName$ other )
+    $Name$ other )
   {
     if( _value is null )
     {
@@ -113,14 +113,14 @@ public readonly partial record struct $Name$
   }
 
   public static explicit operator $TypeKeyword$(
-    $FullName$ primitive )
+    $Name$ primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator $FullName$( $TypeKeyword$? value )
+  public static explicit operator $Name$( $TypeKeyword$? value )
   {
-    var result = $FullName$.Create( value );
+    var result = $Name$.Create( value );
     if( result.IsFailed )
     {
       throw new global::System.InvalidOperationException(
