@@ -5,6 +5,7 @@
 namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 public class TemplateCompiler
 {
@@ -166,34 +167,28 @@ public class TemplateCompiler
 
         Debug.Assert( index >= 0 && index < chunks.Count, $"Index (index) out of range [0, {chunks.Count}]" );
 
-        if( HasLeftConstantText( index ) )
-        {
-          // Remove the closing delimiter of the empty macro in the current chunk
-          var macroChunk = chunks[index];
-          builder.Remove( macroChunk.Start + 1, 1 );
+        // Remove the closing delimiter of the empty macro in the current chunk
+        var macroChunk = chunks[index];
+        builder.Remove( macroChunk.Start + 1, 1 );
 
+        if( TryGetLeftConstantChunk( index, out var textChunk ) )
+        {
           // Extend the prior constant text segment to include the opening delimiter of the empty macro
-          var textChunk = chunks[index - 1];
           ++textChunk.Length;
 
-          // All subsequent chunks must be shifted left by one
+          // All subsequent chunk start position must be shifted left by one
           ShiftChunksLeft( index + 1 );
 
           // Remove the macro chunk
           chunks.RemoveAt( index );
         }
-        else if( HasRightConstantText( index ) )
+        else if( TryGetRightConstantChunk( index, out textChunk ) )
         {
-          // Remove the closing delimiter of the empty macro in the current chunk
-          var macroChunk = chunks[index];
-          builder.Remove( macroChunk.Start + 1, 1 );
-
-          // Shift the right constant text segment to the left
-          var textChunk = chunks[index + 1];
+          // Shift the start of the constant text segment to the left and extend to cover the delimiter
           --textChunk.Start;
           ++textChunk.Length;
 
-          // All subsequent chunks must be shifted left by one
+          // All subsequent chunk start position must be shifted left by one
           ShiftChunksLeft( index + 1 );
 
           // Remove the macro chunk
@@ -202,14 +197,10 @@ public class TemplateCompiler
         else
         {
           // Convert macro to constant text
-          // Remove the closing delimiter of the empty macro in the current chunk
-          var macroChunk = chunks[index];
-          builder.Remove( macroChunk.Start + 1, 1 );
-
           macroChunk.Kind = SegmentKind.Constant;
           --macroChunk.Length;
 
-          // All subsequent chunks must be shifted left by one
+          // All subsequent chunk start position must be shifted left by one
           ShiftChunksLeft( index + 1 );
         }
       }
@@ -232,16 +223,40 @@ public class TemplateCompiler
       }
     }
 
-    bool HasLeftConstantText(
-      int index )
+    bool TryGetLeftConstantChunk(
+      int index,
+      [NotNullWhen( true )] out Chunk? chunk )
     {
-      return index > 0 && chunks[index - 1].Kind == SegmentKind.Constant;
+      if( index > 0 )
+      {
+        var c = chunks[index - 1];
+        if( c.Kind == SegmentKind.Constant )
+        {
+          chunk = c;
+          return true;
+        }
+      }
+
+      chunk = null;
+      return false;
     }
 
-    bool HasRightConstantText(
-      int index )
+    bool TryGetRightConstantChunk(
+      int index,
+      [NotNullWhen( true )] out Chunk? chunk )
     {
-      return index < chunks.Count - 1 && chunks[index + 1].Kind == SegmentKind.Constant;
+      if( index < chunks.Count - 1 )
+      {
+        var c = chunks[index + 1];
+        if( c.Kind == SegmentKind.Constant )
+        {
+          chunk = c;
+          return true;
+        }
+      }
+
+      chunk = null;
+      return false;
     }
   }
 
