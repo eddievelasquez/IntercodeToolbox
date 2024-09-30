@@ -3,12 +3,12 @@
 
 namespace $Namespace$;
 
-public partial class $Name$NewtonsoftJsonConverter: global::Newtonsoft.Json.JsonConverter
+public partial class $TypeName$NewtonsoftJsonConverter: global::Newtonsoft.Json.JsonConverter
 {
   public override bool CanConvert(
     global::System.Type objectType )
   {
-    return objectType == typeof( $FullName$ );
+    return objectType == typeof( $TypeQualifiedName$ );
   }
 
   public override object? ReadJson(
@@ -36,7 +36,7 @@ public partial class $Name$NewtonsoftJsonConverter: global::Newtonsoft.Json.Json
       }
     }
 
-    var result = $FullName$.Create( value );
+    var result = $TypeQualifiedName$.Create( value );
     if( result.IsFailed )
     {
       throw new global::Newtonsoft.Json.JsonSerializationException( global::System.Linq.Enumerable.First( result.Errors ).Message );
@@ -56,7 +56,7 @@ public partial class $Name$NewtonsoftJsonConverter: global::Newtonsoft.Json.Json
       return;
     }
 
-    if( value is not $FullName$ s )
+    if( value is not $TypeQualifiedName$ s )
     {
       throw new global::Newtonsoft.Json.JsonSerializationException( $$"Unexpected object type: {value.GetType().Name}" );
     }

@@ -3,7 +3,7 @@
 
 namespace $Namespace$;
 
-public partial class $Name$TypeConverter: global::System.ComponentModel.TypeConverter
+public partial class $TypeName$TypeConverter: global::System.ComponentModel.TypeConverter
 {
   public override bool CanConvertFrom(
     global::System.ComponentModel.ITypeDescriptorContext? context,
@@ -40,12 +40,12 @@ public partial class $Name$TypeConverter: global::System.ComponentModel.TypeConv
   {
     if ( value is null )
     {
-      return ( $FullName$ ) default;
+      return ( $TypeQualifiedName$ ) default;
     }
 
     if ( value is $TypeKeyword$ rawValue )
     {
-      return ( $FullName$ ) rawValue;
+      return ( $TypeQualifiedName$ ) rawValue;
     }
 
     bool converted = false;
@@ -57,7 +57,7 @@ public partial class $Name$TypeConverter: global::System.ComponentModel.TypeConv
       throw new NotSupportedException( string.Format( "Converting from {0} is not supported", value.GetType() ) );
     }
 
-    return ( $FullName$ ) convertedValue;
+    return ( $TypeQualifiedName$ ) convertedValue;
   }
 
   public override object? ConvertTo(
@@ -66,7 +66,7 @@ public partial class $Name$TypeConverter: global::System.ComponentModel.TypeConv
     object? value,
     global::System.Type destinationType )
   {
-    if( value is $FullName$ primitive )
+    if( value is $TypeQualifiedName$ primitive )
     {
       if( destinationType == typeof( $TypeKeyword$ ) )
       {

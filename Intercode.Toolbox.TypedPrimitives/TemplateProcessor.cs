@@ -20,13 +20,13 @@ internal class TemplateProcessor
   private const string EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME = "EFCoreValueConverter";
 
   private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.FullName}$TypeConverter ) )]\n";
+    $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.TypeQualifiedName}$TypeConverter ) )]\n";
 
   private const string SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.FullName}$SystemTextJsonConverter ) )]\n";
+    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.TypeQualifiedName}$SystemTextJsonConverter ) )]\n";
 
   private const string NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::Newtonsoft.Json.JsonConverter( typeof( ${Macros.FullName}$NewtonsoftJsonConverter ) )]\n";
+    $"[global::Newtonsoft.Json.JsonConverter( typeof( ${Macros.TypeQualifiedName}$NewtonsoftJsonConverter ) )]\n";
 
   #endregion
 
@@ -50,8 +50,8 @@ internal class TemplateProcessor
     // Set the common macros for all templates
     builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
     builder.AddMacro( Macros.Namespace, context.Model.Namespace );
-    builder.AddMacro( Macros.Name, context.Model.TypeName );
-    builder.AddMacro( Macros.FullName, $"{context.Model.Namespace}.{context.Model.TypeName}" );
+    builder.AddMacro( Macros.TypeName, context.Model.TypeName );
+    builder.AddMacro( Macros.TypeQualifiedName, $"{context.Model.Namespace}.{context.Model.TypeName}" );
 
     // If the template uses a non-default StringComparison, set the StringComparison macro
     if( context.Model.StringComparison is not null )

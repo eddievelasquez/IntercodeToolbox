@@ -3,15 +3,15 @@
 
 namespace $Namespace$;
 
-$TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$Name$ = {_value}" )]
-public readonly partial record struct $Name$
-  : global::System.IComparable<$Name$>,
+$TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$TypeName$ = {_value}" )]
+public readonly partial record struct $TypeName$
+  : global::System.IComparable<$TypeName$>,
     global::System.IComparable,
     global::System.IFormattable
 {
   private readonly $TypeKeyword$? _value;
 
-  private $Name$( $TypeKeyword$? value )
+  private $TypeName$( $TypeKeyword$? value )
   {
     _value = value;
     NormalizePartial( ref _value );
@@ -33,15 +33,15 @@ public readonly partial record struct $Name$
   public $TypeKeyword$? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<$Name$> Create( $TypeKeyword$? value )
+  public static global::FluentResults.Result<$TypeName$> Create( $TypeKeyword$? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
     {
-      return global::FluentResults.Result.Fail<$Name$>( result.Errors );
+      return global::FluentResults.Result.Fail<$TypeName$>( result.Errors );
     }
 
-    return new $Name$( value );
+    return new $TypeName$( value );
   }
 
   public static global::FluentResults.Result Validate( $TypeKeyword$? value )
@@ -57,7 +57,7 @@ public readonly partial record struct $Name$
   }
 
   public bool Equals(
-    $Name$ other )
+    $TypeName$ other )
   {
     return CompareTo( other ) == 0;
   }
@@ -88,7 +88,7 @@ public readonly partial record struct $Name$
   public int CompareTo(
     object? obj )
   {
-    if( obj is $Name$ primitive )
+    if( obj is $TypeName$ primitive )
     {
       return CompareTo( primitive );
     }
@@ -97,7 +97,7 @@ public readonly partial record struct $Name$
   }
 
   public int CompareTo(
-    $Name$ other )
+    $TypeName$ other )
   {
     if( _value is null )
     {
@@ -113,14 +113,14 @@ public readonly partial record struct $Name$
   }
 
   public static explicit operator $TypeKeyword$(
-    $Name$ primitive )
+    $TypeName$ primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator $Name$( $TypeKeyword$? value )
+  public static explicit operator $TypeName$( $TypeKeyword$? value )
   {
-    var result = $Name$.Create( value );
+    var result = $TypeName$.Create( value );
     if( result.IsFailed )
     {
       throw new global::System.InvalidOperationException(

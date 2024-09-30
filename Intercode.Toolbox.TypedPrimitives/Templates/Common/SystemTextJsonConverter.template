@@ -3,15 +3,15 @@
 
 namespace $Namespace$;
 
-public partial class $Name$SystemTextJsonConverter: global::System.Text.Json.Serialization.JsonConverter<$FullName$>
+public partial class $TypeName$SystemTextJsonConverter: global::System.Text.Json.Serialization.JsonConverter<$TypeQualifiedName$>
 {
   public override bool CanConvert(
     global::System.Type typeToConvert )
   {
-    return typeToConvert == typeof( $FullName$ );
+    return typeToConvert == typeof( $TypeQualifiedName$ );
   }
 
-  public override $FullName$ Read(
+  public override $TypeQualifiedName$ Read(
     ref global::System.Text.Json.Utf8JsonReader reader,
     global::System.Type typeToConvert,
     global::System.Text.Json.JsonSerializerOptions options )
@@ -35,7 +35,7 @@ public partial class $Name$SystemTextJsonConverter: global::System.Text.Json.Ser
       }
     }
 
-    var result = $FullName$.Create( value );
+    var result = $TypeQualifiedName$.Create( value );
     if( result.IsFailed )
     {
       throw new global::System.Text.Json.JsonException(
@@ -49,7 +49,7 @@ public partial class $Name$SystemTextJsonConverter: global::System.Text.Json.Ser
 
   public override void Write(
     global::System.Text.Json.Utf8JsonWriter writer,
-    $FullName$ value,
+    $TypeQualifiedName$ value,
     global::System.Text.Json.JsonSerializerOptions options )
   {
     if ( value.IsDefault )

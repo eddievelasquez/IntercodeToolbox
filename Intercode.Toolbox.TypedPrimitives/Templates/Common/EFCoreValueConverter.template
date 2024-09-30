@@ -3,18 +3,18 @@
 
 namespace $Namespace$;
 
-public class $Name$ValueConverter: global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<$FullName$, $TypeKeyword$>
+public class $TypeName$ValueConverter: global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<$TypeQualifiedName$, $TypeKeyword$>
 {
-  public $Name$ValueConverter()
+  public $TypeName$ValueConverter()
     : this( null )
   {
   }
 
-  public $Name$ValueConverter(
+  public $TypeName$ValueConverter(
     global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ConverterMappingHints? mappingHints = null )
     : base(
       primitive => primitive.Value,
-      value => ( $FullName$ ) value,
+      value => ( $TypeQualifiedName$ ) value,
       mappingHints
     )
   {
