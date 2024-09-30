@@ -14,13 +14,14 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   public void Initialize(
     IncrementalGeneratorInitializationContext context )
   {
-    // Filter for all readonly record structs that the maker attribute
+    // Get all the readonly record structs that are tagged with the marker attribute
     var primitivesToGenerate = context.SyntaxProvider.ForAttributeWithMetadataName(
       Parser.MarkerAttributeFullName,
       Parser.IsGenerationTarget,
       Parser.GetTypedPrimitiveToGenerate
     );
 
+    // Register the types to generate
     context.RegisterSourceOutput(
       primitivesToGenerate,
       static (

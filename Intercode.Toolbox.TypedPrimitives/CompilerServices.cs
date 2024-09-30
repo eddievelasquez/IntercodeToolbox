@@ -89,8 +89,7 @@ namespace System.Diagnostics.CodeAnalysis
   ///   corresponding type allows it.
   /// </summary>
   [AttributeUsage( AttributeTargets.Parameter )]
-  internal
-    sealed class NotNullWhenAttribute: Attribute
+  internal sealed class NotNullWhenAttribute: Attribute
   {
     #region Constructors
 
@@ -119,8 +118,7 @@ namespace System.Diagnostics.CodeAnalysis
     AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue,
     AllowMultiple = true
   )]
-  internal
-    sealed class NotNullIfNotNullAttribute: Attribute
+  internal sealed class NotNullIfNotNullAttribute: Attribute
   {
     #region Constructors
 
@@ -146,8 +144,7 @@ namespace System.Diagnostics.CodeAnalysis
 
   /// <summary>Applied to a method that will never return under any circumstance.</summary>
   [AttributeUsage( AttributeTargets.Method, Inherited = false )]
-  internal
-    sealed class DoesNotReturnAttribute: Attribute
+  internal sealed class DoesNotReturnAttribute: Attribute
   {
   }
 
@@ -186,8 +183,7 @@ namespace System.Diagnostics.CodeAnalysis
   ///   values.
   /// </summary>
   [AttributeUsage( AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true )]
-  internal
-    sealed class MemberNotNullAttribute: Attribute
+  internal sealed class MemberNotNullAttribute: Attribute
   {
     #region Constructors
 
@@ -226,8 +222,7 @@ namespace System.Diagnostics.CodeAnalysis
   ///   values when returning with the specified return value condition.
   /// </summary>
   [AttributeUsage( AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true )]
-  internal
-    sealed class MemberNotNullWhenAttribute: Attribute
+  internal sealed class MemberNotNullWhenAttribute: Attribute
   {
     #region Constructors
 

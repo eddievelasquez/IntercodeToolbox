@@ -33,14 +33,19 @@ internal static class Parser
            recordSyntax.AttributeLists.Count > 0;
   }
 
-  // Select readonly records that have the marker attribute
+  // Obtain the generation model for the target type
   public static Result<GeneratorModel> GetTypedPrimitiveToGenerate(
     GeneratorAttributeSyntaxContext context,
     CancellationToken _ )
   {
+    // Ensure the target symbol is a named type symbol, but we should never get here because
+    // syntax nodes are filtered to only include readonly records.
     if( context.TargetSymbol is not INamedTypeSymbol recordSymbol )
     {
-      return Result.Fail<GeneratorModel>( UnexpectedDiagnostic.Create( "Expected a named type symbol", null ) );
+      return Error.UnexpectedFailure(
+        $"'{context.TargetSymbol.QualifiedName()}' is not a named type symbol",
+        context.TargetNode
+      );
     }
 
     var recordSyntax = ( RecordDeclarationSyntax ) context.TargetNode;
@@ -48,39 +53,22 @@ internal static class Parser
     // Ensure it's a partial record
     if( !IsPartial( recordSyntax ) )
     {
-      return Result.Fail<GeneratorModel>( NotPartialDiagnostic.Create( recordSyntax ) );
+      return Error.NotPartialFailure( recordSymbol, recordSyntax );
     }
 
-    // Get attribute values
-    GeneratorModel? model = null;
-    List<DiagnosticInfo>? diagnostics = null;
+    // Attribute data should never be null because the source generator's syntax provider
+    // filters out by the attribute name, so this should have the marker attribute.
+    var attributeData = recordSymbol.GetAttributes()
+                                    .First( data => data.AttributeClass?.Name == MarkerAttributeName );
 
-    foreach( var attributeData in recordSymbol.GetAttributes() )
+    var attrSyntax = attributeData.ApplicationSyntaxReference?.GetSyntax();
+    var result = CreatePrimitiveToGenerate( recordSymbol, attributeData, attrSyntax );
+    if( result.IsFailed )
     {
-      // Skip attributes that are not the marker attribute
-      if( attributeData.AttributeClass?.Name != MarkerAttributeName )
-      {
-        continue;
-      }
-
-      var attrSyntax = attributeData.ApplicationSyntaxReference?.GetSyntax();
-      var result = CreatePrimitiveToGenerate( recordSymbol, attributeData, attrSyntax );
-      if( result.IsFailed )
-      {
-        diagnostics ??= [];
-        diagnostics.AddRange( result.Errors );
-      }
-
-      model = result.Value;
+      return Result.Fail<GeneratorModel>( result.Errors );
     }
 
-    if( diagnostics is not null && diagnostics.Count > 0 )
-    {
-      return Result.Fail<GeneratorModel>( diagnostics );
-    }
-
-    Debug.Assert( model != null );
-    return Result.Ok( model!.Value );
+    return Result.Ok( result.Value );
 
     static bool IsPartial(
       RecordDeclarationSyntax syntax )
@@ -98,40 +86,40 @@ internal static class Parser
     AttributeData attributeData,
     SyntaxNode? attributeSyntax )
   {
-    var primitiveType = GetPrimitiveType( attributeData );
-    if( primitiveType is null )
+    var result = GetPrimitiveType( attributeData );
+
+    // Ensure that the primitive type was found
+    if( result.IsFailed )
     {
-      return Result.Fail<GeneratorModel>( MissingPrimitiveTypeDiagnostic.Create( attributeSyntax ) );
+      return Result.Fail<GeneratorModel>( result.Errors );
+
+      //return Error.MissingPrimitiveTypeFailure( recordSymbol, attributeSyntax );
     }
 
+    var primitiveType = result.Value!;
     if( !TypeManager.IsTypeSupported( primitiveType ) )
     {
-      return Result.Fail<GeneratorModel>( UnsupportedTypeDiagnostic.Create( attributeSyntax, primitiveType ) );
+      return Error.UnsupportedTypeFailure( primitiveType, attributeSyntax );
     }
 
     var namedArguments = attributeData.NamedArguments;
     var converters = namedArguments.GetEnumValue<TypedPrimitiveConverter>( ConvertersKey ) ??
                      TypedPrimitiveConverter.Default;
-    var nameSpace = recordSymbol.ContainingNamespace.ToDisplayString();
-    var name = recordSymbol.Name;
+    var @namespace = recordSymbol.ContainingNamespace.ToDisplayString();
+    var typeName = recordSymbol.Name;
 
     string? stringComparison = null;
     if( primitiveType == typeof( string ) )
     {
-      var comparison = StringComparison.OrdinalIgnoreCase;
       var stringComparisonValue = namedArguments.GetEnumValue<StringComparison>( StringComparisonKey );
-      if( stringComparisonValue is not null )
-      {
-        comparison = stringComparisonValue.Value;
-      }
-
+      var comparison = stringComparisonValue ?? StringComparison.OrdinalIgnoreCase;
       stringComparison = $"{typeof( StringComparison ).FullName}.{comparison}";
     }
 
     var model = new GeneratorModel(
       primitiveType,
-      name,
-      nameSpace,
+      typeName,
+      @namespace,
       converters,
       stringComparison
     );
@@ -139,18 +127,14 @@ internal static class Parser
     return Result.Ok( model );
   }
 
-  private static Type? GetPrimitiveType(
+  private static Result<Type> GetPrimitiveType(
     AttributeData attributeData )
   {
     var args = attributeData.ConstructorArguments;
+    Debug.Assert( args.Length > 0 );
 
     // The first argument should always be the primitive type
-    if( args.Length > 0 )
-    {
-      return args[0].GetTypeValue();
-    }
-
-    return null;
+    return args[0].GetTypeValue();
   }
 
   #endregion

@@ -6,14 +6,16 @@ namespace Intercode.Toolbox.TypedPrimitives;
 
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using Intercode.Toolbox.TypedPrimitives.Diagnostics;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 internal static class TypedConstantExtensions
 {
   #region Constants
 
   // We use a nullable Type value so we don't have to lookup unknown types multiple times
-  private static readonly ConcurrentDictionary<string, Type?> s_cachedTypes;
+  private static readonly ConcurrentDictionary<string, Result<Type>> s_cachedTypes;
 
   #endregion
 
@@ -22,9 +24,9 @@ internal static class TypedConstantExtensions
   static TypedConstantExtensions()
   {
     // Preload well-known types
-    s_cachedTypes = new ConcurrentDictionary<string, Type?>();
-    s_cachedTypes.TryAdd( typeof( Guid ).FullName!, typeof( Guid ) );
-    s_cachedTypes.TryAdd( typeof( DateTimeOffset ).FullName!, typeof( DateTimeOffset ) );
+    s_cachedTypes = new ConcurrentDictionary<string, Result<Type>>();
+    s_cachedTypes.TryAdd( typeof( Guid ).FullName!, Result.Ok( typeof( Guid ) ) );
+    s_cachedTypes.TryAdd( typeof( DateTimeOffset ).FullName!, Result.Ok( typeof( DateTimeOffset ) ) );
   }
 
   #endregion
@@ -50,15 +52,6 @@ internal static class TypedConstantExtensions
     }
 
     return ( T ) typedConstant.Value!;
-  }
-
-  public static string? GetTypeName(
-    this ImmutableArray<KeyValuePair<string, TypedConstant>> arguments,
-    string name )
-  {
-    var typedConstant = arguments.FirstOrDefault( pair => pair.Key == name )
-                                 .Value;
-    return typedConstant.GetTypeName();
   }
 
   public static string? GetTypeName(
@@ -100,26 +93,17 @@ internal static class TypedConstantExtensions
     return null;
   }
 
-  public static Type? GetTypeValue(
-    this ImmutableArray<KeyValuePair<string, TypedConstant>> arguments,
-    string name )
-  {
-    var typedConstant = arguments.FirstOrDefault( pair => pair.Key == name )
-                                 .Value;
-    return typedConstant.GetTypeValue();
-  }
-
-  public static Type? GetTypeValue(
+  public static Result<Type> GetTypeValue(
     this TypedConstant typedConstant )
   {
     if( typedConstant.IsNull )
     {
-      return null;
+      return Result.Fail<Type>( Error.Unexpected( "The primitive type should not be null" ) );
     }
 
     if( typedConstant.Kind != TypedConstantKind.Type )
     {
-      return null;
+      return Result.Fail<Type>( Error.Unexpected( "The primitive type is not a type" ) );
     }
 
     if( typedConstant.Value is INamedTypeSymbol namedTypeSymbol )
@@ -141,22 +125,18 @@ internal static class TypedConstantExtensions
         SpecialType.System_UInt16   => typeof( ushort ),
         SpecialType.System_UInt32   => typeof( uint ),
         SpecialType.System_UInt64   => typeof( ulong ),
-        _                           => GetTypeFromSymbol( namedTypeSymbol )
+        _                           => null
       };
 
-      return type;
+      if( type is null )
+      {
+        return GetTypeFromSymbol( namedTypeSymbol );
+      }
+
+      return Result.Ok( type );
     }
 
-    return null;
-  }
-
-  public static object? GetValue(
-    this ImmutableArray<KeyValuePair<string, TypedConstant>> arguments,
-    string name )
-  {
-    var typedConstant = arguments.FirstOrDefault( pair => pair.Key == name )
-                                 .Value;
-    return typedConstant.GetValue();
+    return Result.Fail<Type>( Error.UnsupportedType( typedConstant.Value!.ToString() ) );
   }
 
   public static object? GetValue(
@@ -179,7 +159,7 @@ internal static class TypedConstantExtensions
 
   #region Implementation
 
-  private static Type? GetTypeFromSymbol(
+  private static Result<Type> GetTypeFromSymbol(
     INamedTypeSymbol namedTypeSymbol )
   {
     var typeName = namedTypeSymbol.ToDisplayString();
@@ -187,7 +167,7 @@ internal static class TypedConstantExtensions
     return type;
   }
 
-  private static Type? GetTypeFromSymbolCore(
+  private static Result<Type> GetTypeFromSymbolCore(
     INamedTypeSymbol namedTypeSymbol,
     string typeName )
   {
@@ -201,10 +181,16 @@ internal static class TypedConstantExtensions
 
     if( assembly == null )
     {
-      return null;
+      return Result.Fail<Type>( Error.Unexpected( $"The '{assemblyName}' assembly was not found" ) );
     }
 
-    return assembly.GetType( typeName );
+    var type = assembly.GetType( typeName );
+    if( type is null )
+    {
+      return Result.Fail<Type>( Error.Unexpected( $"The '{typeName}' type was not found" ) );
+    }
+
+    return Result.Ok( type );
   }
 
   #endregion

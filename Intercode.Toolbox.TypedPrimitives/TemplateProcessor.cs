@@ -109,7 +109,7 @@ internal class TemplateProcessor
       yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}NewtonsoftJsonConverter", sourceText );
     }
 
-    // See if we have already composed and compiled this template
+    // See if we have already composed the main template
     var compiledTemplate = s_templateCache.GetOrAdd(
       context.TemplateKey,
       _ =>

@@ -4,23 +4,17 @@
 
 namespace Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
-using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using VerifyXunit;
 using Xunit.Abstractions;
 
 internal static class SourceGeneratorTestHelper
 {
   #region Public Methods
 
-  public static Task Verify<TGenerator>(
+  public static Task VerifyAsync<TGenerator>(
     string source,
     ITestOutputHelper? output = null )
     where TGenerator: IIncrementalGenerator, new()
@@ -43,11 +37,7 @@ internal static class SourceGeneratorTestHelper
 
     // Ensure the incoming code has no errors
     var compileDiagnostics = compilation.GetDiagnostics();
-    var diagnostics = compileDiagnostics.Where( d => d.Severity == DiagnosticSeverity.Error )
-                                        .ToList();
-
-    diagnostics.Should()
-               .BeEmpty();
+    CompilationException.ThrowIfErrors( compileDiagnostics );
 
     var stopwatch = new Stopwatch();
     stopwatch.Start();
@@ -61,17 +51,15 @@ internal static class SourceGeneratorTestHelper
     output?.WriteLine( $"Source generation took: {stopwatch.Elapsed.TotalMilliseconds:f2}ms" );
 
     // Ensure the generated code has no errors
-    diagnostics = driver.GetRunResult()
-                        .Diagnostics.Where( d => d.Severity == DiagnosticSeverity.Error )
-                        .ToList();
-
-    diagnostics.Should()
-               .BeEmpty();
+    CompilationException.ThrowIfErrors(
+      driver.GetRunResult()
+            .Diagnostics
+    );
 
     // Verify the generated code vs the expected code
-    return Verifier.Verify( driver )
-                   //.AutoVerify()
-                   .UseDirectory( GetSnapshotDirectory( Assembly.GetCallingAssembly() ) );
+    return Verify( driver )
+           //.AutoVerify()
+           .UseDirectory( GetSnapshotDirectory( Assembly.GetCallingAssembly() ) );
   }
 
   #endregion

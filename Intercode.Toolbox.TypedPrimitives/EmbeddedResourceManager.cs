@@ -4,6 +4,7 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 
@@ -36,10 +37,10 @@ internal static class EmbeddedResourceManager
 #if DEBUG
       var existingResources = s_thisAssembly.GetManifestResourceNames();
       throw new ArgumentException(
-        $"Could not find embedded resource {resourceName}. Available names: {string.Join( ", ", existingResources )}"
+        $"Could not find embedded resource '{resourceName}'. Available names: {string.Join( ", ", existingResources )}"
       );
 #else
-      throw new ArgumentException( $"Could not find embedded resource {resourceName}." );
+      throw new ArgumentException( $"Could not find embedded resource '{resourceName}'." );
 #endif
     }
 
@@ -47,22 +48,13 @@ internal static class EmbeddedResourceManager
   }
 
   public static bool TryLoadTemplate(
-    string resourceDirectory,
-    string templateName,
-    out string template )
-  {
-    var resourceName = GetResourceName( resourceDirectory, templateName );
-    return TryLoadTemplate( resourceName, out template );
-  }
-
-  public static bool TryLoadTemplate(
     string resourceName,
-    out string template )
+    [NotNullWhen( true )] out string? template )
   {
     var resourceStream = s_thisAssembly.GetManifestResourceStream( resourceName );
     if( resourceStream is null )
     {
-      template = string.Empty;
+      template = null;
       return false;
     }
 

@@ -24,7 +24,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   [Fact]
@@ -39,7 +39,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   [Fact]
@@ -54,7 +54,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   [Fact]
@@ -69,7 +69,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   [Fact]
@@ -84,7 +84,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   #endregion

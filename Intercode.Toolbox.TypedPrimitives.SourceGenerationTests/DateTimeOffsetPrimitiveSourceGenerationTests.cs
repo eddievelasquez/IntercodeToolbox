@@ -23,7 +23,7 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   [Fact]
@@ -38,7 +38,7 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   [Fact]
@@ -53,7 +53,7 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
         public readonly partial record struct Test;
       """;
 
-    return SourceGeneratorTestHelper.Verify<TypedPrimitiveSourceGenerator>( source, output );
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
 
   #endregion

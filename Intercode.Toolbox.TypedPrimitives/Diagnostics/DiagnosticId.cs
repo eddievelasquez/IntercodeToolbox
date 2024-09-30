@@ -8,11 +8,11 @@ internal static class DiagnosticId
 {
   #region Constants
 
-  public const string Prefix = "TPR";
-  public const string NotPartial = $"{Prefix}001";
-  public const string MissingPrimitiveType = $"{Prefix}002";
-  public const string Unexpected = $"{Prefix}003";
-  public const string UnsupportedPrimitiveTypeDiagnostic = $"{Prefix}004";
+  public const string Prefix = "TP";
+  public const string NotPartial = $"{Prefix}0001";
+  public const string MissingPrimitiveType = $"{Prefix}0002";
+  public const string Unexpected = $"{Prefix}0003";
+  public const string UnsupportedPrimitiveTypeDiagnostic = $"{Prefix}0004";
 
   #endregion
 }

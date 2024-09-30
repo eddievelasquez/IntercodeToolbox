@@ -9,6 +9,7 @@ using System.Collections;
 // <summary>
 // A cache-friendly, immutable and equatable array. Just like <see cref="Array{T}"/>
 // but with value equality support.
+// Loosely based on the ImmutableArray<T> type of the CommunityToolkit.
 // </summary
 internal readonly struct EquatableArray<T>
   : IEquatable<EquatableArray<T>>,
