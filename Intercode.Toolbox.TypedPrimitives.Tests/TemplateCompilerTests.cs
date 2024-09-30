@@ -12,26 +12,139 @@ public class TemplateCompilerTests
   #region Tests
 
   [Fact]
-  public void Compile_ShouldReturnSingleConstantSegment_WhenEscapedDelimiterIsMiddleOfConstantSegments()
+  public void Compile_ShouldReturnSingleConstantSegment_WhenDoubleEscapedDelimitersAreInMiddleOfConstantSegments()
   {
-    var escapedTemplate = "This is a $$ template.";
-    var unescapedTemplate = "This is a $ template.";
+    var escapedText = "This is a $$$$ template.";
+    var unescapedText = "This is a $$ template.";
 
     var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( escapedTemplate );
+    var template = compiler.Compile( escapedText );
 
-    compiledTemplate.Should()
-                    .NotBeNull();
+    template.Should()
+            .NotBeNull();
 
-    compiledTemplate.Template.Should()
-                    .Be( unescapedTemplate );
+    template.Text.Should()
+            .Be( unescapedText );
 
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 1 );
+    template.Segments.Should()
+            .HaveCount( 1 );
 
-    compiledTemplate.Segments[0]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedTemplate );
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedText );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnSingleConstantSegment_WhenEscapedDelimiterIsMiddleOfConstantSegments()
+  {
+    var escapedText = "This is a $$ template.";
+    var unescapedText = "This is a $ template.";
+
+    var compiler = new TemplateCompiler();
+    var compile = compiler.Compile( escapedText );
+
+    compile.Should()
+           .NotBeNull();
+
+    compile.Text.Should()
+           .Be( unescapedText );
+
+    compile.Segments.Should()
+           .HaveCount( 1 );
+
+    compile.Segments[0]
+           .Should()
+           .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedText );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnSingleConstantSegment_WhenStringEndsWithEscapedDelimiterFollowingConstantSegment()
+  {
+    var escapedText = "template $$";
+    var unescapedText = "template $";
+
+    var compiler = new TemplateCompiler();
+    var template = compiler.Compile( escapedText );
+
+    template.Should()
+            .NotBeNull();
+
+    template.Text.Should()
+            .Be( unescapedText );
+
+    template.Segments.Should()
+            .HaveCount( 1 );
+
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedText );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnSingleConstantSegment_WhenStringStartsWithEscapedDelimiterFollowedByConstantSegment()
+  {
+    var escapedText = "$$ template.";
+    var unescapedText = "$ template.";
+
+    var compiler = new TemplateCompiler();
+    var template = compiler.Compile( escapedText );
+
+    template.Should()
+            .NotBeNull();
+
+    template.Text.Should()
+            .Be( unescapedText );
+
+    template.Segments.Should()
+            .HaveCount( 1 );
+
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedText );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnSingleConstantSegment_WhenTemplateHasNoMacros()
+  {
+    var text = "I have no macros";
+
+    var compiler = new TemplateCompiler();
+    var template = compiler.Compile( text );
+
+    template.Should()
+            .NotBeNull();
+
+    template.Text.Should()
+            .Be( text );
+
+    template.Segments.Should()
+            .HaveCount( 1 );
+
+    template.Segments.Single()
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == text );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnSingleMacroSegment_WhenTemplateIsOnlyTheMacro()
+  {
+    var text = "$macro$";
+
+    var compiler = new TemplateCompiler();
+    var template = compiler.Compile( text );
+
+    template.Should()
+            .NotBeNull();
+
+    template.Text.Should()
+            .Be( text );
+
+    template.Segments.Should()
+            .HaveCount( 1 );
+
+    template.Segments.Single()
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == text );
   }
 
   [Fact]
@@ -41,171 +154,58 @@ public class TemplateCompilerTests
     var unescapedTemplate = "$macro$$$macro$";
 
     var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( escapedTemplate );
+    var template = compiler.Compile( escapedTemplate );
 
-    compiledTemplate.Should()
-                    .NotBeNull();
+    template.Should()
+            .NotBeNull();
 
-    compiledTemplate.Template.Should()
-                    .Be( unescapedTemplate );
+    template.Text.Should()
+            .Be( unescapedTemplate );
 
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 3 );
+    template.Segments.Should()
+            .HaveCount( 3 );
 
-    compiledTemplate.Segments[0]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "$macro$" );
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "$macro$" );
 
-    compiledTemplate.Segments[1]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$" );
+    template.Segments[1]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$" );
 
-    compiledTemplate.Segments[2]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "$macro$" );
-  }
-
-  [Fact]
-  public void Compile_ShouldReturnSingleConstantSegment_WhenDoubleEscapedDelimitersAreInMiddleOfConstantSegments()
-  {
-    var escapedTemplate = "This is a $$$$ template.";
-    var unescapedTemplate = "This is a $$ template.";
-
-    var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( escapedTemplate );
-
-    compiledTemplate.Should()
-                    .NotBeNull();
-
-    compiledTemplate.Template.Should()
-                    .Be( unescapedTemplate );
-
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 1 );
-
-    compiledTemplate.Segments[0]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedTemplate );
-  }
-
-  [Fact]
-  public void Compile_ShouldReturnSingleConstantSegment_WhenStringStartsWithEscapedDelimiterFollowedByConstantSegment()
-  {
-    var escapedTemplate = "$$ template.";
-    var unescapedTemplate = "$ template.";
-
-    var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( escapedTemplate );
-
-    compiledTemplate.Should()
-                    .NotBeNull();
-
-    compiledTemplate.Template.Should()
-                    .Be( unescapedTemplate );
-
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 1 );
-
-    compiledTemplate.Segments[0]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedTemplate );
-  }
-
-  [Fact]
-  public void Compile_ShouldReturnSingleConstantSegment_WhenStringEndsWithEscapedDelimiterFollowingConstantSegment()
-  {
-    var escapedTemplate = "template $$";
-    var unescapedTemplate = "template $";
-
-    var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( escapedTemplate );
-
-    compiledTemplate.Should()
-                    .NotBeNull();
-
-    compiledTemplate.Template.Should()
-                    .Be( unescapedTemplate );
-
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 1 );
-
-    compiledTemplate.Segments[0]
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == unescapedTemplate );
-  }
-
-  [Fact]
-  public void Compile_ShouldReturnSingleConstantSegment_WhenTemplateHasNoMacros()
-  {
-    var template = "I have no macros";
-
-    var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( template );
-
-    compiledTemplate.Should()
-                    .NotBeNull();
-
-    compiledTemplate.Template.Should()
-                    .Be( template );
-
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 1 );
-
-    compiledTemplate.Segments.Single()
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == template );
-  }
-
-  [Fact]
-  public void Compile_ShouldReturnSingleMacroSegment_WhenTemplateIsOnlyTheMacro()
-  {
-    var template = "$macro$";
-
-    var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( template );
-
-    compiledTemplate.Should()
-                    .NotBeNull();
-
-    compiledTemplate.Template.Should()
-                    .Be( template );
-
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 1 );
-
-    compiledTemplate.Segments.Single()
-                    .Should()
-                    .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == template );
+    template.Segments[2]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "$macro$" );
   }
 
   [Fact]
   public void Compile_ShouldReturnThreeSegments_WhenTemplateContainsMacroInMiddle()
   {
-    var template = "This is a $macro$ template.";
+    var text = "This is a $macro$ template.";
 
     var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( template );
+    var template = compiler.Compile( text );
 
-    compiledTemplate.Should()
-                    .NotBeNull();
+    template.Should()
+            .NotBeNull();
 
-    compiledTemplate.Template.Should()
-                    .Be( template );
+    template.Text.Should()
+            .Be( text );
 
-    compiledTemplate.Segments.Should()
-                    .HaveCount( 3 );
+    template.Segments.Should()
+            .HaveCount( 3 );
 
-    compiledTemplate.Segments[0]
-                    .Should()
-                    .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == "This is a " );
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == "This is a " );
 
-    compiledTemplate.Segments[1]
-                    .Should()
-                    .Match<Segment>( static s => s.Kind == SegmentKind.Macro && s.Text == "$macro$" );
+    template.Segments[1]
+            .Should()
+            .Match<Segment>( static s => s.Kind == SegmentKind.Macro && s.Text == "$macro$" );
 
-    compiledTemplate.Segments[2]
-                    .Should()
-                    .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == " template." );
+    template.Segments[2]
+            .Should()
+            .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == " template." );
   }
 
   #endregion

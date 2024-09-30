@@ -54,27 +54,27 @@ public class TemplateCompiler
 
   #region Public Methods
 
-  public CompiledTemplate Compile(
-    string template )
+  public Template Compile(
+    string text )
   {
-    if( string.IsNullOrEmpty( template ) )
+    if( string.IsNullOrEmpty( text ) )
     {
-      throw new ArgumentException( "Value cannot be null or empty.", nameof( template ) );
+      throw new ArgumentException( "The template's text cannot be null or empty.", nameof( text ) );
     }
 
-    Phase1SplitIntoChunks( template, out var chunks, out var emptyMacros );
+    Phase1SplitIntoChunks( text, out var chunks, out var emptyMacros );
 
     // Optimize chunks:
     // Convert empty macro chunks into a single delimiter and merge into an adjacent constant segment
-    Phase2RemoveEmptyMacroChunks( ref template, chunks, emptyMacros );
+    Phase2RemoveEmptyMacroChunks( ref text, chunks, emptyMacros );
 
     // Optimize chunks:
     // Merge adjacent constant segments
     Phase3MergeAdjacentConstantSegments( chunks );
 
-    // Generate compiled template
-    var compiledTemplate = Phase4GenerateCompiledTemplate( template, chunks );
-    return compiledTemplate;
+    // Generate template
+    var template = Phase4GenerateTemplate( text, chunks );
+    return template;
   }
 
   #endregion
@@ -82,26 +82,26 @@ public class TemplateCompiler
   #region Implementation
 
   private static void Phase1SplitIntoChunks(
-    string template,
+    string text,
     out List<Chunk> chunks,
     out List<Chunk> emptyMacros )
   {
     chunks = [];
     emptyMacros = [];
 
-    var templateMemory = template.AsMemory();
+    var memory = text.AsMemory();
     var currentIndex = 0;
 
-    while( currentIndex < templateMemory.Length )
+    while( currentIndex < memory.Length )
     {
-      var macroStart = templateMemory.Slice( currentIndex )
-                                     .Span
-                                     .IndexOf( MacroDelimiter );
+      var macroStart = memory.Slice( currentIndex )
+                             .Span
+                             .IndexOf( MacroDelimiter );
 
       if( macroStart == -1 )
       {
         // No more macros found, add the remaining text as a constant segment
-        chunks.Add( Chunk.CreateConstant( currentIndex, templateMemory.Length - currentIndex ) );
+        chunks.Add( Chunk.CreateConstant( currentIndex, memory.Length - currentIndex ) );
         break;
       }
 
@@ -114,14 +114,14 @@ public class TemplateCompiler
       }
 
       // Look for the closing macro delimiter
-      var macroEnd = templateMemory.Slice( ( macroStart + 1 ) )
-                                   .Span
-                                   .IndexOf( MacroDelimiter );
+      var macroEnd = memory.Slice( ( macroStart + 1 ) )
+                           .Span
+                           .IndexOf( MacroDelimiter );
 
       if( macroEnd == -1 )
       {
         // No closing delimiter found, treat the rest as a constant segment
-        chunks.Add( Chunk.CreateConstant( macroStart, templateMemory.Length - macroStart ) );
+        chunks.Add( Chunk.CreateConstant( macroStart, memory.Length - macroStart ) );
         break;
       }
 
@@ -131,7 +131,7 @@ public class TemplateCompiler
       var chunk = Chunk.CreateMacro( macroStart, macroEnd - macroStart + 1 );
       chunks.Add( chunk );
 
-      // If empty macro, add it to the empty list
+      // If the macro is empty, add it to the empty list
       if( macroEnd == macroStart + 1 )
       {
         emptyMacros.Add( chunk );
@@ -143,20 +143,21 @@ public class TemplateCompiler
   }
 
   private static void Phase2RemoveEmptyMacroChunks(
-    ref string template,
+    ref string text,
     List<Chunk> chunks,
     List<Chunk> emptyMacros )
   {
+    // Nothing to do if there are no empty macros
     if( emptyMacros.Count == 0 )
     {
       return;
     }
 
-    var builder = StringBuilderPool.Default.Get();
+    var sb = StringBuilderPool.Default.Get();
 
     try
     {
-      builder.Clear().Append( template );
+      sb.Clear().Append( text );
 
       var index = 0;
       foreach( var chunk in emptyMacros )
@@ -169,7 +170,7 @@ public class TemplateCompiler
 
         // Remove the closing delimiter of the empty macro in the current chunk
         var macroChunk = chunks[index];
-        builder.Remove( macroChunk.Start + 1, 1 );
+        sb.Remove( macroChunk.Start + 1, 1 );
 
         if( TryGetLeftConstantChunk( index, out var textChunk ) )
         {
@@ -196,7 +197,7 @@ public class TemplateCompiler
         }
         else
         {
-          // Convert macro to constant text
+          // Convert macro chunk to constant
           macroChunk.Kind = SegmentKind.Constant;
           --macroChunk.Length;
 
@@ -205,11 +206,11 @@ public class TemplateCompiler
         }
       }
 
-      template = builder.ToString();
+      text = sb.ToString();
     }
     finally
     {
-      StringBuilderPool.Default.Return( builder );
+      StringBuilderPool.Default.Return( sb );
     }
 
     return;
@@ -288,16 +289,16 @@ public class TemplateCompiler
     }
   }
 
-  private static CompiledTemplate Phase4GenerateCompiledTemplate(
-    string template,
+  private static Template Phase4GenerateTemplate(
+    string text,
     List<Chunk> chunks )
   {
-    var templateMemory = template.AsMemory();
-    var segments = chunks.Select( chunk => new Segment( chunk.Kind, templateMemory.Slice( chunk.Start, chunk.Length ) ) )
+    var memory = text.AsMemory();
+    var segments = chunks.Select( chunk => new Segment( chunk.Kind, memory.Slice( chunk.Start, chunk.Length ) ) )
                          .ToArray();
 
-    var compiledTemplate = new CompiledTemplate( template, segments );
-    return compiledTemplate;
+    var template = new Template( text, segments );
+    return template;
   }
 
   #endregion

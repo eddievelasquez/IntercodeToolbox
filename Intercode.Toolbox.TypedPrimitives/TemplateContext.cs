@@ -4,10 +4,7 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
-using System.Text;
-using Intercode.Toolbox.TypedPrimitives.TemplateEngine;
-
-internal class TemplateContext: IDisposable
+internal class TemplateContext
 {
   #region Constants
 
@@ -28,36 +25,23 @@ internal class TemplateContext: IDisposable
     GeneratorModel model )
   {
     Model = model;
-    UseCommonTemplates = UsesCommonTemplates();
-    TemplateKey = GetTemplateKey();
-
-    _resourceDirectory = GetResourceDirectory( model.PrimitiveType );
-    ContentBuilder = StringBuilderPool.Default.Get();
     TypeInfo = TypeManager.GetSupportedTypeInfo( model.PrimitiveType );
-    return;
 
-    string GetResourceDirectory(
-      Type type )
+    // Use the common main template if no specialization exists
+    var useCommonTemplates = !EmbeddedResourceManager.DoesResourceExist(
+      Model.PrimitiveType.FullName!,
+      MAIN_TEMPLATE_NAME
+    );
+
+    if( useCommonTemplates )
     {
-      return UseCommonTemplates ? COMMON_DIRECTORY : type.FullName!;
+      _resourceDirectory = COMMON_DIRECTORY;
+      TemplateKey = Model.Converters.ToString();
     }
-
-    string GetTemplateKey()
+    else
     {
-      if( UseCommonTemplates )
-      {
-        return $"{Model.Converters}";
-      }
-
-      return $"{Model.PrimitiveType.FullName}_{Model.Converters}";
-    }
-
-    bool UsesCommonTemplates()
-    {
-      return !EmbeddedResourceManager.DoesResourceExist(
-        Model.PrimitiveType.FullName!,
-        MAIN_TEMPLATE_NAME
-      );
+      _resourceDirectory = model.PrimitiveType.FullName!;
+      TemplateKey = $"{Model.PrimitiveType.FullName}_{Model.Converters}";
     }
   }
 
@@ -67,8 +51,6 @@ internal class TemplateContext: IDisposable
 
   public string TemplateKey { get; }
   public GeneratorModel Model { get; }
-  public StringBuilder ContentBuilder { get; }
-  public bool UseCommonTemplates { get; }
   public SupportedTypeInfo TypeInfo { get; }
 
   #endregion
@@ -82,12 +64,6 @@ internal class TemplateContext: IDisposable
     var resourceDir = useCommonOverride ? COMMON_DIRECTORY : _resourceDirectory;
     var template = EmbeddedResourceManager.LoadTemplate( resourceDir, templateName );
     return template;
-  }
-
-  public void Dispose()
-  {
-    StringBuilderPool.Default.Return( ContentBuilder );
-    GC.SuppressFinalize( this );
   }
 
   #endregion

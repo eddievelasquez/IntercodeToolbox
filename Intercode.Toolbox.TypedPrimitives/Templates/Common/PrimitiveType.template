@@ -3,7 +3,7 @@
 
 namespace $Namespace$;
 
-$Attributes$[global::System.Diagnostics.DebuggerDisplay( "$Name$ = {_value}" )]
+$TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$Name$ = {_value}" )]
 public readonly partial record struct $Name$
   : global::System.IComparable<$Name$>,
     global::System.IComparable,

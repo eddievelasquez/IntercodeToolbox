@@ -90,5 +90,9 @@ internal static class Macros
   /// </summary>
   public const string NewtonsoftJsonTokenType = nameof( NewtonsoftJsonTokenType );
 
+  public const string TypeConverterAttribute = nameof( TypeConverterAttribute );
+  public const string SystemTextJsonConverterAttribute = nameof( SystemTextJsonConverterAttribute );
+  public const string NewtonsoftJsonConverterAttribute = nameof( NewtonsoftJsonConverterAttribute );
+
   #endregion
 }

@@ -10,6 +10,8 @@ public class MacroProcessor
 {
   #region Fields
 
+  private readonly char _macroDelimiter;
+
   private readonly FrozenDictionary<string, string> _macros;
 
   #endregion
@@ -17,65 +19,60 @@ public class MacroProcessor
   #region Constructors
 
   internal MacroProcessor(
-    IDictionary<string, string> macros )
+    IDictionary<string, string> macros,
+    char macroDelimiter )
   {
+    _macroDelimiter = macroDelimiter;
     _macros = macros.ToFrozenDictionary( StringComparer.OrdinalIgnoreCase );
   }
 
   #endregion
 
+  #region Properties
+
+  public int MacroCount => _macros.Count;
+
+  #endregion
+
   #region Public Methods
 
-  public string ProcessMacros(
-    CompiledTemplate compiledTemplate )
+  public string? GetMacroValue(
+    string macroName )
   {
-    var outputBuilder = StringBuilderPool.Default.Get();
+    var key = $"{_macroDelimiter}{macroName}{_macroDelimiter}";
+    return _macros.TryGetValue( key, out var macroValue ) ? macroValue : null;
+  }
 
-    // This assumes that every macro value is used in the template. It doesn't account for
-    // the fact that a macro can be used several times in a template, but it's a good
-    // heuristic for now.
-    var bufferLength = _macros.Values.Sum( s => s.Length ) + compiledTemplate.Template.Length;
-    outputBuilder.EnsureCapacity( bufferLength );
-
-    try
+  public void ProcessMacros(
+    Template template,
+    TextWriter writer )
+  {
+    foreach( var segment in template.Segments )
     {
-      foreach( var segment in compiledTemplate.Segments )
+      switch( segment.Kind )
       {
-        switch( segment.Kind )
+        case SegmentKind.Constant:
+
+          writer.Write( segment.Memory );
+          break;
+
+        case SegmentKind.Macro:
         {
-          case SegmentKind.Constant:
-
-            // NOTE: StringBuilder in NetStandard2.0 doesn't have an Append method
-            // that takes a ReadOnlySpan<char>, unfortunately we must first convert the span to text.
-            outputBuilder.Append( segment.Text );
-            break;
-
-          case SegmentKind.Macro:
+          // Unfortunately we cannot use a span for the macro as Dictionary does not
+          // yet span lookup support; however it might come in .NET 9.
+          // See: https://github.com/dotnet/runtime/issues/27229
+          var macroName = segment.Text;
+          if( _macros.TryGetValue( macroName, out var macroValue ) )
           {
-            // Unfortunately we cannot use a span for the macro as Dictionary does not
-            // yet span lookup support; however it might come in .NET 9.
-            // See: https://github.com/dotnet/runtime/issues/27229
-            var macroName = segment.Text;
-            if( !_macros.TryGetValue( macroName, out var macroValue ) )
-            {
-              macroValue = macroName;
-            }
-
-            outputBuilder.Append( macroValue );
-            break;
+            writer.Write( macroValue );
           }
 
-          default:
-            throw new InvalidOperationException( $"Unknown segment type '{segment.Kind}'" );
+          break;
         }
-      }
 
-      var output = outputBuilder.ToString();
-      return output;
-    }
-    finally
-    {
-      StringBuilderPool.Default.Return( outputBuilder );
+        default:
+          throw new InvalidOperationException( $"Unknown segment type '{segment.Kind}'" );
+      }
     }
   }
 
