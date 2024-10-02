@@ -11,13 +11,13 @@ public class DateTimePrimitiveSourceGenerationTests( ITestOutputHelper output )
   #region Tests
 
   [Fact]
-  public Task WithDefaultConvertersAndNoValidation()
+  public Task Compilation_ShouldSucceed_WithExplicitDefaultConverters()
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
-
+      
         [TypedPrimitive(typeof( System.DateTime ), Converters = TypedPrimitiveConverter.Default)]
         public readonly partial struct Test;
       """;
@@ -26,13 +26,13 @@ public class DateTimePrimitiveSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public Task WithNoConvertersAndNoValidation()
+  public Task Compilation_ShouldSucceed_WithExplicitNoneConverters()
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
-
+      
         [TypedPrimitive(typeof( System.DateTime ), Converters = TypedPrimitiveConverter.None)]
         public readonly partial struct Test;
       """;
@@ -41,13 +41,13 @@ public class DateTimePrimitiveSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public Task WithoutExplicitConvertersAndNoValidation()
+  public Task Compilation_ShouldSucceed_WithImplicitDefaultConverters()
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
-
+      
         [TypedPrimitive(typeof( System.DateTime ))]
         public readonly partial struct Test;
       """;

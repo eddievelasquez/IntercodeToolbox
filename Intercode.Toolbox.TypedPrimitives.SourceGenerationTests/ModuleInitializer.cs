@@ -1,9 +1,11 @@
+// Module Name: ModuleInitializer.cs
+// Author:      Eduardo Velasquez
+// Copyright (c) 2024, Intercode Consulting, Inc.
+
 namespace Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
 using System.Runtime.CompilerServices;
 using FluentResults;
-using Intercode.Toolbox.TypedPrimitives;
-using VerifyTests;
 
 internal static class ModuleInitializer
 {

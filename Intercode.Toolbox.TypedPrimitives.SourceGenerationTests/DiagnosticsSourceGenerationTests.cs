@@ -17,12 +17,12 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
     // MyPrimitive only exists in the in-memory assembly so it won't be found
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
+      
         public record MyPrimitive(int Id);
-
+      
         [TypedPrimitive(typeof(MyPrimitive))]
         public readonly partial struct Test;
       """;
@@ -31,7 +31,9 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
 
     await act.Should()
              .ThrowAsync<CompilationException>()
-             .WithMessage( "The 'SourceGeneratorTests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null' assembly was not found" );
+             .WithMessage(
+               "The 'SourceGeneratorTests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null' assembly was not found"
+             );
   }
 
   [Fact]
@@ -39,10 +41,10 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
+      
         [TypedPrimitive(typeof(string[]))]
         public readonly partial struct Test;
       """;
@@ -59,10 +61,10 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
+      
         [TypedPrimitive(typeof(System.Net.IPAddress))]
         public readonly partial struct Test;
       """;
@@ -79,10 +81,10 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
+      
         [TypedPrimitive(typeof( int ))]
         public readonly struct Test;
       """;
@@ -99,10 +101,10 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
   {
     var source = """
         namespace GeneratorTest;
-
+      
         using Intercode.Toolbox.TypedPrimitives;
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-
+      
         [TypedPrimitive(typeof( int ))]
         public partial struct Test;
       """;
