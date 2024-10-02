@@ -12,10 +12,10 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 [TypedPrimitive( typeof( DateTime ) )]
-public readonly partial record struct UnvalidatedDateTimePrimitive;
+public readonly partial struct UnvalidatedDateTimePrimitive;
 
 [TypedPrimitive( typeof( DateTime ) )]
-public readonly partial record struct DateTimePrimitive
+public readonly partial struct DateTimePrimitive
 {
   #region Constants
 

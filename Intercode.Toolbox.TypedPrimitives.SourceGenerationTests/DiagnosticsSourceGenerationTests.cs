@@ -24,7 +24,7 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
         public record MyPrimitive(int Id);
 
         [TypedPrimitive(typeof(MyPrimitive))]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     var act = () => SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -44,7 +44,7 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
         [TypedPrimitive(typeof(string[]))]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     var act = () => SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -64,7 +64,7 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
         [TypedPrimitive(typeof(System.Net.IPAddress))]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     var act = () => SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -75,7 +75,7 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public async Task Compilation_ShouldFail_WhenRecordIsNotPartial()
+  public async Task Compilation_ShouldFail_WhenStructIsNotPartial()
   {
     var source = """
         namespace GeneratorTest;
@@ -84,14 +84,34 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
 
         [TypedPrimitive(typeof( int ))]
-        public readonly record struct Test;
+        public readonly struct Test;
       """;
 
     var act = () => SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
 
     await act.Should()
              .ThrowAsync<CompilationException>()
-             .WithMessage( "The 'GeneratorTest.Test' record must be partial" );
+             .WithMessage( "The 'GeneratorTest.Test' struct must be partial" );
+  }
+
+  [Fact]
+  public async Task Compilation_ShouldFail_WhenStructIsNotReadOnly()
+  {
+    var source = """
+        namespace GeneratorTest;
+
+        using Intercode.Toolbox.TypedPrimitives;
+        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
+
+        [TypedPrimitive(typeof( int ))]
+        public partial struct Test;
+      """;
+
+    var act = () => SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
+
+    await act.Should()
+             .ThrowAsync<CompilationException>()
+             .WithMessage( "The 'GeneratorTest.Test' struct must be readonly" );
   }
 
   #endregion

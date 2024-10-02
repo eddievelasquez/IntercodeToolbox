@@ -23,14 +23,17 @@ internal static class Parser
 
   #region Public Methods
 
-  // Select readonly record structs that have attributes
+  // Only target structs as this method is called by SyntaxProvider.ForAttributeWithMetadataName,
+  // which ensures that the syntax node has the marker attribute, which is only applicable
+  // to structs.
+  //
+  // The partial and readonly modifiers are validated in GetTypedPrimitiveToGenerate
+  // method to ensure the user gets an error message that is more specific.
   public static bool IsGenerationTarget(
     SyntaxNode syntaxNode,
     CancellationToken _ )
   {
-    return syntaxNode is RecordDeclarationSyntax { Modifiers: { } modifiers } recordSyntax &&
-           modifiers.Any( modifier => modifier.IsKind( SyntaxKind.ReadOnlyKeyword ) ) &&
-           recordSyntax.AttributeLists.Count > 0;
+    return syntaxNode is StructDeclarationSyntax;
   }
 
   // Obtain the generation model for the target type
@@ -39,8 +42,8 @@ internal static class Parser
     CancellationToken _ )
   {
     // Ensure the target symbol is a named type symbol, but we should never get here because
-    // syntax nodes are filtered to only include readonly records.
-    if( context.TargetSymbol is not INamedTypeSymbol recordSymbol )
+    // syntax nodes are filtered to only include structs .
+    if( context.TargetSymbol is not INamedTypeSymbol structSymbol )
     {
       return Error.UnexpectedFailure(
         $"'{context.TargetSymbol.QualifiedName()}' is not a named type symbol",
@@ -48,21 +51,24 @@ internal static class Parser
       );
     }
 
-    var recordSyntax = ( RecordDeclarationSyntax ) context.TargetNode;
-
-    // Ensure it's a partial record
-    if( !IsPartial( recordSyntax ) )
+    var structSyntax = ( StructDeclarationSyntax ) context.TargetNode;
+    if( !IsPartial( structSyntax ) )
     {
-      return Error.NotPartialFailure( recordSymbol, recordSyntax );
+      return Error.NotPartialFailure( structSymbol, structSyntax );
+    }
+
+    if( !IsReadOnly( structSyntax ) )
+    {
+      return Error.NotReadOnlyFailure( structSymbol, structSyntax );
     }
 
     // Attribute data should never be null because the source generator's syntax provider
     // filters out by the attribute name, so this should have the marker attribute.
-    var attributeData = recordSymbol.GetAttributes()
-                                    .First( data => data.AttributeClass?.Name == MarkerAttributeName );
+    var attributeData = structSymbol.GetAttributes()
+                                    .Single( data => data.AttributeClass?.Name == MarkerAttributeName );
 
     var attrSyntax = attributeData.ApplicationSyntaxReference?.GetSyntax();
-    var result = CreatePrimitiveToGenerate( recordSymbol, attributeData, attrSyntax );
+    var result = CreatePrimitiveToGenerate( structSymbol, attributeData, attrSyntax );
     if( result.IsFailed )
     {
       return Result.Fail<GeneratorModel>( result.Errors );
@@ -71,9 +77,15 @@ internal static class Parser
     return Result.Ok( result.Value );
 
     static bool IsPartial(
-      RecordDeclarationSyntax syntax )
+      StructDeclarationSyntax syntax )
     {
       return syntax.Modifiers.Any( modifier => modifier.IsKind( SyntaxKind.PartialKeyword ) );
+    }
+
+    static bool IsReadOnly(
+      StructDeclarationSyntax syntax )
+    {
+      return syntax.Modifiers.Any( modifier => modifier.IsKind( SyntaxKind.ReadOnlyKeyword ) );
     }
   }
 
@@ -92,8 +104,6 @@ internal static class Parser
     if( result.IsFailed )
     {
       return Result.Fail<GeneratorModel>( result.Errors );
-
-      //return Error.MissingPrimitiveTypeFailure( recordSymbol, attributeSyntax );
     }
 
     var primitiveType = result.Value!;

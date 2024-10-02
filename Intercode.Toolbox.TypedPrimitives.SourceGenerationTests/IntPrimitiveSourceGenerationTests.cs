@@ -19,7 +19,7 @@ public class IntPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( int ), Converters = TypedPrimitiveConverter.Default)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -34,7 +34,7 @@ public class IntPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( int ), Converters = TypedPrimitiveConverter.None)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -49,7 +49,7 @@ public class IntPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( int ))]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );

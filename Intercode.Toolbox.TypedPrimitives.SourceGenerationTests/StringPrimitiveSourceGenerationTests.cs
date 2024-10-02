@@ -21,7 +21,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
 
         [TypedPrimitive(typeof( string ),
                         StringComparison = System.StringComparison.Ordinal)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -36,7 +36,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( string ), Converters = TypedPrimitiveConverter.Default)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -51,7 +51,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( string ), Converters = TypedPrimitiveConverter.NewtonsoftJson)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -66,7 +66,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( string ), Converters = TypedPrimitiveConverter.None)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -81,7 +81,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( string ))]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );

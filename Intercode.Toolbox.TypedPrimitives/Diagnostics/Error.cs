@@ -17,7 +17,7 @@ internal static class Error
     return CreateDiagnostic(
       DiagnosticId.NotPartial,
       "Must be partial",
-      $"The '{symbol.QualifiedName()}' record must be partial",
+      $"The '{symbol.QualifiedName()}' struct must be partial",
       syntaxNode
     );
   }
@@ -27,6 +27,25 @@ internal static class Error
     SyntaxNode syntaxNode )
   {
     return Result.Fail<GeneratorModel>( NotPartial( symbol, syntaxNode ) );
+  }
+
+  public static DiagnosticInfo NotReadOnly(
+    INamedTypeSymbol symbol,
+    SyntaxNode syntaxNode )
+  {
+    return CreateDiagnostic(
+      DiagnosticId.NotReadOnly,
+      "Must be readonly",
+      $"The '{symbol.QualifiedName()}' struct must be readonly",
+      syntaxNode
+    );
+  }
+
+  public static Result<GeneratorModel> NotReadOnlyFailure(
+    INamedTypeSymbol symbol,
+    SyntaxNode syntaxNode )
+  {
+    return Result.Fail<GeneratorModel>( NotReadOnly( symbol, syntaxNode ) );
   }
 
   public static DiagnosticInfo MissingPrimitiveType(

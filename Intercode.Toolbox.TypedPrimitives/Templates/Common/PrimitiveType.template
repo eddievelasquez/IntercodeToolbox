@@ -4,7 +4,7 @@
 namespace $Namespace$;
 
 $TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$TypeName$ = {_value}" )]
-public readonly partial record struct $TypeName$
+public readonly partial struct $TypeName$
   : global::System.IComparable<$TypeName$>,
     global::System.IComparable,
     global::System.IFormattable

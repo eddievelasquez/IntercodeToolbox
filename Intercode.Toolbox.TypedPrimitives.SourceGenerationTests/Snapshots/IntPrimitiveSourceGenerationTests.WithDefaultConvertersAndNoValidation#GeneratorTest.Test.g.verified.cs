@@ -7,7 +7,7 @@ namespace GeneratorTest;
 [global::System.ComponentModel.TypeConverter( typeof( GeneratorTest.TestTypeConverter ) )]
 [global::System.Text.Json.Serialization.JsonConverter( typeof( GeneratorTest.TestSystemTextJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
-public readonly partial record struct Test
+public readonly partial struct Test
   : global::System.IComparable<Test>,
     global::System.IComparable,
     global::System.IFormattable

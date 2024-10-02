@@ -20,7 +20,7 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
 
         [TypedPrimitive(typeof( System.DateTimeOffset ),
                         Converters = TypedPrimitiveConverter.Default)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -35,7 +35,7 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( System.DateTimeOffset ), Converters = TypedPrimitiveConverter.None)]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
@@ -50,7 +50,7 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
         using Intercode.Toolbox.TypedPrimitives;
 
         [TypedPrimitive(typeof( System.DateTimeOffset ))]
-        public readonly partial record struct Test;
+        public readonly partial struct Test;
       """;
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );

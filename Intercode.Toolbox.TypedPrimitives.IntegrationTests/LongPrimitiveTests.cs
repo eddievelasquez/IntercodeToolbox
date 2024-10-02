@@ -12,10 +12,10 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 [TypedPrimitive( typeof( long ) )]
-public readonly partial record struct UnvalidatedLongPrimitive;
+public readonly partial struct UnvalidatedLongPrimitive;
 
 [TypedPrimitive( typeof( long ) )]
-public readonly partial record struct LongPrimitive
+public readonly partial struct LongPrimitive
 {
   #region Constants
 

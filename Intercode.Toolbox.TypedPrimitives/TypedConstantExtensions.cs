@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Intercode.Toolbox.TypedPrimitives.Diagnostics;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 internal static class TypedConstantExtensions
 {

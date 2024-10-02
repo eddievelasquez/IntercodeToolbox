@@ -1,4 +1,4 @@
-// Module Name: NamedSymbolTypeExtensions.cs
+// Module Name: SymbolExtensions.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 

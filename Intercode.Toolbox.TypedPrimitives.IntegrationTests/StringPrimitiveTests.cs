@@ -16,13 +16,13 @@ using SystemTextJsonException = System.Text.Json.JsonException;
 using SystemTextJsonSerializer = System.Text.Json.JsonSerializer;
 
 [TypedPrimitive( typeof( string ) )]
-public readonly partial record struct UnvalidatedStringPrimitive;
+public readonly partial struct UnvalidatedStringPrimitive;
 
 [TypedPrimitive(
   typeof( string ),
   Converters = TypedPrimitiveConverter.Default | TypedPrimitiveConverter.NewtonsoftJson
 )]
-public readonly partial record struct StringPrimitive
+public readonly partial struct StringPrimitive
 {
   #region Constants
 
