@@ -14,20 +14,66 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   public void Initialize(
     IncrementalGeneratorInitializationContext context )
   {
-    // Get all the readonly record structs that are tagged with the marker attribute
+    // Get all the readonly structs that are tagged with the marker attribute
     var primitivesToGenerate = context.SyntaxProvider.ForAttributeWithMetadataName(
       Parser.MarkerAttributeFullName,
       Parser.IsGenerationTarget,
       Parser.GetTypedPrimitiveToGenerate
     );
 
-    // Register the types to generate
-    context.RegisterSourceOutput(
-      primitivesToGenerate,
-      static (
-        context,
-        result ) => Generate( result, context )
+    // Get all the readonly structs that are tagged with the generic marker attribute
+    var primitivesToGenerateFromGeneric = context.SyntaxProvider.ForAttributeWithMetadataName(
+      Parser.GenericMarkerAttributeFullName,
+      Parser.IsGenerationTarget,
+      Parser.GetTypedPrimitiveToGenerate
     );
+
+    // Report errors
+    RegisterErrorOutput( primitivesToGenerate );
+    RegisterErrorOutput( primitivesToGenerateFromGeneric );
+
+    // Generate source code
+    RegisterSourceOutput( primitivesToGenerate );
+    RegisterSourceOutput( primitivesToGenerateFromGeneric );
+
+    return;
+
+    void RegisterSourceOutput(
+      IncrementalValuesProvider<Result<GeneratorModel>> results )
+    {
+      var values = results.Where( result => result.IsSuccess )
+                          .Select(
+                            static (
+                              result,
+                              _ ) => result.Value
+                          );
+
+      context.RegisterSourceOutput(
+        values,
+        static (
+          context,
+          model ) => Generate( model, context )
+      );
+    }
+
+    void RegisterErrorOutput(
+      IncrementalValuesProvider<Result<GeneratorModel>> results )
+    {
+      context.RegisterSourceOutput(
+        results.SelectMany(
+          static (
+            result,
+            _ ) => result.Errors
+        ),
+        static (
+          context,
+          info ) =>
+        {
+          var diagnostic = info.ToDiagnostic();
+          context.ReportDiagnostic( diagnostic );
+        }
+      );
+    }
   }
 
   #endregion
@@ -35,21 +81,9 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   #region Implementation
 
   private static void Generate(
-    Result<GeneratorModel> primitiveToGenerate,
+    GeneratorModel model,
     SourceProductionContext context )
   {
-    if( primitiveToGenerate.IsFailed )
-    {
-      foreach( var diagnosticInfo in primitiveToGenerate.Errors )
-      {
-        var diagnostic = diagnosticInfo.ToDiagnostic();
-        context.ReportDiagnostic( diagnostic );
-      }
-
-      return;
-    }
-
-    var model = primitiveToGenerate.Value;
     var processor = new TemplateProcessor();
 
     foreach( var (typeName, sourceText) in processor.ProcessTemplate( model ) )

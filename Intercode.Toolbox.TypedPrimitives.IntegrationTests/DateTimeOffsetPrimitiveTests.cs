@@ -11,7 +11,7 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive( typeof( DateTimeOffset ) )]
+[TypedPrimitive<DateTimeOffset>]
 public readonly partial struct UnvalidatedDateTimeOffsetPrimitive;
 
 [TypedPrimitive( typeof( DateTimeOffset ) )]

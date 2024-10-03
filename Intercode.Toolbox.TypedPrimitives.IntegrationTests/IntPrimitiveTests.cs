@@ -11,7 +11,7 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive( typeof( int ) )]
+[TypedPrimitive<int>]
 public readonly partial struct UnvalidatedIntPrimitive;
 
 [TypedPrimitive( typeof( int ) )]

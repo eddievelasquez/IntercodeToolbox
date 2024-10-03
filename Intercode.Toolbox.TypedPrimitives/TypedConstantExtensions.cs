@@ -105,37 +105,43 @@ internal static class TypedConstantExtensions
       return Result.Fail<Type>( Error.Unexpected( "The primitive type is not a type" ) );
     }
 
-    if( typedConstant.Value is INamedTypeSymbol namedTypeSymbol )
+    if( typedConstant.Value is INamedTypeSymbol typeSymbol )
     {
-      var type = namedTypeSymbol.SpecialType switch
-      {
-        SpecialType.System_Boolean  => typeof( bool ),
-        SpecialType.System_Byte     => typeof( byte ),
-        SpecialType.System_Char     => typeof( char ),
-        SpecialType.System_DateTime => typeof( DateTime ),
-        SpecialType.System_Decimal  => typeof( decimal ),
-        SpecialType.System_Double   => typeof( double ),
-        SpecialType.System_Int16    => typeof( short ),
-        SpecialType.System_Int32    => typeof( int ),
-        SpecialType.System_Int64    => typeof( long ),
-        SpecialType.System_SByte    => typeof( sbyte ),
-        SpecialType.System_Single   => typeof( float ),
-        SpecialType.System_String   => typeof( string ),
-        SpecialType.System_UInt16   => typeof( ushort ),
-        SpecialType.System_UInt32   => typeof( uint ),
-        SpecialType.System_UInt64   => typeof( ulong ),
-        _                           => null
-      };
-
-      if( type is null )
-      {
-        return GetTypeFromSymbol( namedTypeSymbol );
-      }
-
-      return Result.Ok( type );
+      return typeSymbol.GetTypeValue();
     }
 
     return Result.Fail<Type>( Error.UnsupportedType( typedConstant.Value!.ToString() ) );
+  }
+
+  public static Result<Type> GetTypeValue(
+    this ITypeSymbol typeSymbol )
+  {
+    var type = typeSymbol.SpecialType switch
+    {
+      SpecialType.System_Boolean  => typeof( bool ),
+      SpecialType.System_Byte     => typeof( byte ),
+      SpecialType.System_Char     => typeof( char ),
+      SpecialType.System_DateTime => typeof( DateTime ),
+      SpecialType.System_Decimal  => typeof( decimal ),
+      SpecialType.System_Double   => typeof( double ),
+      SpecialType.System_Int16    => typeof( short ),
+      SpecialType.System_Int32    => typeof( int ),
+      SpecialType.System_Int64    => typeof( long ),
+      SpecialType.System_SByte    => typeof( sbyte ),
+      SpecialType.System_Single   => typeof( float ),
+      SpecialType.System_String   => typeof( string ),
+      SpecialType.System_UInt16   => typeof( ushort ),
+      SpecialType.System_UInt32   => typeof( uint ),
+      SpecialType.System_UInt64   => typeof( ulong ),
+      _                           => null
+    };
+
+    if( type is null )
+    {
+      return GetTypeFromSymbol( typeSymbol );
+    }
+
+    return Result.Ok( type );
   }
 
   public static object? GetValue(
@@ -159,7 +165,7 @@ internal static class TypedConstantExtensions
   #region Implementation
 
   private static Result<Type> GetTypeFromSymbol(
-    INamedTypeSymbol namedTypeSymbol )
+    ITypeSymbol namedTypeSymbol )
   {
     var typeName = namedTypeSymbol.ToDisplayString();
     var type = s_cachedTypes.GetOrAdd( typeName, s => GetTypeFromSymbolCore( namedTypeSymbol, s ) );
@@ -167,11 +173,16 @@ internal static class TypedConstantExtensions
   }
 
   private static Result<Type> GetTypeFromSymbolCore(
-    INamedTypeSymbol namedTypeSymbol,
+    ITypeSymbol namedTypeSymbol,
     string typeName )
   {
     // Get metadata reference for the named type symbol
     var containingAssembly = namedTypeSymbol.ContainingAssembly;
+    if( containingAssembly is null )
+    {
+      return Result.Fail<Type>( Error.Unexpected( $"The containing assembly for the '{typeName}' was not found" ) );
+    }
+
     var assemblyName = containingAssembly.Identity.GetDisplayName();
 
     var assemblies = AppDomain.CurrentDomain.GetAssemblies();

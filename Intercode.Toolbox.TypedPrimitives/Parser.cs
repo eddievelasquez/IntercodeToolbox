@@ -16,6 +16,7 @@ internal static class Parser
 
   public static readonly string MarkerAttributeName = nameof( TypedPrimitiveAttribute )!;
   public static readonly string MarkerAttributeFullName = typeof( TypedPrimitiveAttribute ).FullName!;
+  public static readonly string GenericMarkerAttributeFullName = typeof( TypedPrimitiveAttribute<> ).FullName!;
   public static readonly string ConvertersKey = nameof( TypedPrimitiveAttribute.Converters );
   public static readonly string StringComparisonKey = nameof( TypedPrimitiveAttribute.StringComparison );
 
@@ -140,6 +141,12 @@ internal static class Parser
   private static Result<Type> GetPrimitiveType(
     AttributeData attributeData )
   {
+    if( attributeData.AttributeClass!.IsGenericType )
+    {
+      var typeArg = attributeData.AttributeClass.TypeArguments.First();
+      return typeArg.GetTypeValue();
+    }
+
     var args = attributeData.ConstructorArguments;
     Debug.Assert( args.Length > 0 );
 

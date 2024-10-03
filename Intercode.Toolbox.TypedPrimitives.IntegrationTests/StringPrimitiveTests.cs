@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 using SystemTextJsonException = System.Text.Json.JsonException;
 using SystemTextJsonSerializer = System.Text.Json.JsonSerializer;
 
-[TypedPrimitive( typeof( string ) )]
+[TypedPrimitive<string>]
 public readonly partial struct UnvalidatedStringPrimitive;
 
 [TypedPrimitive(

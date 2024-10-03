@@ -11,7 +11,7 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive( typeof( Guid ) )]
+[TypedPrimitive<Guid>]
 public readonly partial struct UnvalidatedGuidPrimitive;
 
 [TypedPrimitive( typeof( Guid ) )]

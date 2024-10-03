@@ -86,6 +86,21 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
 
     return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
   }
+  [Fact]
+  public Task Compilation_ShouldSucceed_WithGenericAttribute()
+  {
+    var source = """
+        namespace GeneratorTest;
+
+        using Intercode.Toolbox.TypedPrimitives;
+        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
+
+        [TypedPrimitive<string>(Converters = TypedPrimitiveConverter.None)]
+        public readonly partial struct Test;
+      """;
+
+    return SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
+  }
 
   #endregion
 }

@@ -17,3 +17,8 @@ public class TypedPrimitiveAttribute( Type primitiveType ): Attribute
 
   #endregion
 }
+
+[AttributeUsage( AttributeTargets.Struct )]
+public class TypedPrimitiveAttribute<T>(): TypedPrimitiveAttribute( typeof( T ) )
+{
+}

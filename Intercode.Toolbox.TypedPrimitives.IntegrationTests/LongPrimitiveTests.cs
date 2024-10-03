@@ -11,7 +11,7 @@ using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-[TypedPrimitive( typeof( long ) )]
+[TypedPrimitive<long>]
 public readonly partial struct UnvalidatedLongPrimitive;
 
 [TypedPrimitive( typeof( long ) )]
