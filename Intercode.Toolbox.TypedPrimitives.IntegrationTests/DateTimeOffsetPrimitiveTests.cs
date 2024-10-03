@@ -14,7 +14,12 @@ using Microsoft.EntityFrameworkCore;
 [TypedPrimitive<DateTimeOffset>]
 public readonly partial struct UnvalidatedDateTimeOffsetPrimitive;
 
-[TypedPrimitive( typeof( DateTimeOffset ) )]
+[TypedPrimitive(
+  typeof( DateTimeOffset ),
+  Converters = TypedPrimitiveConverter.TypeConverter |
+               TypedPrimitiveConverter.SystemTextJson |
+               TypedPrimitiveConverter.EfCoreValueConverter
+)]
 public readonly partial struct DateTimeOffsetPrimitive
 {
   #region Constants
@@ -595,6 +600,17 @@ public class DateTimeOffsetPrimitiveTests
           .Be( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
+  [Fact]
+  public void Validate_ValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = DateTimeOffsetPrimitive.Validate( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+  }
+
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
@@ -602,17 +618,6 @@ public class DateTimeOffsetPrimitiveTests
   {
     // Act
     var result = UnvalidatedDateTimeOffsetPrimitive.Validate( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-  }
-
-  [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
-  {
-    // Act
-    var result = DateTimeOffsetPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()

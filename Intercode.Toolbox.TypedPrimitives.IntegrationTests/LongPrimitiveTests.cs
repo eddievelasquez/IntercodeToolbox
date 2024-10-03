@@ -14,7 +14,12 @@ using Microsoft.EntityFrameworkCore;
 [TypedPrimitive<long>]
 public readonly partial struct UnvalidatedLongPrimitive;
 
-[TypedPrimitive( typeof( long ) )]
+[TypedPrimitive(
+  typeof( long ),
+  Converters = TypedPrimitiveConverter.TypeConverter |
+               TypedPrimitiveConverter.SystemTextJson |
+               TypedPrimitiveConverter.EfCoreValueConverter
+)]
 public readonly partial struct LongPrimitive
 {
   #region Constants
@@ -585,6 +590,17 @@ public class LongPrimitiveTests
           .Be( LongPrimitive.ExpectedValidationErrorMessage );
   }
 
+  [Fact]
+  public void Validate_ValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = LongPrimitive.Validate( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+  }
+
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
@@ -592,17 +608,6 @@ public class LongPrimitiveTests
   {
     // Act
     var result = UnvalidatedLongPrimitive.Validate( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-  }
-
-  [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
-  {
-    // Act
-    var result = LongPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()

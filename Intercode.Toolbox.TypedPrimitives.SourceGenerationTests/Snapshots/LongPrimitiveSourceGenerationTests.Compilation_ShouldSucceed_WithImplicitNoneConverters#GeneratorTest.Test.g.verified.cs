@@ -4,23 +4,21 @@
 
 namespace GeneratorTest;
 
-[global::System.ComponentModel.TypeConverter( typeof( GeneratorTest.TestTypeConverter ) )]
-[global::System.Text.Json.Serialization.JsonConverter( typeof( GeneratorTest.TestSystemTextJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
   : global::System.IComparable<Test>,
     global::System.IComparable,
     global::System.IFormattable
 {
-  private readonly global::System.DateTime? _value;
+  private readonly long? _value;
 
-  private Test( global::System.DateTime? value )
+  private Test( long? value )
   {
     _value = value;
     NormalizePartial( ref _value );
   }
 
-  public global::System.DateTime Value
+  public long Value
   {
     get
     {
@@ -33,10 +31,10 @@ public readonly partial struct Test
     }
   }
 
-  public global::System.DateTime? ValueOrDefault => _value;
+  public long? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<Test> Create( global::System.DateTime? value )
+  public static global::FluentResults.Result<Test> Create( long? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
@@ -47,14 +45,14 @@ public readonly partial struct Test
     return new Test( value );
   }
 
-  public static global::FluentResults.Result Validate( global::System.DateTime? value )
+  public static global::FluentResults.Result Validate( long? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
   }
 
-  public static bool IsValid( global::System.DateTime? value )
+  public static bool IsValid( long? value )
   {
     return Validate( value ).IsSuccess;
   }
@@ -112,16 +110,16 @@ public readonly partial struct Test
       return 1;
     }
 
-    return ((global::System.DateTime) _value).CompareTo( ((global::System.DateTime) other) );
+    return ((long) _value).CompareTo( ((long) other) );
   }
 
-  public static explicit operator global::System.DateTime(
+  public static explicit operator long(
     Test primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator Test( global::System.DateTime? value )
+  public static explicit operator Test( long? value )
   {
     var result = Test.Create( value );
     if( result.IsFailed )
@@ -136,8 +134,8 @@ public readonly partial struct Test
   }
 
   static partial void NormalizePartial(
-    ref global::System.DateTime? value );
+    ref long? value );
 
   static partial void ValidatePartial(
-    global::System.DateTime? value, ref global::FluentResults.Result result );
+    long? value, ref global::FluentResults.Result result );
 }

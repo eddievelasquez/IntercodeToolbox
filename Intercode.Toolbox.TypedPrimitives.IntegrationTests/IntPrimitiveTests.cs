@@ -14,7 +14,12 @@ using Microsoft.EntityFrameworkCore;
 [TypedPrimitive<int>]
 public readonly partial struct UnvalidatedIntPrimitive;
 
-[TypedPrimitive( typeof( int ) )]
+[TypedPrimitive(
+  typeof( int ),
+  Converters = TypedPrimitiveConverter.TypeConverter |
+               TypedPrimitiveConverter.SystemTextJson |
+               TypedPrimitiveConverter.EfCoreValueConverter
+)]
 public readonly partial struct IntPrimitive
 {
   #region Constants
@@ -585,6 +590,17 @@ public class IntPrimitiveTests
           .Be( IntPrimitive.ExpectedValidationErrorMessage );
   }
 
+  [Fact]
+  public void Validate_ValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = IntPrimitive.Validate( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+  }
+
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
@@ -592,17 +608,6 @@ public class IntPrimitiveTests
   {
     // Act
     var result = UnvalidatedIntPrimitive.Validate( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-  }
-
-  [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
-  {
-    // Act
-    var result = IntPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()

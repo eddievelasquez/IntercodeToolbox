@@ -4,23 +4,21 @@
 
 namespace GeneratorTest;
 
-[global::System.ComponentModel.TypeConverter( typeof( GeneratorTest.TestTypeConverter ) )]
-[global::System.Text.Json.Serialization.JsonConverter( typeof( GeneratorTest.TestSystemTextJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
   : global::System.IComparable<Test>,
     global::System.IComparable,
     global::System.IFormattable
 {
-  private readonly global::System.Guid? _value;
+  private readonly int? _value;
 
-  private Test( global::System.Guid? value )
+  private Test( int? value )
   {
     _value = value;
     NormalizePartial( ref _value );
   }
 
-  public global::System.Guid Value
+  public int Value
   {
     get
     {
@@ -33,10 +31,10 @@ public readonly partial struct Test
     }
   }
 
-  public global::System.Guid? ValueOrDefault => _value;
+  public int? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<Test> Create( global::System.Guid? value )
+  public static global::FluentResults.Result<Test> Create( int? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
@@ -47,14 +45,14 @@ public readonly partial struct Test
     return new Test( value );
   }
 
-  public static global::FluentResults.Result Validate( global::System.Guid? value )
+  public static global::FluentResults.Result Validate( int? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
   }
 
-  public static bool IsValid( global::System.Guid? value )
+  public static bool IsValid( int? value )
   {
     return Validate( value ).IsSuccess;
   }
@@ -112,16 +110,16 @@ public readonly partial struct Test
       return 1;
     }
 
-    return ((global::System.Guid) _value).CompareTo( ((global::System.Guid) other) );
+    return ((int) _value).CompareTo( ((int) other) );
   }
 
-  public static explicit operator global::System.Guid(
+  public static explicit operator int(
     Test primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator Test( global::System.Guid? value )
+  public static explicit operator Test( int? value )
   {
     var result = Test.Create( value );
     if( result.IsFailed )
@@ -136,8 +134,8 @@ public readonly partial struct Test
   }
 
   static partial void NormalizePartial(
-    ref global::System.Guid? value );
+    ref int? value );
 
   static partial void ValidatePartial(
-    global::System.Guid? value, ref global::FluentResults.Result result );
+    int? value, ref global::FluentResults.Result result );
 }

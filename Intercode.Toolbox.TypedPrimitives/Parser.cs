@@ -115,7 +115,7 @@ internal static class Parser
 
     var namedArguments = attributeData.NamedArguments;
     var converters = namedArguments.GetEnumValue<TypedPrimitiveConverter>( ConvertersKey ) ??
-                     TypedPrimitiveConverter.Default;
+                     TypedPrimitiveConverter.None;
     var @namespace = recordSymbol.ContainingNamespace.ToDisplayString();
     var typeName = recordSymbol.Name;
 

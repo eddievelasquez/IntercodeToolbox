@@ -4,23 +4,21 @@
 
 namespace GeneratorTest;
 
-[global::System.ComponentModel.TypeConverter( typeof( GeneratorTest.TestTypeConverter ) )]
-[global::System.Text.Json.Serialization.JsonConverter( typeof( GeneratorTest.TestSystemTextJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
   : global::System.IComparable<Test>,
     global::System.IComparable,
     global::System.IFormattable
 {
-  private readonly int? _value;
+  private readonly global::System.DateTimeOffset? _value;
 
-  private Test( int? value )
+  private Test( global::System.DateTimeOffset? value )
   {
     _value = value;
     NormalizePartial( ref _value );
   }
 
-  public int Value
+  public global::System.DateTimeOffset Value
   {
     get
     {
@@ -33,10 +31,10 @@ public readonly partial struct Test
     }
   }
 
-  public int? ValueOrDefault => _value;
+  public global::System.DateTimeOffset? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<Test> Create( int? value )
+  public static global::FluentResults.Result<Test> Create( global::System.DateTimeOffset? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
@@ -47,14 +45,14 @@ public readonly partial struct Test
     return new Test( value );
   }
 
-  public static global::FluentResults.Result Validate( int? value )
+  public static global::FluentResults.Result Validate( global::System.DateTimeOffset? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
   }
 
-  public static bool IsValid( int? value )
+  public static bool IsValid( global::System.DateTimeOffset? value )
   {
     return Validate( value ).IsSuccess;
   }
@@ -112,16 +110,16 @@ public readonly partial struct Test
       return 1;
     }
 
-    return ((int) _value).CompareTo( ((int) other) );
+    return ((global::System.DateTimeOffset) _value).CompareTo( ((global::System.DateTimeOffset) other) );
   }
 
-  public static explicit operator int(
+  public static explicit operator global::System.DateTimeOffset(
     Test primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator Test( int? value )
+  public static explicit operator Test( global::System.DateTimeOffset? value )
   {
     var result = Test.Create( value );
     if( result.IsFailed )
@@ -136,8 +134,8 @@ public readonly partial struct Test
   }
 
   static partial void NormalizePartial(
-    ref int? value );
+    ref global::System.DateTimeOffset? value );
 
   static partial void ValidatePartial(
-    int? value, ref global::FluentResults.Result result );
+    global::System.DateTimeOffset? value, ref global::FluentResults.Result result );
 }

@@ -11,15 +11,15 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
   #region Tests
 
   [Fact]
-  public Task Compilation_ShouldSucceed_WithExplicitDefaultConverters()
+  public Task Compilation_ShouldSucceed_WithExplicitConverters()
   {
     var source = """
         namespace GeneratorTest;
-      
+
         using Intercode.Toolbox.TypedPrimitives;
-      
+
         [TypedPrimitive(typeof( System.DateTimeOffset ),
-                        Converters = TypedPrimitiveConverter.Default)]
+                        Converters = TypedPrimitiveConverter.TypeConverter | TypedPrimitiveConverter.SystemTextJson | TypedPrimitiveConverter.EfCoreValueConverter)]
         public readonly partial struct Test;
       """;
 
@@ -31,9 +31,9 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
   {
     var source = """
         namespace GeneratorTest;
-      
+
         using Intercode.Toolbox.TypedPrimitives;
-      
+
         [TypedPrimitive(typeof( System.DateTimeOffset ), Converters = TypedPrimitiveConverter.None)]
         public readonly partial struct Test;
       """;
@@ -42,13 +42,13 @@ public class DateTimeOffsetPrimitiveSourceGenerationTests( ITestOutputHelper out
   }
 
   [Fact]
-  public Task Compilation_ShouldSucceed_WithImplicitDefaultConverters()
+  public Task Compilation_ShouldSucceed_WithImplicitNoneConverters()
   {
     var source = """
         namespace GeneratorTest;
-      
+
         using Intercode.Toolbox.TypedPrimitives;
-      
+
         [TypedPrimitive(typeof( System.DateTimeOffset ))]
         public readonly partial struct Test;
       """;

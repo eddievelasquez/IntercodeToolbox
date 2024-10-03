@@ -4,23 +4,20 @@
 
 namespace GeneratorTest;
 
-[global::System.ComponentModel.TypeConverter( typeof( GeneratorTest.TestTypeConverter ) )]
-[global::System.Text.Json.Serialization.JsonConverter( typeof( GeneratorTest.TestSystemTextJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
   : global::System.IComparable<Test>,
-    global::System.IComparable,
-    global::System.IFormattable
+    global::System.IComparable
 {
-  private readonly global::System.DateTimeOffset? _value;
+  private readonly string? _value;
 
-  private Test( global::System.DateTimeOffset? value )
+  private Test( string? value )
   {
     _value = value;
     NormalizePartial( ref _value );
   }
 
-  public global::System.DateTimeOffset Value
+  public string Value
   {
     get
     {
@@ -29,14 +26,14 @@ public readonly partial struct Test
         throw new global::System.InvalidOperationException( "Value is null" );
       }
 
-      return _value.Value;
+      return _value!;
     }
   }
 
-  public global::System.DateTimeOffset? ValueOrDefault => _value;
+  public string? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
-  public static global::FluentResults.Result<Test> Create( global::System.DateTimeOffset? value )
+  public static global::FluentResults.Result<Test> Create( string? value )
   {
     var result = Validate( value );
     if( result.IsFailed )
@@ -47,14 +44,14 @@ public readonly partial struct Test
     return new Test( value );
   }
 
-  public static global::FluentResults.Result Validate( global::System.DateTimeOffset? value )
+  public static global::FluentResults.Result Validate( string? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
   }
 
-  public static bool IsValid( global::System.DateTimeOffset? value )
+  public static bool IsValid( string? value )
   {
     return Validate( value ).IsSuccess;
   }
@@ -72,20 +69,13 @@ public readonly partial struct Test
 
   public override string ToString()
   {
-    return _value is null ? string.Empty : _value.ToString()!;
+    return _value is null ? string.Empty : _value;
   }
 
   public string ToString(
-    string? format )
-  {
-    return _value is null ? string.Empty : _value.Value.ToString( format, null );
-  }
-
-  public string ToString(
-    string? format,
     global::System.IFormatProvider? formatProvider )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
+    return _value is null ? string.Empty : _value.ToString( formatProvider );
   }
 
   public int CompareTo(
@@ -112,16 +102,16 @@ public readonly partial struct Test
       return 1;
     }
 
-    return ((global::System.DateTimeOffset) _value).CompareTo( ((global::System.DateTimeOffset) other) );
+    return string.Compare( _value, other._value, System.StringComparison.OrdinalIgnoreCase );
   }
 
-  public static explicit operator global::System.DateTimeOffset(
+  public static explicit operator string(
     Test primitive )
   {
     return primitive.Value;
   }
 
-  public static explicit operator Test( global::System.DateTimeOffset? value )
+  public static explicit operator Test( string? value )
   {
     var result = Test.Create( value );
     if( result.IsFailed )
@@ -136,8 +126,8 @@ public readonly partial struct Test
   }
 
   static partial void NormalizePartial(
-    ref global::System.DateTimeOffset? value );
+    ref string? value );
 
   static partial void ValidatePartial(
-    global::System.DateTimeOffset? value, ref global::FluentResults.Result result );
+    string? value, ref global::FluentResults.Result result );
 }

@@ -11,14 +11,14 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
   #region Tests
 
   [Fact]
-  public Task Compilation_ShouldSucceed_WithExplicitDefaultConverters()
+  public Task Compilation_ShouldSucceed_WithExplicitConverters()
   {
     var source = """
         namespace GeneratorTest;
 
         using Intercode.Toolbox.TypedPrimitives;
 
-        [TypedPrimitive(typeof( string ), Converters = TypedPrimitiveConverter.Default)]
+        [TypedPrimitive(typeof( string ), Converters = TypedPrimitiveConverter.TypeConverter | TypedPrimitiveConverter.SystemTextJson | TypedPrimitiveConverter.EfCoreValueConverter)]
         public readonly partial struct Test;
       """;
 
@@ -41,7 +41,7 @@ public class StringPrimitiveSourceGenerationTests( ITestOutputHelper output )
   }
 
   [Fact]
-  public Task Compilation_ShouldSucceed_WithImplicitDefaultConverters()
+  public Task Compilation_ShouldSucceed_WithImplicitNoneConverters()
   {
     var source = """
         namespace GeneratorTest;

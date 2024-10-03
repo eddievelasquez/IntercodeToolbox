@@ -14,7 +14,12 @@ using Microsoft.EntityFrameworkCore;
 [TypedPrimitive<Guid>]
 public readonly partial struct UnvalidatedGuidPrimitive;
 
-[TypedPrimitive( typeof( Guid ) )]
+[TypedPrimitive(
+  typeof( Guid ),
+  Converters = TypedPrimitiveConverter.TypeConverter |
+               TypedPrimitiveConverter.SystemTextJson |
+               TypedPrimitiveConverter.EfCoreValueConverter
+)]
 public readonly partial struct GuidPrimitive
 {
   #region Constants
@@ -588,6 +593,17 @@ public class GuidPrimitiveTests
           .Be( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
+  [Fact]
+  public void Validate_ValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = GuidPrimitive.Validate( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+  }
+
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
@@ -595,17 +611,6 @@ public class GuidPrimitiveTests
   {
     // Act
     var result = UnvalidatedGuidPrimitive.Validate( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-  }
-
-  [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
-  {
-    // Act
-    var result = GuidPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()

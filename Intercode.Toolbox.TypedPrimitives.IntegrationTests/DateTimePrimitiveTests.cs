@@ -14,7 +14,12 @@ using Microsoft.EntityFrameworkCore;
 [TypedPrimitive<DateTime>]
 public readonly partial struct UnvalidatedDateTimePrimitive;
 
-[TypedPrimitive( typeof( DateTime ) )]
+[TypedPrimitive(
+  typeof( DateTime ),
+  Converters = TypedPrimitiveConverter.TypeConverter |
+               TypedPrimitiveConverter.SystemTextJson |
+               TypedPrimitiveConverter.EfCoreValueConverter
+)]
 public readonly partial struct DateTimePrimitive
 {
   #region Constants
@@ -595,6 +600,17 @@ public class DateTimePrimitiveTests
           .Be( DateTimePrimitive.ExpectedValidationErrorMessage );
   }
 
+  [Fact]
+  public void Validate_ValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = DateTimePrimitive.Validate( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+  }
+
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
@@ -602,17 +618,6 @@ public class DateTimePrimitiveTests
   {
     // Act
     var result = UnvalidatedDateTimePrimitive.Validate( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-  }
-
-  [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
-  {
-    // Act
-    var result = DateTimePrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()

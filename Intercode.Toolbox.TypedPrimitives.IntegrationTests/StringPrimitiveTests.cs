@@ -20,7 +20,10 @@ public readonly partial struct UnvalidatedStringPrimitive;
 
 [TypedPrimitive(
   typeof( string ),
-  Converters = TypedPrimitiveConverter.Default | TypedPrimitiveConverter.NewtonsoftJson
+  Converters = TypedPrimitiveConverter.TypeConverter |
+               TypedPrimitiveConverter.SystemTextJson |
+               TypedPrimitiveConverter.EfCoreValueConverter |
+               TypedPrimitiveConverter.NewtonsoftJson
 )]
 public readonly partial struct StringPrimitive
 {
@@ -888,6 +891,17 @@ public class StringPrimitiveTests
           .Be( StringPrimitive.ExpectedValidationErrorMessage );
   }
 
+  [Fact]
+  public void Validate_ValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = StringPrimitive.Validate( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+  }
+
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
@@ -895,17 +909,6 @@ public class StringPrimitiveTests
   {
     // Act
     var result = UnvalidatedStringPrimitive.Validate( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-  }
-
-  [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
-  {
-    // Act
-    var result = StringPrimitive.Validate( s_validValueA );
 
     // Assert
     result.IsSuccess.Should()
