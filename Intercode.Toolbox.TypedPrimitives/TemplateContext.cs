@@ -28,7 +28,7 @@ internal class TemplateContext
     TypeInfo = TypeManager.GetSupportedTypeInfo( model.PrimitiveType );
 
     // Use the common main template if no specialization exists
-    var useCommonTemplates = !EmbeddedResourceManager.DoesResourceExist(
+    var useCommonTemplates = !EmbeddedResourceManager.DoesTemplateExist(
       Model.PrimitiveType.FullName!,
       MAIN_TEMPLATE_NAME
     );

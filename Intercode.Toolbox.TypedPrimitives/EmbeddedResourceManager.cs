@@ -18,12 +18,12 @@ internal static class EmbeddedResourceManager
 
   #region Public Methods
 
-  public static bool DoesResourceExist(
+  public static bool DoesTemplateExist(
     string resourceDirectory,
     string templateName )
   {
-    var resourceName = GetResourceName( resourceDirectory, templateName );
-    var info = s_thisAssembly.GetManifestResourceInfo( resourceName );
+    var resourcePath = GetTemplateResourcePath( resourceDirectory, templateName );
+    var info = s_thisAssembly.GetManifestResourceInfo( resourcePath );
     return info is not null;
   }
 
@@ -31,47 +31,79 @@ internal static class EmbeddedResourceManager
     string resourceDirectory,
     string templateName )
   {
-    var resourceName = GetResourceName( resourceDirectory, templateName );
-    if( !TryLoadTemplate( resourceName, out var template ) )
+    var resourcePath = GetTemplateResourcePath( resourceDirectory, templateName );
+    if( !TryLoadTextResource( resourcePath, out var template ) )
     {
 #if DEBUG
       var existingResources = s_thisAssembly.GetManifestResourceNames();
       throw new ArgumentException(
-        $"Could not find embedded resource '{resourceName}'. Available names: {string.Join( ", ", existingResources )}"
+        $"Could not find embedded resource '{resourcePath}'. Available names: {string.Join( ", ", existingResources )}"
       );
 #else
-      throw new ArgumentException( $"Could not find embedded resource '{resourceName}'." );
+      throw new ArgumentException( $"Could not find embedded resource '{resourcePath}'." );
 #endif
     }
 
     return template;
   }
 
-  public static bool TryLoadTemplate(
+  public static string LoadTextResource(
     string resourceName,
-    [NotNullWhen( true )] out string? template )
+    string? resourceDirectory = null )
   {
-    var resourceStream = s_thisAssembly.GetManifestResourceStream( resourceName );
-    if( resourceStream is null )
+    var resourcePath = GetResourcePath( resourceName, resourceDirectory );
+    if( !TryLoadTextResource( resourcePath, out var text ) )
     {
-      template = null;
-      return false;
+#if DEBUG
+      var existingResources = s_thisAssembly.GetManifestResourceNames();
+      throw new ArgumentException(
+        $"Could not find embedded resource '{resourcePath}'. Available names: {string.Join( ", ", existingResources )}"
+      );
+#else
+      throw new ArgumentException( $"Could not find embedded resource '{resourcePath}'." );
+#endif
     }
 
-    using var reader = new StreamReader( resourceStream, Encoding.UTF8 );
-    template = reader.ReadToEnd();
-    return true;
+    return text;
   }
 
   #endregion
 
   #region Implementation
 
-  private static string GetResourceName(
+  private static bool TryLoadTextResource(
+    string resourcePath,
+    [NotNullWhen( true )] out string? text )
+  {
+    var resourceStream = s_thisAssembly.GetManifestResourceStream( resourcePath );
+    if( resourceStream is null )
+    {
+      text = null;
+      return false;
+    }
+
+    using var reader = new StreamReader( resourceStream, Encoding.UTF8 );
+    text = reader.ReadToEnd();
+    return true;
+  }
+
+  private static string GetTemplateResourcePath(
     string resourceDirectory,
     string templateName )
   {
     return $"Intercode.Toolbox.TypedPrimitives.Templates.{resourceDirectory}.{templateName}.template";
+  }
+
+  private static string GetResourcePath(
+    string resourceName,
+    string? resourceDirectory = null )
+  {
+    if( resourceDirectory is not null )
+    {
+      return $"Intercode.Toolbox.TypedPrimitives.{resourceDirectory}.{resourceName}";
+    }
+
+    return $"Intercode.Toolbox.TypedPrimitives.{resourceName}";
   }
 
   #endregion

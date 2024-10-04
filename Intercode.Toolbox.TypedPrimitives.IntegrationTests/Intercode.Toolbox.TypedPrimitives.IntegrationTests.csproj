@@ -30,7 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Intercode.Toolbox.TypedPrimitives.Annotations\Intercode.Toolbox.TypedPrimitives.Annotations.csproj" OutputItemType="Analyzer" />
     <ProjectReference Include="..\Intercode.Toolbox.TypedPrimitives\Intercode.Toolbox.TypedPrimitives.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 

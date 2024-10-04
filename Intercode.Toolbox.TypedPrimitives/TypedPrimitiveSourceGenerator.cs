@@ -14,27 +14,37 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   public void Initialize(
     IncrementalGeneratorInitializationContext context )
   {
+    context.RegisterPostInitializationOutput(
+      static initializationContext =>
+      {
+        var source = EmbeddedResourceManager.LoadTextResource( "TypedPrimitiveAttribute.cs" );
+        var hintName = $"{typeof( TypedPrimitiveAttribute ).FullName!}.g.cs";
+
+        initializationContext.AddSource( hintName, source );
+      }
+    );
+
     // Get all the readonly structs that are tagged with the marker attribute
-    var primitivesToGenerate = context.SyntaxProvider.ForAttributeWithMetadataName(
+    var pipeline = context.SyntaxProvider.ForAttributeWithMetadataName(
       Parser.MarkerAttributeFullName,
       Parser.IsGenerationTarget,
       Parser.GetTypedPrimitiveToGenerate
     );
 
     // Get all the readonly structs that are tagged with the generic marker attribute
-    var primitivesToGenerateFromGeneric = context.SyntaxProvider.ForAttributeWithMetadataName(
+    var genericPipeline = context.SyntaxProvider.ForAttributeWithMetadataName(
       Parser.GenericMarkerAttributeFullName,
       Parser.IsGenerationTarget,
       Parser.GetTypedPrimitiveToGenerate
     );
 
     // Report errors
-    RegisterErrorOutput( primitivesToGenerate );
-    RegisterErrorOutput( primitivesToGenerateFromGeneric );
+    RegisterErrorOutput( pipeline );
+    RegisterErrorOutput( genericPipeline );
 
     // Generate source code
-    RegisterSourceOutput( primitivesToGenerate );
-    RegisterSourceOutput( primitivesToGenerateFromGeneric );
+    RegisterSourceOutput( pipeline );
+    RegisterSourceOutput( genericPipeline );
 
     return;
 
@@ -88,7 +98,8 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
 
     foreach( var (typeName, sourceText) in processor.ProcessTemplate( model ) )
     {
-      context.AddSource( $"{typeName}.g.cs", sourceText );
+      var hintName = $"{typeName}.g.cs";
+      context.AddSource( hintName, sourceText );
     }
   }
 

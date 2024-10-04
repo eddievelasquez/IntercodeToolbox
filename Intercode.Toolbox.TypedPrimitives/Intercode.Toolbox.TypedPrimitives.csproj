@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -36,7 +36,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Templates\Common\NewtonsoftJsonConverter.template" />
+    <EmbeddedResource Include="TypedPrimitiveAttribute.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,16 +56,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Intercode.Toolbox.TypedPrimitives.Annotations\Intercode.Toolbox.TypedPrimitives.Annotations.csproj">
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <PrivateAssets>all</PrivateAssets>
-    </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.Annotations.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.Annotations.dll" Pack="true" PackagePath="lib\netstandard2.0" Visible="true" />
     <None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 

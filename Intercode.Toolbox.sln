@@ -40,13 +40,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Typed Primitives", "Typed P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives", "Intercode.Toolbox.TypedPrimitives\Intercode.Toolbox.TypedPrimitives.csproj", "{99FC0B70-F5BF-41D6-83FB-03A679DEA533}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.Annotations", "Intercode.Toolbox.TypedPrimitives.Annotations\Intercode.Toolbox.TypedPrimitives.Annotations.csproj", "{FE20998F-3ED3-4989-A21E-F6D6F11FF8EF}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.IntegrationTests", "Intercode.Toolbox.TypedPrimitives.IntegrationTests\Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj", "{0678401E-D2C6-40C1-9447-A0C2A3742C2F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.SourceGenerationTests", "Intercode.Toolbox.TypedPrimitives.SourceGenerationTests\Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj", "{545BA897-0433-4FCC-9CDE-39884C05AB27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intercode.Toolbox.TypedPrimitives.Tests", "Intercode.Toolbox.TypedPrimitives.Tests\Intercode.Toolbox.TypedPrimitives.Tests.csproj", "{DD283EF4-2273-4692-AD18-957052059D19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.Tests", "Intercode.Toolbox.TypedPrimitives.Tests\Intercode.Toolbox.TypedPrimitives.Tests.csproj", "{DD283EF4-2273-4692-AD18-957052059D19}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -102,10 +100,6 @@ Global
 		{99FC0B70-F5BF-41D6-83FB-03A679DEA533}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{99FC0B70-F5BF-41D6-83FB-03A679DEA533}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{99FC0B70-F5BF-41D6-83FB-03A679DEA533}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE20998F-3ED3-4989-A21E-F6D6F11FF8EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE20998F-3ED3-4989-A21E-F6D6F11FF8EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE20998F-3ED3-4989-A21E-F6D6F11FF8EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE20998F-3ED3-4989-A21E-F6D6F11FF8EF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0678401E-D2C6-40C1-9447-A0C2A3742C2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0678401E-D2C6-40C1-9447-A0C2A3742C2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0678401E-D2C6-40C1-9447-A0C2A3742C2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -130,7 +124,6 @@ Global
 		{DA3EC9A7-CC59-4CB3-ADBA-8D5A1D78DD43} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
 		{75F042DC-96D1-4F2D-A512-AB9EC65F551C} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
 		{99FC0B70-F5BF-41D6-83FB-03A679DEA533} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
-		{FE20998F-3ED3-4989-A21E-F6D6F11FF8EF} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
 		{0678401E-D2C6-40C1-9447-A0C2A3742C2F} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
 		{545BA897-0433-4FCC-9CDE-39884C05AB27} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
 		{DD283EF4-2273-4692-AD18-957052059D19} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
