@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>12.0</LangVersion>
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <PackageId>Intercode.Toolbox.TypedPrimitives</PackageId>
@@ -33,6 +33,10 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <Optimize>True</Optimize>
     <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);TP_USE_GENERIC_ATTRIBUTES</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

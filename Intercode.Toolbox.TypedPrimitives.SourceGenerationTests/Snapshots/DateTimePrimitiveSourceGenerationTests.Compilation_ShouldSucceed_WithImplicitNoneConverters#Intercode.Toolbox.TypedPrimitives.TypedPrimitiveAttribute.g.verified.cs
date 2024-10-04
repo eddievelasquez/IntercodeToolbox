@@ -31,7 +31,11 @@ public class TypedPrimitiveAttribute( Type primitiveType ): Attribute
   #endregion
 }
 
+#if NET7_0_OR_GREATER || TP_USE_GENERIC_ATTRIBUTES
+
 [AttributeUsage( AttributeTargets.Struct )]
 public class TypedPrimitiveAttribute<T>(): TypedPrimitiveAttribute( typeof( T ) )
 {
 }
+
+#endif
