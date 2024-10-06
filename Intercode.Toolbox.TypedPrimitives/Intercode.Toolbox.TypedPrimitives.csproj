@@ -2,22 +2,30 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <PackageId>Intercode.Toolbox.TypedPrimitives</PackageId>
-    <Description>A source generator for creating strongly-typed primitive types by decorating with the TypedPrimitive attribute</Description>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <Title>Typed Primitives source generator</Title>
-    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>false</EmbedUntrackedSources>
-    <DebugType>none</DebugType>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageId>Intercode.Toolbox.TypedPrimitives</PackageId>
+    <Title>Typed Primitives source generator</Title>
+    <Description>A source generator for creating strongly-typed primitive types by decorating with the TypedPrimitive attribute</Description>
+    <Product>Intercode.Toolbox</Product>
+    <Copyright>Intercode Consulting</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>primitive;typedprimitive;typesafe;sourcegenerator;codegen;codegenerator;validation;conversion;attribute;generator;generation;intercodetoolbox</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <Deterministic>true</Deterministic>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TF_BUILD)' == 'true'">
@@ -28,12 +36,14 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <Optimize>False</Optimize>
     <DebugType>portable</DebugType>
+    <NoWarn>1701;1702;NU5128</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <Optimize>True</Optimize>
     <DebugType>portable</DebugType>
+    <NoWarn>1701;1702;NU5128</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -59,11 +69,12 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" PrivateAssests="all" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(SolutionDir)\README.md" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
