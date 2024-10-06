@@ -4,7 +4,12 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using Intercode.Toolbox.TypedPrimitives.Diagnostics;
 using Microsoft.CodeAnalysis;
+
+internal record struct Package(
+  string Name,
+  Version Version );
 
 [Generator]
 public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
@@ -14,45 +19,9 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   public void Initialize(
     IncrementalGeneratorInitializationContext initializationContext )
   {
-    initializationContext.RegisterPostInitializationOutput(
-      static context =>
-      {
-        AddSource( typeof( TypedPrimitiveAttribute ) );
-        return;
+    AddPostInitializationSources( initializationContext );
 
-        void AddSource(
-          Type type )
-        {
-          var source = EmbeddedResourceManager.LoadTextResource( $"{type.Name}.cs" );
-          var hintName = $"{type.FullName!}.g.cs";
-
-          context.AddSource( hintName, source );
-        }
-      }
-    );
-
-    // Get all the structs that are tagged with the marker attribute
-    var markerPipeline = initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
-      Parser.MarkerAttributeFullName,
-      Parser.IsGenerationTarget,
-      Parser.GetTypedPrimitiveToGenerate
-    );
-
-    // Get all the structs that are tagged with the generic marker attribute
-    var genericMarkerPipeline = initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
-      Parser.GenericMarkerAttributeFullName,
-      Parser.IsGenerationTarget,
-      Parser.GetTypedPrimitiveToGenerate
-    );
-
-    // Combine the results of both pipelines
-    var pipeline = markerPipeline.Collect()
-                                 .Combine( genericMarkerPipeline.Collect() )
-                                 .SelectMany(
-                                   (
-                                     tuple,
-                                     _ ) => tuple.Left.Concat( tuple.Right )
-                                 );
+    var pipeline = GatherStructsToGenerate( initializationContext );
 
     // Report diagnostics from failed results
     initializationContext.RegisterSourceOutput(
@@ -91,6 +60,50 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   #endregion
 
   #region Implementation
+
+
+  private static IncrementalValuesProvider<Result<GeneratorModel>> GatherStructsToGenerate(
+    IncrementalGeneratorInitializationContext initializationContext )
+  {
+    // Get all the structs that are tagged with the marker attribute
+    var markerPipeline = initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
+      Parser.MarkerAttributeFullName,
+      Parser.IsGenerationTarget,
+      Parser.GetTypedPrimitiveToGenerate
+    );
+
+    // Get all the structs that are tagged with the generic marker attribute
+    var genericMarkerPipeline = initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
+      Parser.GenericMarkerAttributeFullName,
+      Parser.IsGenerationTarget,
+      Parser.GetTypedPrimitiveToGenerate
+    );
+
+    // Merge the results of both pipelines
+    var pipeline = markerPipeline.Merge( genericMarkerPipeline );
+    return pipeline;
+  }
+
+  private static void AddPostInitializationSources(
+    IncrementalGeneratorInitializationContext context )
+  {
+    context.RegisterPostInitializationOutput(
+      static context =>
+      {
+        AddSource( typeof( TypedPrimitiveAttribute ) );
+        return;
+
+        void AddSource(
+          Type type )
+        {
+          var source = EmbeddedResourceManager.LoadTextResource( $"{type.Name}.cs" );
+          var hintName = $"{type.FullName!}.g.cs";
+
+          context.AddSource( hintName, source );
+        }
+      }
+    );
+  }
 
   private static void GenerateSource(
     GeneratorModel model,

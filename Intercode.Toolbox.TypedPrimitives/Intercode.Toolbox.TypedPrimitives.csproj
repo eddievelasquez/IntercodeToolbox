@@ -10,6 +10,7 @@
     <PackageId>Intercode.Toolbox.TypedPrimitives</PackageId>
     <Description>A source generator for creating strongly-typed primitive types by decorating with the TypedPrimitive attribute</Description>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
     <Title>Typed Primitives source generator</Title>
     <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -53,6 +54,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentResults" />
     <PackageReference Include="Microsoft.Bcl.HashCode" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
