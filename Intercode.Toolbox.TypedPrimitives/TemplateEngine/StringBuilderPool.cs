@@ -4,14 +4,29 @@
 
 namespace Intercode.Toolbox.TypedPrimitives.TemplateEngine;
 
+using System.Collections.Concurrent;
 using System.Text;
 
 public class StringBuilderPool
 {
   #region Fields
 
-  private readonly LinkedList<StringBuilder> _pool = new ();
-  private readonly ReaderWriterLockSlim _lock = new ();
+  private readonly ConcurrentBag<StringBuilder> _pool;
+  private readonly int _initialCapacity;
+  private readonly int _maxPoolSize;
+
+  #endregion
+
+  #region Constructors
+
+  public StringBuilderPool(
+    int initialCapacity = 1024,
+    int maxPoolSize = 100 )
+  {
+    _initialCapacity = initialCapacity;
+    _maxPoolSize = maxPoolSize;
+    _pool = [];
+  }
 
   #endregion
 
@@ -25,49 +40,31 @@ public class StringBuilderPool
 
   public StringBuilder Get()
   {
-    _lock.EnterUpgradeableReadLock();
-
-    try
+    // Try to get a builder from the pool
+    if( _pool.TryTake( out var builder ) )
     {
-      if( _pool.Count <= 0 )
-      {
-        return new StringBuilder();
-      }
-
-      var builder = _pool.First.Value;
-      _lock.EnterWriteLock();
-
-      try
-      {
-        _pool.RemoveFirst();
-      }
-      finally
-      {
-        _lock.ExitWriteLock();
-      }
-
       return builder;
     }
-    finally
-    {
-      _lock.ExitUpgradeableReadLock();
-    }
+
+    // The pool was empty, so create a new builder
+    return new StringBuilder( _initialCapacity );
   }
 
   public void Return(
     StringBuilder builder )
   {
+    if( builder == null )
+    {
+      throw new ArgumentNullException( nameof( builder ) );
+    }
+
+    // Clear the builder to avoid leaking data
     builder.Clear();
 
-    _lock.EnterWriteLock();
-
-    try
+    // Add the builder back to the pool if it's not full
+    if( _pool.Count < _maxPoolSize )
     {
-      _pool.AddFirst( builder );
-    }
-    finally
-    {
-      _lock.ExitWriteLock();
+      _pool.Add( builder );
     }
   }
 

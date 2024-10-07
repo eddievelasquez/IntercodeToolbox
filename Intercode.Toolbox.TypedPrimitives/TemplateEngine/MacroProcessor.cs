@@ -59,8 +59,8 @@ public class MacroProcessor
         case SegmentKind.Macro:
         {
           // Unfortunately we cannot use a span for the macro as Dictionary does not
-          // yet span lookup support; however it might come in .NET 9.
-          // See: https://github.com/dotnet/runtime/issues/27229
+          // yet span lookup support; but .NET 9.0 does.
+          // see https://blog.ndepend.com/alternate-lookup-for-dictionary-and-hashset-in-net-9/
           var macroName = segment.Text;
           if( _macros.TryGetValue( macroName, out var macroValue ) )
           {

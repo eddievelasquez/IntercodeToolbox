@@ -62,17 +62,17 @@ public class TemplateCompiler
       throw new ArgumentException( "The template's text cannot be null or empty.", nameof( text ) );
     }
 
-    Phase1SplitIntoChunks( text, out var chunks, out var emptyMacros );
+    // Split the text into chunks of constant text and macros
+    Phase1SplitIntoChunks( text.AsSpan(), out var chunks, out var emptyMacros );
 
-    // Optimize chunks:
-    // Convert empty macro chunks into a single delimiter and merge into an adjacent constant segment
+    // Optimize chunks: Convert empty macro chunks into a single delimiter and merge it into
+    // an adjacent constant text chunk (basically escaping $$ into $)
     Phase2RemoveEmptyMacroChunks( ref text, chunks, emptyMacros );
 
-    // Optimize chunks:
-    // Merge adjacent constant segments
-    Phase3MergeAdjacentConstantSegments( chunks );
+    // Optimize chunks: Merge adjacent constant text chunks into the leftmost chunk
+    Phase3MergeAdjacentConstantTextChunks( chunks );
 
-    // Generate template
+    // Generate template from the chunks
     var template = Phase4GenerateTemplate( text, chunks );
     return template;
   }
@@ -82,46 +82,43 @@ public class TemplateCompiler
   #region Implementation
 
   private static void Phase1SplitIntoChunks(
-    string text,
+    ReadOnlySpan<char> text,
     out List<Chunk> chunks,
     out List<Chunk> emptyMacros )
   {
     chunks = [];
-    emptyMacros = [];
+    emptyMacros = []; // Optimization: keep a list of empty macros to remove them in the next phase
 
-    var memory = text.AsMemory();
     var currentIndex = 0;
 
-    while( currentIndex < memory.Length )
+    while( currentIndex < text.Length )
     {
-      var macroStart = memory.Slice( currentIndex )
-                             .Span
-                             .IndexOf( MacroDelimiter );
+      var macroStart = text.Slice( currentIndex )
+                           .IndexOf( MacroDelimiter );
 
       if( macroStart == -1 )
       {
-        // No more macros found, add the remaining text as a constant segment
-        chunks.Add( Chunk.CreateConstant( currentIndex, memory.Length - currentIndex ) );
+        // No more macros found, add the remaining text as a constant chunk
+        chunks.Add( Chunk.CreateConstant( currentIndex, text.Length - currentIndex ) );
         break;
       }
 
       macroStart += currentIndex;
 
-      // Add the text before the macro delimiter as a constant segment
+      // Add the text before the macro delimiter (if any) as a constant chunk
       if( macroStart > currentIndex )
       {
         chunks.Add( Chunk.CreateConstant( currentIndex, macroStart - currentIndex ) );
       }
 
       // Look for the closing macro delimiter
-      var macroEnd = memory.Slice( ( macroStart + 1 ) )
-                           .Span
-                           .IndexOf( MacroDelimiter );
+      var macroEnd = text.Slice( ( macroStart + 1 ) )
+                         .IndexOf( MacroDelimiter );
 
       if( macroEnd == -1 )
       {
-        // No closing delimiter found, treat the rest as a constant segment
-        chunks.Add( Chunk.CreateConstant( macroStart, memory.Length - macroStart ) );
+        // No closing delimiter found, treat the rest of the text as a constant chunk
+        chunks.Add( Chunk.CreateConstant( macroStart, text.Length - macroStart ) );
         break;
       }
 
@@ -174,10 +171,10 @@ public class TemplateCompiler
 
         if( TryGetLeftConstantChunk( index, out var textChunk ) )
         {
-          // Extend the prior constant text segment to include the opening delimiter of the empty macro
+          // Extend the prior constant text chunk to include the opening delimiter of the empty macro
           ++textChunk.Length;
 
-          // All subsequent chunk start position must be shifted left by one
+          // All subsequent chunk start position must be shifted left by one character (the removed macro closing delimiter)
           ShiftChunksLeft( index + 1 );
 
           // Remove the macro chunk
@@ -185,11 +182,11 @@ public class TemplateCompiler
         }
         else if( TryGetRightConstantChunk( index, out textChunk ) )
         {
-          // Shift the start of the constant text segment to the left and extend to cover the delimiter
+          // Shift the start of the constant text chunk to the left and extend to cover the delimiter
           --textChunk.Start;
           ++textChunk.Length;
 
-          // All subsequent chunk start position must be shifted left by one
+          // All subsequent chunk start position must be shifted left by one character (the removed macro closing delimiter)
           ShiftChunksLeft( index + 1 );
 
           // Remove the macro chunk
@@ -197,11 +194,13 @@ public class TemplateCompiler
         }
         else
         {
-          // Convert macro chunk to constant
+          // Convert macro chunk kind to Constant to avoid processing empty macros in subsequent phases
           macroChunk.Kind = SegmentKind.Constant;
+
+          // Remove the closing delimiter of the empty macro in the current chunk
           --macroChunk.Length;
 
-          // All subsequent chunk start position must be shifted left by one
+          // All subsequent chunk start position must be shifted left by one character (the removed macro closing delimiter)
           ShiftChunksLeft( index + 1 );
         }
       }
@@ -228,6 +227,7 @@ public class TemplateCompiler
       int index,
       [NotNullWhen( true )] out Chunk? chunk )
     {
+      // Check if there is a constant chunk to the left of the current chunk
       if( index > 0 )
       {
         var c = chunks[index - 1];
@@ -246,6 +246,7 @@ public class TemplateCompiler
       int index,
       [NotNullWhen( true )] out Chunk? chunk )
     {
+      // Check if there is a constant chunk to the right of the current chunk
       if( index < chunks.Count - 1 )
       {
         var c = chunks[index + 1];
@@ -261,7 +262,7 @@ public class TemplateCompiler
     }
   }
 
-  private static void Phase3MergeAdjacentConstantSegments(
+  private static void Phase3MergeAdjacentConstantTextChunks(
     List<Chunk> chunks )
   {
     if( chunks.Count < 2 )
@@ -275,7 +276,7 @@ public class TemplateCompiler
       var firstChunk = chunks[i - 1];
       var secondChunk = chunks[i];
 
-      // Only merge adjacent constant text segments
+      // Only merge adjacent constant text chunks
       if( firstChunk.Kind != SegmentKind.Constant || secondChunk.Kind != SegmentKind.Constant )
       {
         continue;
@@ -293,6 +294,7 @@ public class TemplateCompiler
     string text,
     List<Chunk> chunks )
   {
+    // Must use Memory because Span is not allowed on the heap
     var memory = text.AsMemory();
     var segments = chunks.Select( chunk => new Segment( chunk.Kind, memory.Slice( chunk.Start, chunk.Length ) ) )
                          .ToArray();
