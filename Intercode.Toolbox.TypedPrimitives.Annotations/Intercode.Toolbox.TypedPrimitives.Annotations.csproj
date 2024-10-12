@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Description>Attributes for the Intercode.Toolbox.TypedPrimitives source generator</Description>
+    <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Intercode.Toolbox.TypedPrimitives</RootNamespace>
+  </PropertyGroup>
+
+</Project>

@@ -18,7 +18,7 @@ public class JsonWebTokenBuilder
 {
   #region Constants
 
-  private static readonly Dictionary<RequiredClaim, string> REQUIRED_CLAIM_NAMES = new ()
+  private static readonly Dictionary<RequiredClaim, string> s_requiredClaimNames = new ()
   {
     { RequiredClaim.Subject, JwtRegisteredClaimNames.Sub },
     { RequiredClaim.Issuer, JwtRegisteredClaimNames.Iss },
@@ -446,7 +446,7 @@ public class JsonWebTokenBuilder
         return;
       }
 
-      var claimName = REQUIRED_CLAIM_NAMES[claim];
+      var claimName = s_requiredClaimNames[claim];
       if( _claims.Contains( claimName ) )
       {
         return;

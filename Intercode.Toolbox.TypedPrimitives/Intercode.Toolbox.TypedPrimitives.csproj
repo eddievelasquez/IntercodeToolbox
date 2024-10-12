@@ -1,0 +1,80 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <PackageId>Intercode.Toolbox.TypedPrimitives</PackageId>
+    <Title>Typed Primitives source generator</Title>
+    <Description>A source generator for creating strongly-typed primitive types by decorating with the TypedPrimitive attribute</Description>
+    <Product>Intercode.Toolbox</Product>
+    <Copyright>Intercode Consulting</Copyright>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>primitive;typedprimitive;typesafe;sourcegenerator;codegen;codegenerator;validation;conversion;attribute;generator;generation;intercodetoolbox</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <Deterministic>true</Deterministic>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TF_BUILD)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <Optimize>False</Optimize>
+    <DebugType>portable</DebugType>
+    <NoWarn>1701;1702;NU5128</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <Optimize>True</Optimize>
+    <DebugType>portable</DebugType>
+    <NoWarn>1701;1702;NU5128</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);TP_USE_GENERIC_ATTRIBUTES</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="TypedPrimitiveAttribute.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
+    <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter.template" />
+    <EmbeddedResource Include="Templates\Common\PrimitiveType.template" />
+    <EmbeddedResource Include="Templates\Common\SystemTextJsonConverter.template" />
+    <EmbeddedResource Include="Templates\Common\TypeConverter.template" />
+    <EmbeddedResource Include="Templates\System.String\PrimitiveType.template" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentResults" />
+    <PackageReference Include="Microsoft.Bcl.HashCode" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" PrivateAssests="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>
