@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TemplateEngine.Benchmarks": {
+      "commandName": "Project",
+      "commandLineArgs": "--filter *"
+    }
+  }
+}

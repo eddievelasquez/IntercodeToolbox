@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.Core.Benc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.Core.Tests", "Intercode.Toolbox.Core.Tests\Intercode.Toolbox.Core.Tests.csproj", "{E6CFAB3A-2D06-4153-A39A-6EDEEA0B3051}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit Tests", "Unit Tests", "{207C7ED0-F5DB-4A72-8461-D954E182B9F9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{207C7ED0-F5DB-4A72-8461-D954E182B9F9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.AspNetCore.Extensions", "Intercode.Toolbox.AspNetCore.Extensions\Intercode.Toolbox.AspNetCore.Extensions.csproj", "{0CE01CF0-7953-4F4F-9FCF-8986A10838E1}"
 EndProject
@@ -36,15 +36,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.UnitTesti
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.UnitTesting.XUnit.Tests", "Intercode.Toolbox.UnitTesting.XUnit.Tests\Intercode.Toolbox.UnitTesting.XUnit.Tests.csproj", "{75F042DC-96D1-4F2D-A512-AB9EC65F551C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Typed Primitives", "Typed Primitives", "{F10E5E81-2D86-43FD-A907-293F08E6BAF6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives", "Intercode.Toolbox.TypedPrimitives\Intercode.Toolbox.TypedPrimitives.csproj", "{99FC0B70-F5BF-41D6-83FB-03A679DEA533}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.IntegrationTests", "Intercode.Toolbox.TypedPrimitives.IntegrationTests\Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj", "{0678401E-D2C6-40C1-9447-A0C2A3742C2F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.SourceGenerationTests", "Intercode.Toolbox.TypedPrimitives.SourceGenerationTests\Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj", "{545BA897-0433-4FCC-9CDE-39884C05AB27}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TypedPrimitives.Tests", "Intercode.Toolbox.TypedPrimitives.Tests\Intercode.Toolbox.TypedPrimitives.Tests.csproj", "{DD283EF4-2273-4692-AD18-957052059D19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TemplateEngine.Tests", "Intercode.Toolbox.TemplateEngine.Tests\Intercode.Toolbox.TemplateEngine.Tests.csproj", "{DD283EF4-2273-4692-AD18-957052059D19}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.TemplateEngine", "Intercode.Toolbox.TemplateEngine\Intercode.Toolbox.TemplateEngine.csproj", "{226F2ADF-273E-4689-8130-9C599E89B3D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intercode.Toolbox.TemplateEngine.Benchmarks", "Intercode.Toolbox.TemplateEngine.Benchmarks\Intercode.Toolbox.TemplateEngine.Benchmarks.csproj", "{3F4435A5-C166-4626-90BF-3F8A343F06E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -112,6 +114,14 @@ Global
 		{DD283EF4-2273-4692-AD18-957052059D19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DD283EF4-2273-4692-AD18-957052059D19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DD283EF4-2273-4692-AD18-957052059D19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{226F2ADF-273E-4689-8130-9C599E89B3D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{226F2ADF-273E-4689-8130-9C599E89B3D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{226F2ADF-273E-4689-8130-9C599E89B3D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{226F2ADF-273E-4689-8130-9C599E89B3D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F4435A5-C166-4626-90BF-3F8A343F06E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F4435A5-C166-4626-90BF-3F8A343F06E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F4435A5-C166-4626-90BF-3F8A343F06E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F4435A5-C166-4626-90BF-3F8A343F06E9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -123,10 +133,10 @@ Global
 		{80E6A726-A7B7-4631-8FB9-7AA0EB7F1E83} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
 		{DA3EC9A7-CC59-4CB3-ADBA-8D5A1D78DD43} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
 		{75F042DC-96D1-4F2D-A512-AB9EC65F551C} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
-		{99FC0B70-F5BF-41D6-83FB-03A679DEA533} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
-		{0678401E-D2C6-40C1-9447-A0C2A3742C2F} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
-		{545BA897-0433-4FCC-9CDE-39884C05AB27} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
-		{DD283EF4-2273-4692-AD18-957052059D19} = {F10E5E81-2D86-43FD-A907-293F08E6BAF6}
+		{0678401E-D2C6-40C1-9447-A0C2A3742C2F} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
+		{545BA897-0433-4FCC-9CDE-39884C05AB27} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
+		{DD283EF4-2273-4692-AD18-957052059D19} = {207C7ED0-F5DB-4A72-8461-D954E182B9F9}
+		{3F4435A5-C166-4626-90BF-3F8A343F06E9} = {29C9DFC8-AB8E-438F-8B9D-8F18CAA33BC0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16D06924-33DD-49A9-8C66-91D4D1635A7E}

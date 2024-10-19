@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Intercode.Toolbox.Core\Intercode.Toolbox.Core.csproj" />
+    <ProjectReference Include="..\Intercode.Toolbox.TemplateEngine\Intercode.Toolbox.TemplateEngine.csproj" />
   </ItemGroup>
 
 </Project>
