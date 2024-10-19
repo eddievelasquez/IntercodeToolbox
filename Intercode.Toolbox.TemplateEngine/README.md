@@ -312,7 +312,7 @@ public partial class MacroProcessingTests
 Only the macro replacement code within the template is being benchmarked. As the results indicate, the `MacroProcessor` demonstrates significantly 
 faster performance and lower memory allocation compared to the `StringBuilder` and `Regex` implementations.
 
-![Results](BenchmarkResults.png)
+![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/refs/heads/main/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
 
 ---
 
