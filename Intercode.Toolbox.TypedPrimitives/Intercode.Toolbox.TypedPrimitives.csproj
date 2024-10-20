@@ -65,6 +65,7 @@
 
   <ItemGroup>
     <PackageReference Include="FluentResults" />
+    <PackageReference Include="Intercode.Toolbox.TemplateEngine" PrivateAssets="all" GeneratePathProperty="true" />
     <PackageReference Include="Microsoft.Bcl.HashCode" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
@@ -72,8 +73,19 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" PrivateAssests="all" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GetDependencyTargetPaths">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker Include="$(PKGIntercode_Toolbox_TemplateEngine)\lib\netstandard2.0\Intercode.Toolbox.TemplateEngine.dll" IncludeRuntimeDependency="false" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
-    <None Include="$(OutputPath)\Intercode.Toolbox.TypedPrimitives.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(PkgIntercode_Toolbox_TemplateEngine)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 

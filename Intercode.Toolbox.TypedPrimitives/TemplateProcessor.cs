@@ -6,7 +6,7 @@ namespace Intercode.Toolbox.TypedPrimitives;
 
 using System.Collections.Concurrent;
 using System.Text;
-using Intercode.Toolbox.TypedPrimitives.TemplateEngine;
+using Intercode.Toolbox.TemplateEngine;
 using Microsoft.CodeAnalysis.Text;
 
 internal class TemplateProcessor

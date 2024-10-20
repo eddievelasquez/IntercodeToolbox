@@ -1,5 +1,9 @@
 # Intercode.Toolbox.TypedPrimitives
 
+## Updates
+
+- **Version 2.3.1** - Moved the template processing engine to its own package: [Intercode.Toolbox.TemplateEngine](https://www.nuget.org/packages/Intercode.Toolbox.TemplateEngine/).
+
 ## Description
 
 [Primitive obsession](https://www.freecodecamp.org/news/what-is-primitive-obsession/) is a pervasive code smell in object-oriented programming that occurs when primitive types are used to represent domain concepts instead of creating custom types. This can lead to a variety of problems, including a lack of type safety, duplication of logic, and difficulty in understanding the code.
