@@ -1,86 +1,185 @@
 # Intercode.Toolbox.TemplateEngine
 
+A fast and simple text templating engine.
+
+## Updates
+- **Version 2.4** - Added dynamic macro support.
+
+## Table of Contents
+<!--TOC-->
+  - [Description](#description)
+  - [Processing Macros in Templates: A Quick Guide](#processing-macros-in-templates-a-quick-guide)
+  - [Reference](#reference)
+    - [`TemplateEngineOptions` class](#templateengineoptions-class)
+      - [Constructor](#constructor)
+      - [Properties](#properties)
+    - [`TemplateCompiler` class](#templatecompiler-class)
+      - [Constructor](#constructor)
+      - [Methods](#methods)
+    - [`MacroValueGenerator` delegate](#macrovaluegenerator-delegate)
+    - [`MacroProcessorBuilder` class](#macroprocessorbuilder-class)
+      - [Constructor](#constructor)
+      - [Methods](#methods)
+      - [Extension Methods](#extension-methods)
+    - [`MacroProcessor` class](#macroprocessor-class)
+      - [Methods](#methods)
+  - [Benchmarks](#benchmarks)
+  - [License](#license)
+<!--/TOC-->
+
 ## Description
 
-A fast and simple templatating engine used by the [Intercode.Toolbox.TypedPrimitives](https://www.nuget.org/packages/Intercode.Toolbox.TypedPrimitives/) package.
-
-A template is a string that can contain one or macros that will be replaced by their corresponding values; a macro name is a string delimited, 
-by default, by `$` characters. For example:
+A template is a string that can include one or more macros, which are placeholders replaced by their corresponding values. 
+These values can be dynamically generated. By default, macro names are strings enclosed by `$` characters. For example:
 
 ```
-Hello, $Name$!
+Hello, $Name$! Today is $Now:yyyyMMdd$.
 ```
 
-> **NOTE:** A delimiter can be any character, but it must be the same for the start and end of the macro name. The delimiter is
-escaped by doubling it, so `$$` is a literal `$` character. To avoid escaping too many delimiters and simplify the 
-templates, a character that is not commonly found in the template's text should be chosen.
+> **NOTE:** A delimiter can be any character, but it must be the same for the start and end of the macro name.
+The delimiter is escaped by doubling it, so `$$` is a literal `$` character. To avoid excessive escaping and
+simplify templates, choose a character not commonly found in the template's text. For C# code, the backtick `` ` `` 
+character is another good delimiter choice.
 
-The macro processor is case-insensitive, so `$Name$` and `$name$` are the refer to the same macro values.
+The macro names are case-insensitive, meaning that `$Name$` and `$name$` will reference the same macro value.
 
-## Usage
+## Processing Macros in Templates: A Quick Guide
 
-Lets see a short example of how to process macros:
+Let's look at a simple example of how to process macros in a template:
 
 ```csharp
- TemplateCompiler compiler = new();
- Template template = compiler.Compile( "Hello, $Name$!" );
+TemplateCompiler compiler = new();
+Template template = compiler.Compile("Hello, $Name$! Today is $Now:yyyyMMdd$. You are $Age$ years old!");
 
- MacroProcessorBuilder builder = new();
- builder.AddMacro( "Name", "John" );
+MacroProcessorBuilder builder = new();
+builder.AddStandardMacros()
+       .AddMacro("Name", "John")
+       .AddMacro("Age", _ => Random.Shared.Next(18, 100).ToString());
 
- MacroProcessor processor = builder.Build();
- StringWriter writer = new();
- processor.ProcessMacros( template, writer );
+MacroProcessor processor = builder.Build();
+StringWriter writer = new();
+processor.ProcessMacros(template, writer);
 
- var result = writer.ToString();
+var result = writer.ToString();
 
- // Result should be "Hello, John!"
+// Result should be "Hello, John! Today is 20241023. You are 27 years old!" 
+// Assuming today is October 23, 2024 and the generated random number is 27.
 ```
-<br/>
 
-**Step 1: Create a `TemplateCompiler` Instance**
+## Step-by-Step Guide
 
-First, create a `TemplateCompiler` instance to parse the template text and generate a `Template` instance. A `Template` comprises segments of the
-template text, which can either be constant text or macros. You can cache and reuse `Template` instances to process various sets of macro values, 
-preventing the need to compile the same template text multiple times. Passing a `TemplateEngineOptions` instance to the `TemplateCompiler` constructor
-will allow overriding the default macro delimiter.
+### 1. Create a TemplateCompiler Instance
 
-**Step 2: Build a `MacroProcessor`**
+First, create a `TemplateCompiler` instance to parse the template text and generate a `Template` instance. 
 
-Next, instantiate a `MacroProcessorBuilder` to create a `MacroProcessor`. Use the builder to add the necessary macros, each defined as a pair of
-strings—the macro name and its value. Once you've added all required macros, call the `Build` method to create the `MacroProcessor` instance. 
-Given that creating a `MacroProcessor` is a relatively expensive operation, it's recommended to reuse it when processing multiple templates that
-use the same macro **values**. If a customized `TemplateEngineOptions` instance was used in the previous step, the `MacroProcessorBuilder` should
-also be instantiated with the same options.
+Key points:
+* A `Template` consists of segments that can be either constant text or macros.
+* You can cache and reuse `Template` instances for different macro values.
+* Use `TemplateEngineOptions` to customize macro delimiters and argument separators.
 
-**Step 3: Process Macros in the Template**
+### 2. Build a MacroProcessor
 
-Finally, utilize the `ProcessMacros` method of the `MacroProcessor` to replace macros in the `Template` with their corresponding values. The processed template text will be written to the provided `StringWriter` instance, yielding the final output.
+Next, create a `MacroProcessor` using the `MacroProcessorBuilder`:
 
+* Initialize a new `MacroProcessorBuilder`
+* Use `AddMacro()` to add macros using either:
+  * Static values: name-value pairs.
+  * Dynamic values: functions that generate values.
+* Optionally add standard macros using `AddStandardMacros()`
+* Call `Build()` to create the `MacroProcessor`
+
+**Performance Tip:** Creating a `MacroProcessor` is relatively computationally expensive. For high-performance scenarios 
+(like Roslyn source generators), reuse the instance when processing multiple templates with the same **static** macro values.
+
+### 3. Process Macros in the Template
+
+Finally, process the template:
+
+1. Call `ProcessMacros()` on your `MacroProcessor` instance
+2. Pass the `Template` instance generated in Step 1 and a `StringWriter` instance.
+3. Retrieve the final output from the `StringWriter`.
+
+**Note:** If you used custom `TemplateEngineOptions` in Step 1, make sure to use the same options when creating the `MacroProcessorBuilder`.
+
+## Custom Dynamic Macros
+
+Creating a custom dynamic macro is easy: just call the `AddMacro` method and supply a `MacroValueGenerator` delegate to
+generate the macro's value. The example below shows how to create a dynamic macro that returns the current date and 
+time in a specified format:
+
+```csharp
+ MacroProcessorBuilder builder = new();
+ builder.AddMacro( "Random", _ => Random.Shared.Next() );
+```
+
+You can customize your dynamic macro's behavior by using an argument, accessible through the `argument` parameter in the
+`MacroValueGenerator` delegate. If the macro is instantiated without an argument, argument will be an empty span. Otherwise, 
+you can convert it to a string and use it as needed. The argument value is fully transparent to the macro processor, with
+the only limitation being that it cannot contain the macro delimiter character.
+
+```csharp
+ MacroProcessorBuilder builder = new();
+ builder.AddMacro( "Random", arg => 
+    {
+      if( arg.IsEmpty ) 
+      {
+        return Random.Shared.Next().ToString();
+      }
+        
+      return Random.Shared.Next( int.Parse( arg ) )
+    });
+```
+
+In the example above, the `Random` macro generates a random non-negative number less than the specified value. If no argument is provided,
+it generates a random non-negative number less than `int.MaxValue`.
+
+With the following template:
+
+```
+Random number: $Random$. Random number less than 100: $Random:100$.
+```
+
+The first macro will generate a random number less than `int.MaxValue`, while the second macro will generate a random number less than 100.
+
+> **NOTE**: Any exception thrown by a macro value generator will be caught and the macro's value will be the exception's error message.
 
 ## Reference
 ---
 
 ### `TemplateEngineOptions` class
 
-Represents the options for the claassses in the template engine.
+Represents the options for the classes in the template engine.
 
 #### Constructor
 
-Creates a new instance of the `TemplateEngineOptions` class. The `macroDelimiter` parameter specifies the character used to delimit macro; if `null`,
-the value in the `DefaultMacroDelimiter` constant is used.
-
 ```csharp
- TemplateEngineOptions( char? macroDelimiter = null )
+TemplateEngineOptions(
+    char? macroDelimiter = null,
+    char? argumentSeparator = null )
 ```
 
-#### Properties
+Creates a new instance of the `TemplateEngineOptions` class. The `macroDelimiter` parameter specifies the character 
+used to delimit macro; if `null`, the value in the `DefaultMacroDelimiter` constant is used. 
+The `argumentSeparator` parameter specifies the character used to separate the macro's name from it's argument; if `null`,
+the value in the `DefaultArgumentSeparator` constant is used.
 
-- `MacroDelimiter` gets the character used to delimit macro names in the template text.
+An `ArgumentException` exception will be thrown if either `macroDelimiter` or 'argumentSeparator` are a non-punctuation character.
+
+
+#### Properties
 
 ```csharp
 char MacroDelimiter { get; }
 ```
+
+`MacroDelimiter` gets the character used to delimit macro names in the template text.
+
+```csharp
+char ArgumentSeparator { get; }
+```
+
+`ArgumentSeparator` gets the character used to separate a macro's name from its argument in the template text.
+
 
 ### `TemplateCompiler` class
 
@@ -88,20 +187,31 @@ Compiles a template text into a `Template`
 
 #### Constructor
 
-Creates a new instance of the `TemplateCompiler` class. The `macroDelimiter` parameter specifies the character used to delimit macro
-names in the template text. If `null`, the value in the `DefaultMacroDelimiter` constant is used.
-
 ```csharp
-TemplateCompiler( char? macroDelimiter = null )
+TemplateCompiler( TemplateEngineOptions? options = null )
 ```
 
-#### Methods
+Creates a new instance of the `TemplateCompiler` class. The `options` parameter specifies the otion values used during compilation;
+if `null`, the values in `TemplateEngineOptions.Default` are used.
 
-- `Compile` compiles the specified template text into a `Template` instance; an `ArgumentException` is thrown if the template text is `null` or empty.
+#### Methods
 
 ```csharp
 Template Compile( string text )
 ```
+
+`Compile` compiles the specified template text into a `Template` instance; an `ArgumentException` is thrown if the template text is `null` or empty.
+
+---
+
+### `MacroValueGenerator` delegate
+
+```csharp
+delegate string MacroValueGenerator( ReadOnlySpan<char> argument );
+```
+
+Defines a method that will generate a macro's value. The `argument` parameter is the macro's argument, which is an optional text, separated by a
+colon `:` after macro's name and the closing delimiter. If the template didn't specify an argument, the `argument` parameter will be `ReadOnlySpan<char>.Empty`.
 
 ---
 
@@ -109,29 +219,56 @@ Template Compile( string text )
 
 #### Constructor
 
-Builds a `MacroProcessor` instance with the specified macros. The `macroDelimiter` parameter specifies the character used to delimit macro
-names in the template text. If `null`, the value in the `DefaultMacroDelimiter` constant is used.
-
 ```csharp
-MacroProcessorBuilder( char? macroDelimiter = null )
+MacroProcessorBuilder( TemplateEngineOptions? options = null )
 ```
 
-#### Methods
+Builds a `MacroProcessor` instance with the specified macros. The `options` parameter specifies the option values used while processing macros;
+if `null`, the values in `TemplateEngineOptions.Default` are used.
 
-- `AddMacro` adds a macro to the builder. The `name` parameter is the macro name, and the `value` parameter is the macro value. 
-An `ArgumentException` is thrown if the macro name is `null`, empty, all whitespaces, or contains any character that is not alphanumeric
-or an underscore.
+#### Methods
 
 ```csharp
 MacroProcessorBuilder AddMacro( string name, string value )
 ```
 
-- `Build` creates a `MacroProcessor` instance with the macros added to the builder. After it's built, the builder is automatically disposed
-and cannot be reused.
+`AddMacro` adds a static value macro to the builder. The `name` parameter is the macro name, and the `value` parameter is the macro value. 
+An `ArgumentException` is thrown if the macro name is `null`, empty, all whitespaces, or contains any character that is not alphanumeric.
+or an underscore.
+
+```csharp
+MacroProcessorBuilder AddMacro( string name, MacroValueGenerator generator )
+``` 
+
+`AddMacro` adds a dynamic value macro to the builder. The `name` parameter is the macro name, and the `generator` parameter is a function 
+that generates a string value when called.
+An `ArgumentException` is thrown if the macro name is `null`, empty, all whitespaces, or contains any character that is not alphanumeric.
 
 ```csharp
 MacroProcessor Build()
 ```
+
+`Build` creates a `MacroProcessor` instance with the macros added to the builder. The builder instance can be reused to generate a new 
+`MacroProcessor` instance if required.
+
+#### Extension Methods
+
+```csharp
+static MacroProcessorBuilder AddStandardMacros( this MacroProcessorBuilder builder )
+```
+
+`AddStandardMacros` adds the following dynamic macros to the builder:
+
+- `NOW` - Gets the current local date and time. The optional argument is the format string passed to the `DateTime.ToString(String)` method.
+- `UTC_NOW` - Gets the current UTC date and time. The optional argument is the format string passed to the `DateTime.ToString(String)` method.
+- `GUID` - Generates a new `Guid`. The optional argument is the format string passed to the `Guid.ToString(String)` method.
+- `MACHINE` - Gets the name of the local computer as returned by the `Environment.MachineName` property.
+- `OS` - Gets the name of the operating system as returned by the `Environment.OSVersion.VersionString` property.
+- `USER` - Gets the name of the current user as returned by the `Environment.UserName` property.
+- `CLR_VERSION` - Gets the version of the Common Language Runtime as returned by the `Environment.Version` property.
+- `ENV` - Gets the value of the environment variable specified by the argument as returned by the `Environment.GetEnvironmentVariable(String)` method.
+
+If any macro value generator throws an exception, the macro's value will be the exception's error message.
 
 ### `MacroProcessor` class
 
@@ -139,25 +276,21 @@ Processes macros in a `Template` instance and writes the result to a `TextWriter
 
 #### Methods
 
-- `ProcessMacros` replaces macros in the specified `Template` instance with their corresponding values and writes the result to the provided `TextWriter`.
-
 ```csharp
 void ProcessMacros( Template template, TextWriter writer )
  ```
 
- - `GetMacros` returns a read-only snapshot containing the macros added to the `MacroProcessor` instance.
+`ProcessMacros` replaces macros in the specified `Template` instance with their corresponding values and writes the result to the provided `TextWriter`.
 
- ```csharp
- IReadOnlyDictionary<string, string> GetMacros()
- ```
-
- - `GetMacroValue` returns the value of the specified macro name; the macro name shouldn't include the delimiters. If the macro name
- is not found, `null` is returned.
- 
  ```csharp
  string? GetMacroValue( string macroName )
+ string? GetMacroValue( string macroName, ReadOnlySpan<char> argument )
  ```
 
+`GetMacroValue` returns the value of the specified macro name; the macro name shouldn't include the delimiters. If the macro name
+ is not found, `null` is returned. If the macro has an argument, it should be passed as the second parameter.
+
+ 
 ## Benchmarks
 ---
 

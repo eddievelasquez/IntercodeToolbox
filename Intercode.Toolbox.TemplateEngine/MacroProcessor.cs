@@ -5,7 +5,6 @@
 namespace Intercode.Toolbox.TemplateEngine;
 
 using System.Collections.Frozen;
-using System.Collections.ObjectModel;
 
 /// <summary>
 ///   Processes macros in a template.
@@ -14,7 +13,7 @@ public class MacroProcessor
 {
   #region Fields
 
-  private readonly FrozenDictionary<string, ReadOnlyMemory<char>> _macros;
+  private readonly FrozenDictionary<string, MacroValueGenerator> _valueGenerators;
   private readonly TemplateEngineOptions _options;
 
   #endregion
@@ -24,17 +23,16 @@ public class MacroProcessor
   /// <summary>
   ///   Initializes a new instance of the <see cref="MacroProcessor" /> class.
   /// </summary>
-  /// <param name="macros">The dictionary of macro names and values.</param>
+  /// <param name="valueGenerators">Macros with their corresponding value generators.</param>
   /// <param name="options">The Template Engine options.</param>
   /// <remarks>
-  ///   * The macro names in the <paramref name="macros" /> dictionary come surrounded by the delimiter character.<br />
-  ///   * The <see cref="ReadOnlyMemory{T}" /> values in the dictionary keep the underlying string alive.
+  ///   The macro names in the <paramref name="valueGenerators" /> dictionary come surrounded by the delimiter character.
   /// </remarks>
   internal MacroProcessor(
-    FrozenDictionary<string, ReadOnlyMemory<char>> macros,
+    FrozenDictionary<string, MacroValueGenerator> valueGenerators,
     TemplateEngineOptions options )
   {
-    _macros = macros;
+    _valueGenerators = valueGenerators;
     _options = options;
   }
 
@@ -45,26 +43,11 @@ public class MacroProcessor
   /// <summary>
   ///   Gets the number of registered macros.
   /// </summary>
-  public int MacroCount => _macros.Count;
+  public int MacroCount => _valueGenerators.Count;
 
   #endregion
 
   #region Public Methods
-
-  /// <summary>
-  ///   Gets all the registered macros as a read-only dictionary.
-  /// </summary>
-  /// <returns>A read-only dictionary containing the registered macros.</returns>
-  public IReadOnlyDictionary<string, string> GetMacros()
-  {
-    return new ReadOnlyDictionary<string, string>(
-      _macros.ToDictionary(
-        static pair => pair.Key,
-        static pair => pair.Value.ToString(),
-        StringComparer.OrdinalIgnoreCase
-      )
-    );
-  }
 
   /// <summary>
   ///   Gets the value of a macro or <c>null</c> if not found.
@@ -76,20 +59,22 @@ public class MacroProcessor
   public string? GetMacroValue(
     string macroName )
   {
-    var key = _options.Delimit( macroName );
-    return _macros.TryGetValue( key, out var macroValue ) ? macroValue.ToString() : null;
+    return _valueGenerators.TryGetValue( macroName, out var generator ) ? generator( ReadOnlySpan<char>.Empty ) : null;
   }
 
   /// <summary>
-  ///   Gets the value of a macro as a <see cref="ReadOnlyMemory{T}" /> or <c>null</c> if not found.
+  ///   Gets the value of a macro or <c>null</c> if not found.
   /// </summary>
-  /// <param name="macroName">The name of the macro. The macro name used here does not include the delimiter character.</param>
-  /// <returns>The value of the macro as a <see cref="ReadOnlyMemory{T}" />, or null if the macro does not exist.</returns>
-  public ReadOnlyMemory<char>? GetMacroValueMemory(
-    string macroName )
+  /// <param name="macroName">
+  ///   The name of the macro. The macro name used here does not include the delimiter character.
+  /// </param>
+  /// <param name="argument">Data passed into the value generator.</param>
+  /// <returns>The value of the macro, or null if the macro does not exist.</returns>
+  public string? GetMacroValue(
+    string macroName,
+    ReadOnlySpan<char> argument )
   {
-    var key = _options.Delimit( macroName );
-    return _macros.TryGetValue( key, out var macroValue ) ? macroValue : null;
+    return _valueGenerators.TryGetValue( macroName, out var generator ) ? generator( argument ) : null;
   }
 
   /// <summary>
@@ -103,33 +88,58 @@ public class MacroProcessor
   {
     foreach( var segment in template.Segments )
     {
-      if( segment.IsMacro )
+      switch( segment.Kind )
       {
-        // Unfortunately we cannot use a Span for the macro lookup as Dictionary does not
-        // yet Span lookup support; but .NET 9.0 does.
-        // see https://blog.ndepend.com/alternate-lookup-for-dictionary-and-hashset-in-net-9/
-        var macroName = segment.Text;
-        if( _macros.TryGetValue( macroName, out var macroValue ) )
+        case SegmentKind.Macro:
         {
-#if NET6_0_OR_GREATER
-          writer.Write( macroValue.Span );
-#else
+          // Unfortunately we cannot use a Span for the macro lookup as Dictionary does not
+          // yet Span lookup support; but .NET 9.0 does.
+          // see https://blog.ndepend.com/alternate-lookup-for-dictionary-and-hashset-in-net-9/
+          var macroName = segment.Text;
+          if( _valueGenerators.TryGetValue( macroName, out var generator ) )
+          {
+            string value;
 
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-          writer.Write( macroValue.ToString() );
-#endif
+            try
+            {
+              value = generator( segment.ArgumentMemory.Span );
+            }
+            catch( Exception exception )
+            {
+              value = exception.Message;
+            }
+
+            writer.Write( value );
+          }
+
+          break;
         }
+
+        case SegmentKind.Delimiter:
+          writer.Write( _options.MacroDelimiter );
+          break;
+
+        case SegmentKind.Constant:
+          WriteConstant( segment );
+          break;
+
+        default:
+          throw new InvalidOperationException( "Unknown segment kind" );
       }
-      else
-      {
+    }
+
+    return;
+
+    void WriteConstant(
+      Segment segment )
+    {
 #if NET6_0_OR_GREATER
-        writer.Write( segment.Memory.Span );
+      writer.Write( segment.Memory.Span );
 #else
 
-        // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-        writer.Write( segment.Memory.ToString() );
+      // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+      writer.Write( segment.Memory.ToString() );
 #endif
-      }
     }
   }
 

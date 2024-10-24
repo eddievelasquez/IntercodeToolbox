@@ -44,7 +44,7 @@ public partial class MacroProcessingTests
     var helper = new TemplateEngineHelper();
     _template = helper.Compile();
     _macroProcessor = helper.CreateMacroProcessor();
-    _macros = _macroProcessor.GetMacros();
+    _macros = helper.Macros;
   }
 
   #endregion

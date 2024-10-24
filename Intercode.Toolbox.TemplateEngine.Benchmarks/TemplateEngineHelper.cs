@@ -83,6 +83,22 @@ internal class TemplateEngineHelper
 
   #endregion
 
+  #region Properties
+
+  public IReadOnlyDictionary<string, string> Macros =>
+    new Dictionary<string, string>
+    {
+      { "Namespace", "Benchmark.Tests" },
+      { "TypeName", "TestType" },
+      { "TypeQualifiedName", "Benchmark.Tests.TestType" },
+      { "TypeKeyword", "string" },
+      { "JsonTokenType", "String" },
+      { "JsonReader", "reader.GetString()" },
+      { "JsonWriter", "writer.WriteStringValue( value.Value )" }
+    };
+
+  #endregion
+
   #region Public Methods
 
   public Template Compile(
@@ -95,13 +111,7 @@ internal class TemplateEngineHelper
   public MacroProcessor CreateMacroProcessor()
   {
     return new MacroProcessorBuilder()
-           .AddMacro( "Namespace", "Benchmark.Tests" )
-           .AddMacro( "TypeName", "TestType" )
-           .AddMacro( "TypeQualifiedName", "Benchmark.Tests.TestType" )
-           .AddMacro( "TypeKeyword", "string" )
-           .AddMacro( "JsonTokenType", "String" )
-           .AddMacro( "JsonReader", "reader.GetString()" )
-           .AddMacro( "JsonWriter", "writer.WriteStringValue( value.Value )" )
+           .AddMacros( Macros )
            .Build();
   }
 

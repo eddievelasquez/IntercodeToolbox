@@ -17,5 +17,10 @@ public enum SegmentKind
   /// <summary>
   ///   Represents a macro segment.
   /// </summary>
-  Macro
+  Macro,
+
+  /// <summary>
+  ///   Represents an escaped delimiter segment.
+  /// </summary>
+  Delimiter
 }

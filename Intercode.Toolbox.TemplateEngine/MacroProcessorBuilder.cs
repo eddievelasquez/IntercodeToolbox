@@ -5,36 +5,23 @@
 namespace Intercode.Toolbox.TemplateEngine;
 
 using System.Collections.Frozen;
-using System.Diagnostics;
-using System.Text;
+
+/// <summary>
+///   Callback for dynamic macros.
+/// </summary>
+/// <param name="argument">Optional data passed to the callback for generating a value.</param>
+public delegate string MacroValueGenerator(
+  ReadOnlySpan<char> argument );
 
 /// <summary>
 ///   Creates a <see cref="MacroProcessor" /> instance.
 /// </summary>
-public class MacroProcessorBuilder: IDisposable
+public class MacroProcessorBuilder
 {
-  #region Nested Types
-
-  // NOTE: netstandard2.0 doesn't have the Range type, so we use a custom record instead.
-  [DebuggerDisplay( "Start: {Start}, Length: {Length}" )]
-  private readonly record struct StringRange(
-    int Start,
-    int End )
-  {
-    #region Properties
-
-    public int Length => End - Start;
-
-    #endregion
-  };
-
-  #endregion
-
   #region Fields
 
-  private readonly Dictionary<string, StringRange> _macros = new ( StringComparer.OrdinalIgnoreCase );
+  private readonly Dictionary<string, MacroValueGenerator> _generators = new ( StringComparer.OrdinalIgnoreCase );
   private readonly TemplateEngineOptions _options;
-  private StringBuilder? _values = StringBuilderPool.Default.Get();
 
   #endregion
 
@@ -44,8 +31,7 @@ public class MacroProcessorBuilder: IDisposable
   ///   Initializes a new instance of the <see cref="MacroProcessorBuilder" /> class.
   /// </summary>
   /// <param name="options">
-  ///   The template engine options. Will use <see cref="TemplateEngineOptions.Default" /> if <c>null</c>
-  ///   .
+  ///   The template engine options. Will use <see cref="TemplateEngineOptions.Default" /> if <c>null</c>.
   /// </param>
   public MacroProcessorBuilder(
     TemplateEngineOptions? options = null )
@@ -56,6 +42,38 @@ public class MacroProcessorBuilder: IDisposable
   #endregion
 
   #region Public Methods
+
+  /// <summary>
+  ///   Adds multiple macros with the specified names and values.
+  /// </summary>
+  /// <param name="macros">The collection of key-value pairs representing the macros to add.</param>
+  /// <returns>The <see cref="MacroProcessorBuilder" /> instance.</returns>
+  public MacroProcessorBuilder AddMacros(
+    IEnumerable<KeyValuePair<string, string>> macros )
+  {
+    foreach( var pair in macros )
+    {
+      AddMacro( pair.Key, pair.Value );
+    }
+
+    return this;
+  }
+
+  /// <summary>
+  ///   Adds multiple macros with the specified names and values.
+  /// </summary>
+  /// <param name="macros">The collection of key-value generator pairs representing the macros to add.</param>
+  /// <returns>The <see cref="MacroProcessorBuilder" /> instance.</returns>
+  public MacroProcessorBuilder AddMacros(
+    IEnumerable<KeyValuePair<string, MacroValueGenerator>> macros )
+  {
+    foreach( var pair in macros )
+    {
+      AddMacro( pair.Key, pair.Value );
+    }
+
+    return this;
+  }
 
   /// <summary>
   ///   Adds a macro with the specified name and value.
@@ -71,14 +89,48 @@ public class MacroProcessorBuilder: IDisposable
     string name,
     string value )
   {
-    if( _values is null )
-    {
-      throw new ObjectDisposedException( nameof( MacroProcessorBuilder ) );
-    }
+    ValidateMacroName( name );
+    _generators.Add( name, _ => value );
 
-    if( string.IsNullOrWhiteSpace( name ) )
+    return this;
+  }
+
+  /// <summary>
+  ///   Adds a macro with the specified name and a dynamically generated value using the provided generator.
+  /// </summary>
+  /// <param name="name">The name of the macro.</param>
+  /// <param name="generator">A function that dynamically generates the macro value.</param>
+  /// <returns></returns>
+  public MacroProcessorBuilder AddMacro(
+    string name,
+    MacroValueGenerator generator )
+  {
+    ValidateMacroName( name );
+    _generators.Add( name, generator );
+
+    return this;
+  }
+
+  /// <summary>
+  ///   Builds a <see cref="MacroProcessor" /> instance using the added macros and macro delimiter.
+  /// </summary>
+  /// <returns>The <see cref="MacroProcessor" /> instance.</returns>
+  public MacroProcessor Build()
+  {
+    var generators = _generators.ToFrozenDictionary( StringComparer.OrdinalIgnoreCase );
+    return new MacroProcessor( generators, _options );
+  }
+
+  #endregion
+
+  #region Implementation
+
+  private static void ValidateMacroName(
+    string name )
+  {
+    if( string.IsNullOrEmpty( name ) )
     {
-      throw new ArgumentException( "Value cannot be null or whitespace.", nameof( name ) );
+      throw new ArgumentException( "Value cannot be null or empty.", nameof( name ) );
     }
 
     if( !IsAlphanumericOrUnderscore( name ) )
@@ -86,11 +138,7 @@ public class MacroProcessorBuilder: IDisposable
       throw new ArgumentException( "Macro name must be alphanumeric or underscore.", nameof( name ) );
     }
 
-    var start = _values.Length;
-    _values.Append( value );
-    _macros.Add( _options.Delimit( name ), new StringRange( start, _values.Length ) );
-
-    return this;
+    return;
 
     static bool IsAlphanumericOrUnderscore(
       string input )
@@ -106,47 +154,6 @@ public class MacroProcessorBuilder: IDisposable
 
       return true;
     }
-  }
-
-  /// <summary>
-  ///   Builds a <see cref="MacroProcessor" /> instance using the added macros and macro delimiter.
-  /// </summary>
-  /// <returns>The <see cref="MacroProcessor" /> instance.</returns>
-  public MacroProcessor Build()
-  {
-    if( _values is null )
-    {
-      throw new ObjectDisposedException( nameof( MacroProcessorBuilder ) );
-    }
-
-    // All the macro values are stored in a single string, so we can use ReadOnlyMemory<char> to reference them.
-    // The ReadOnlyMemory dictionary values keep the underlying string alive, so we don't need to worry about
-    // storing the values variable.
-    var values = _values.ToString();
-
-    var macros = _macros.ToFrozenDictionary(
-      static pair => pair.Key,
-      pair => values.AsMemory( pair.Value.Start, pair.Value.Length ),
-      StringComparer.OrdinalIgnoreCase
-    );
-
-    Dispose();
-
-    return new MacroProcessor( macros, _options );
-  }
-
-  /// <summary>
-  ///   Releases the resources used by the <see cref="MacroProcessorBuilder" />.
-  /// </summary>
-  public void Dispose()
-  {
-    if( _values == null )
-    {
-      return;
-    }
-
-    StringBuilderPool.Default.Return( _values );
-    _values = null;
   }
 
   #endregion

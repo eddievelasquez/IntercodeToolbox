@@ -17,7 +17,7 @@
     <Product>Intercode.Toolbox</Product>
     <Copyright>Intercode Consulting</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>templates;templateengine;macro;macroreplacement;intercodetoolbox</PackageTags>
+    <PackageTags>template;templating;templateengine;engine;macro;macroreplacement;intercodetoolbox;text;generation;fast</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

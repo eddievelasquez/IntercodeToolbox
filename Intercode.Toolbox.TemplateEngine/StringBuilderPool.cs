@@ -78,7 +78,10 @@ public class StringBuilderPool
   /// </summary>
   /// <param name="builder">The <see cref="StringBuilder" /> object to return.</param>
   /// <exception cref="ArgumentNullException">Thrown when the <paramref name="builder" /> is <c>null</c>.</exception>
-  /// <remarks>If the pool is full, the builder instance will not be added to the pool and will be made available for collection.</remarks>
+  /// <remarks>
+  ///   If the pool is full, the builder instance will not be added to the pool and will be made available for
+  ///   collection.
+  /// </remarks>
   public void Return(
     StringBuilder builder )
   {
