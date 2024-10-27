@@ -113,7 +113,7 @@ time in a specified format:
 ```
 
 You can customize your dynamic macro's behavior by using an argument, accessible through the `argument` parameter in the
-`MacroValueGenerator` delegate. If the macro is instantiated without an argument, argument will be an empty span. Otherwise, 
+`MacroValueGenerator` delegate. If the macro is instantiated without an argument, `argument` will be an empty span. Otherwise, 
 you can convert it to a string and use it as needed. The argument value is fully transparent to the macro processor, with
 the only limitation being that it cannot contain the macro delimiter character.
 
@@ -141,7 +141,8 @@ Random number: $Random$. Random number less than 100: $Random:100$.
 
 The first macro will generate a random number less than `int.MaxValue`, while the second macro will generate a random number less than 100.
 
-> **NOTE**: Any exception thrown by a macro value generator will be caught and the macro's value will be the exception's error message.
+> **NOTE**: Any exception thrown by a macro value generator will be caught and the macro's value will be set to the exception's
+error message.
 
 ## Reference
 ---
@@ -163,7 +164,7 @@ used to delimit macro; if `null`, the value in the `DefaultMacroDelimiter` const
 The `argumentSeparator` parameter specifies the character used to separate the macro's name from it's argument; if `null`,
 the value in the `DefaultArgumentSeparator` constant is used.
 
-An `ArgumentException` exception will be thrown if either `macroDelimiter` or 'argumentSeparator` are a non-punctuation character.
+An `ArgumentException` exception will be thrown if either `macroDelimiter` or `argumentSeparator` are a non-punctuation character.
 
 
 #### Properties
@@ -191,7 +192,7 @@ Compiles a template text into a `Template`
 TemplateCompiler( TemplateEngineOptions? options = null )
 ```
 
-Creates a new instance of the `TemplateCompiler` class. The `options` parameter specifies the otion values used during compilation;
+Creates a new instance of the `TemplateCompiler` class. The `options` parameter specifies the option values used during compilation;
 if `null`, the values in `TemplateEngineOptions.Default` are used.
 
 #### Methods
@@ -210,7 +211,7 @@ Template Compile( string text )
 delegate string MacroValueGenerator( ReadOnlySpan<char> argument );
 ```
 
-Defines a method that will generate a macro's value. The `argument` parameter is the macro's argument, which is an optional text, separated by a
+Defines a method that will generate a dynamic macro's value. The `argument` parameter is the macro's argument, which is an optional text, separated by a
 colon `:` after macro's name and the closing delimiter. If the template didn't specify an argument, the `argument` parameter will be `ReadOnlySpan<char>.Empty`.
 
 ---
@@ -268,7 +269,7 @@ static MacroProcessorBuilder AddStandardMacros( this MacroProcessorBuilder build
 - `CLR_VERSION` - Gets the version of the Common Language Runtime as returned by the `Environment.Version` property.
 - `ENV` - Gets the value of the environment variable specified by the argument as returned by the `Environment.GetEnvironmentVariable(String)` method.
 
-If any macro value generator throws an exception, the macro's value will be the exception's error message.
+If any macro value generator throws an exception, the macro's value will be set to the exception's error message.
 
 ### `MacroProcessor` class
 
@@ -293,6 +294,10 @@ void ProcessMacros( Template template, TextWriter writer )
  
 ## Benchmarks
 ---
+
+### Benchmark Setup
+
+#### Template text
 
 To benchmark the `TemplateEngine` we are going to parse the following template, taken from one of the standard templates
 from the [Intercode.Toolbox.TypedPrimitives](https://www.nuget.org/packages/Intercode.Toolbox.TypedPrimitives/) package:
@@ -370,6 +375,8 @@ from the [Intercode.Toolbox.TypedPrimitives](https://www.nuget.org/packages/Inte
     
 ```
 
+#### Macro values
+
 And we are going to use the following macro values:
 
 | Macro Name | Value |
@@ -382,10 +389,8 @@ And we are going to use the following macro values:
 | `JsonReader` | `reader.GetString()` |
 | `JsonWriter` | `writer.WriteStringValue( value.Value )` |
 
-The benchmark [^1] code using [BenchmarkDotNet](https://benchmarkdotnet.org/):
-
-[^1]: The code for the `TemplateEngineHelper` class just compiles the text into a `Template` and creates a `MacroProcessor` instance.
-It is kept in a separate class because we only want to measure the actual macro processing time in this benchmark.
+#### Benchmark Code
+Using [BenchmarkDotNet](https://benchmarkdotnet.org/)
 
 ```csharp
 [MemoryDiagnoser]
@@ -439,10 +444,14 @@ public partial class MacroProcessingTests
   [GeneratedRegex( @"\$([^$]+)\$" )]
   private static partial Regex CreateMacroNameRegex();
 }
-
 ```
 
-Only the macro replacement code within the template is being benchmarked. As the results indicate, the `MacroProcessor` demonstrates significantly 
+> **NOTE**: The code for the `TemplateEngineHelper` class just compiles the text into a `Template` and creates a `MacroProcessor` instance.
+It is kept in a separate class because we only want to measure the actual macro processing time in this benchmark.
+
+#### Benchmark Results
+
+As the results indicate, the `MacroProcessor` demonstrates significantly 
 faster performance and lower memory allocation compared to the `StringBuilder` and `Regex` implementations.
 
 ![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/refs/heads/main/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
