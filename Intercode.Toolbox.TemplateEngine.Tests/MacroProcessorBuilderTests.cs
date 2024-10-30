@@ -28,6 +28,60 @@ public class MacroProcessorBuilderTests
   #region Tests
 
   [Fact]
+  public void AddMacro_ShouldSucceed_WhenMacroNameContainsDash()
+  {
+    var builder = new MacroProcessorBuilder();
+    var act = () => builder.AddMacro( "macro-a", "value" );
+
+    act.Should().NotThrow();
+  }
+
+  [Fact]
+  public void AddMacro_ShouldSucceed_WhenMacroNameContainsUnderscore()
+  {
+    var builder = new MacroProcessorBuilder();
+    var act = () => builder.AddMacro( "macro_A", "value" );
+
+    act.Should().NotThrow();
+  }
+
+  [Fact]
+  public void AddMacro_ShouldSucceed_WhenMacroNameISAlphaNumeric()
+  {
+    var builder = new MacroProcessorBuilder();
+    var act = () => builder.AddMacro( "macro1", "value" );
+
+    act.Should().NotThrow();
+  }
+
+  [Fact]
+  public void AddMacro_ShouldThrow_WhenMacroNameContainsInvalidChars()
+  {
+    var builder = new MacroProcessorBuilder();
+    var act = () => builder.AddMacro( "macro@", "value" );
+
+    act.Should().Throw<ArgumentException>().WithMessage( "Macro name must be alphanumeric, underscore, or dash*" );
+  }
+
+  [Fact]
+  public void AddMacro_ShouldThrow_WhenMacroNameIsNull()
+  {
+    var builder = new MacroProcessorBuilder();
+    var act = () => builder.AddMacro( null!, "value" );
+
+    act.Should().Throw<ArgumentException>().WithMessage( "Value cannot be null or empty*" );
+  }
+
+  [Fact]
+  public void AddMacro_ShouldThrow_WhenMacroNameIsEmpty()
+  {
+    var builder = new MacroProcessorBuilder();
+    var act = () => builder.AddMacro( "", "value" );
+
+    act.Should().Throw<ArgumentException>().WithMessage( "Value cannot be null or empty*" );
+  }
+
+  [Fact]
   public void AddStandardMacros_ShouldAddClrVersionMacro()
   {
     var processor = new MacroProcessorBuilder().AddStandardMacros()

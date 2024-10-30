@@ -130,23 +130,25 @@ public class MacroProcessorBuilder
   {
     if( string.IsNullOrEmpty( name ) )
     {
-      throw new ArgumentException( "Value cannot be null or empty.", nameof( name ) );
+      throw new ArgumentException( "Value cannot be null or empty", nameof( name ) );
     }
 
-    if( !IsAlphanumericOrUnderscore( name ) )
+    if( !IsAlphanumericOrUnderscoreOrDash( name ) )
     {
-      throw new ArgumentException( "Macro name must be alphanumeric or underscore.", nameof( name ) );
+      throw new ArgumentException( "Macro name must be alphanumeric, underscore, or dash", nameof( name ) );
     }
 
     return;
 
-    static bool IsAlphanumericOrUnderscore(
+    static bool IsAlphanumericOrUnderscoreOrDash(
       string input )
     {
       // NOTE: Use loop instead of LINQ for performance
-      foreach( var c in input )
+      var span = input.AsSpan();
+      for( var index = 0; index < input.Length; index++ )
       {
-        if( !char.IsLetterOrDigit( c ) && c != '_' )
+        var c = span[index];
+        if( !char.IsLetterOrDigit( c ) && c is not ('_' or '-') )
         {
           return false;
         }
