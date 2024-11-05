@@ -5,11 +5,14 @@
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
-using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using StjJsonException = System.Text.Json.JsonException;
+using StjJsonSerializer = System.Text.Json.JsonSerializer;
+using NsjJsonException = Newtonsoft.Json.JsonException;
 
 [TypedPrimitive<DateTimeOffset>]
 public readonly partial struct UnvalidatedDateTimeOffsetPrimitive;
@@ -18,7 +21,8 @@ public readonly partial struct UnvalidatedDateTimeOffsetPrimitive;
   typeof( DateTimeOffset ),
   Converters = TypedPrimitiveConverter.TypeConverter |
                TypedPrimitiveConverter.SystemTextJson |
-               TypedPrimitiveConverter.EfCoreValueConverter
+               TypedPrimitiveConverter.EfCoreValueConverter |
+               TypedPrimitiveConverter.NewtonsoftJson
 )]
 public readonly partial struct DateTimeOffsetPrimitive
 {
@@ -362,29 +366,92 @@ public class DateTimeOffsetPrimitiveTests
            .BeTrue();
   }
 
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void NewtonsoftJson_Deserialization_InvalidValue_ShouldThrow(
+    DateTimeOffset? value )
+  {
+    var asString = value is null ? "null" : $"\"{value}\"";
+    var json = $$"""{"Primitive":{{asString}}}""";
+
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<NsjJsonException>()
+       .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithNull_ShouldThrow()
+  {
+    var json = """{"Primitive":null}""";
+
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<NsjJsonException>()
+       .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithValidValue_ShouldSucceed()
+  {
+    var value = s_validValueA;
+    var json = $$"""{"Primitive":"{{value}}"}""";
+
+    var result = JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    result.Should()
+          .NotBeNull();
+
+    result!.Primitive.Value.Should()
+           .Be( value );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Serialization_WithDefault_ShouldSucceed()
+  {
+    var test = new JsonTestClass { Primitive = default };
+
+    var json = JsonConvert.SerializeObject( test );
+
+    json.Should()
+        .Be( """{"Primitive":null}""" );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Serialization_WithValidValue_ShouldSucceed()
+  {
+    var value = s_validValueA;
+    var test = new JsonTestClass { Primitive = ( DateTimeOffsetPrimitive ) value };
+
+    var json = JsonConvert.SerializeObject( test );
+
+    json.Should()
+        .Be( $$"""{"Primitive":"{{value:O}}"}""" );
+  }
+
   [Fact]
   public void SystemTextJson_Deserialization_WithInvalidType_ShouldThrow()
   {
-    var json = """{"DateTimeOffsetPrimitive":12345}""";
+    var json = """{"Primitive":12345}""";
 
-    // The JSON deserializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<StjJsonException>()
        .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithNull_ShouldThrow()
   {
-    var json = """{"DateTimeOffsetPrimitive":null}""";
+    var json = """{"Primitive":null}""";
 
-    // The JSON deserializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<StjJsonException>()
        .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
@@ -392,15 +459,14 @@ public class DateTimeOffsetPrimitiveTests
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
     var value = s_validValueA;
-    var json = $$"""{"DateTimeOffsetPrimitive":"{{value:O}}"}""";
+    var json = $$"""{"Primitive":"{{value:O}}"}""";
 
-    // The JSON deserializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
-    var result = JsonSerializer.Deserialize<JsonTestClass>( json );
+    var result = StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     result.Should()
           .NotBeNull();
 
-    result!.DateTimeOffsetPrimitive.Value.Should()
+    result!.Primitive.Value.Should()
            .Be( value );
   }
 
@@ -410,45 +476,42 @@ public class DateTimeOffsetPrimitiveTests
     DateTimeOffset? value )
   {
     var asString = value is null ? "null" : $"\"{value}\"";
-    var json = $$"""{"DateTimeOffsetPrimitive":{{asString}}}""";
+    var json = $$"""{"Primitive":{{asString}}}""";
 
-    // The JSON deserializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<StjJsonException>()
        .WithMessage( DateTimeOffsetPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Serialization_WithDefault_ShouldSucceed()
   {
-    var test = new JsonTestClass { DateTimeOffsetPrimitive = default };
+    var test = new JsonTestClass { Primitive = default };
 
-    // The JSON serializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
-    var json = JsonSerializer.Serialize( test );
+    var json = StjJsonSerializer.Serialize( test );
 
     json.Should()
-        .Be( """{"DateTimeOffsetPrimitive":null}""" );
+        .Be( """{"Primitive":null}""" );
   }
 
   [Fact]
   public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
   {
     var value = s_validValueA;
-    var expected = new JsonTestClass { DateTimeOffsetPrimitive = ( DateTimeOffsetPrimitive ) value };
+    var expected = new JsonTestClass { Primitive = ( DateTimeOffsetPrimitive ) value };
 
-    // The JSON serializer should use DateTimeOffsetPrimitive's SystemTextJsonConverter
-    var json = JsonSerializer.Serialize( expected );
+    var json = StjJsonSerializer.Serialize( expected );
 
     // Use roundtrip to avoid JSON encoding failures on Linux.
     // This is safer anyway, as it ensures the JSON is valid.
-    var actual = JsonSerializer.Deserialize<JsonTestClass>( json );
+    var actual = StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     actual.Should()
           .NotBeNull();
 
-    actual!.DateTimeOffsetPrimitive.Value.Should()
+    actual!.Primitive.Value.Should()
            .Be( value );
   }
 
@@ -636,7 +699,7 @@ public class DateTimeOffsetPrimitiveTests
     var entity = new TestEntity
     {
       Id = id,
-      DateTimeOffsetPrimitive = ( DateTimeOffsetPrimitive ) value
+      Primitive = ( DateTimeOffsetPrimitive ) value
     };
 
     // Act
@@ -646,7 +709,7 @@ public class DateTimeOffsetPrimitiveTests
     // Assert
     var result = context.Entities.Single( e => e.Id == id );
 
-    result.DateTimeOffsetPrimitive.Value.Should()
+    result.Primitive.Value.Should()
           .Be( value );
   }
 
@@ -664,7 +727,7 @@ public class DateTimeOffsetPrimitiveTests
   {
     #region Properties
 
-    public DateTimeOffsetPrimitive DateTimeOffsetPrimitive { get; set; }
+    public DateTimeOffsetPrimitive Primitive { get; set; }
 
     #endregion
   }
@@ -674,7 +737,7 @@ public class DateTimeOffsetPrimitiveTests
     #region Properties
 
     public Guid Id { get; set; } = Guid.NewGuid();
-    public DateTimeOffsetPrimitive DateTimeOffsetPrimitive { get; set; }
+    public DateTimeOffsetPrimitive Primitive { get; set; }
 
     #endregion
   }
@@ -707,7 +770,7 @@ public class DateTimeOffsetPrimitiveTests
       ModelBuilder modelBuilder )
     {
       modelBuilder.Entity<TestEntity>()
-                  .Property( e => e.DateTimeOffsetPrimitive )
+                  .Property( e => e.Primitive )
                   .HasConversion( new DateTimeOffsetPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }

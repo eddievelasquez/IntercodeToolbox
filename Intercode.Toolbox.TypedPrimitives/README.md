@@ -3,6 +3,8 @@
 ## Updates
 
 - **Version 2.3.1** - Moved the template processing engine to its own package: [Intercode.Toolbox.TemplateEngine](https://www.nuget.org/packages/Intercode.Toolbox.TemplateEngine/).
+- **Version 2.4.3** - Added support for the following primitive types: **Byte**, **SByte**, **Int16**, **UInt16**, **UInt32**, **UInt64**, **Single**,
+**Double**, **Decimal**, **TimeSpan**, and **Uri**.
 
 ## Description
 
@@ -11,7 +13,8 @@
 
 There are several [projects](#references) that also attempt to tackle this problem, but most of them are focused on providing a way encapsulate object identifiers, 
 hence not supporting other primitive types. **TypedPrimitives** is focused on providing a way to encapsulate most commonly-used primitive type, including `string`, 
-`int`, `long`, `Guid`, `DateTime`, and `DateTimeOffset`. Support for other types can be added in the future.
+`byte`, `sbyte`, `short`, `ushort`, `int`, `uint`, `long`, `ulong`, `float`, `double`, `decimal`, `Guid`, `DateTime`, `DateTimeOffset`, `TimeSpan`, and `Uri`.
+Support for other types can be added in the future.
 
 Additionally, **TypedPrimitives** adds multiple features to the generated code, including:.
 - Debugger display.

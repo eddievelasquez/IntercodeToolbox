@@ -36,15 +36,22 @@ internal static class EmbeddedResourceManager
     {
 #if DEBUG
       var existingResources = s_thisAssembly.GetManifestResourceNames();
-      throw new ArgumentException(
-        $"Could not find embedded resource '{resourcePath}'. Available names: {string.Join( ", ", existingResources )}"
-      );
+      throw new ArgumentException( $"Could not find embedded resource '{resourcePath}'. Available names: {string.Join( ", ", existingResources )}" );
 #else
       throw new ArgumentException( $"Could not find embedded resource '{resourcePath}'." );
 #endif
     }
 
     return template;
+  }
+
+  public static bool TryLoadTemplate(
+    string resourceDirectory,
+    string templateName,
+    [NotNullWhen( true )] out string? template )
+  {
+    var resourcePath = GetTemplateResourcePath( resourceDirectory, templateName );
+    return TryLoadTextResource( resourcePath, out template );
   }
 
   public static string LoadTextResource(
@@ -56,9 +63,7 @@ internal static class EmbeddedResourceManager
     {
 #if DEBUG
       var existingResources = s_thisAssembly.GetManifestResourceNames();
-      throw new ArgumentException(
-        $"Could not find embedded resource '{resourcePath}'. Available names: {string.Join( ", ", existingResources )}"
-      );
+      throw new ArgumentException( $"Could not find embedded resource '{resourcePath}'. Available names: {string.Join( ", ", existingResources )}" );
 #else
       throw new ArgumentException( $"Could not find embedded resource '{resourcePath}'." );
 #endif

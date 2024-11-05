@@ -108,11 +108,6 @@ internal static class Parser
     }
 
     var primitiveType = result.Value!;
-    if( !TypeManager.IsTypeSupported( primitiveType ) )
-    {
-      return Error.UnsupportedTypeFailure( primitiveType, attributeSyntax );
-    }
-
     var namedArguments = attributeData.NamedArguments;
     var converters = namedArguments.GetEnumValue<TypedPrimitiveConverter>( ConvertersKey ) ??
                      TypedPrimitiveConverter.None;
@@ -144,14 +139,14 @@ internal static class Parser
     if( attributeData.AttributeClass!.IsGenericType )
     {
       var typeArg = attributeData.AttributeClass.TypeArguments.First();
-      return typeArg.GetTypeValue();
+      return typeArg.GetTypeOf();
     }
 
     var args = attributeData.ConstructorArguments;
     Debug.Assert( args.Length > 0 );
 
     // The first argument should always be the primitive type
-    return args[0].GetTypeValue();
+    return args[0].GetTypeOf();
   }
 
   #endregion

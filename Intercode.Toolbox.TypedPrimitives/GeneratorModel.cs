@@ -16,7 +16,8 @@ internal readonly record struct GeneratorModel
     TypedPrimitiveConverter converters,
     string? stringComparison )
   {
-    PrimitiveType = primitiveType;
+    PrimitiveTypeName = primitiveType.FullName!;
+    IsValueType = primitiveType.IsValueType;
     TypeName = typeName;
     Namespace = @namespace;
     Converters = converters;
@@ -32,11 +33,12 @@ internal readonly record struct GeneratorModel
 
   #region Properties
 
-  public Type PrimitiveType { get; init; }
-  public string TypeName { get; init; }
-  public string Namespace { get; init; }
-  public TypedPrimitiveConverter Converters { get; init; }
-  public string? StringComparison { get; init; }
+  public string PrimitiveTypeName { get; }
+  public bool IsValueType { get; }
+  public string TypeName { get; }
+  public string Namespace { get; }
+  public TypedPrimitiveConverter Converters { get; }
+  public string? StringComparison { get; }
   public bool HasTypeConverter { get; }
   public bool HasSystemTextJsonConverter { get; }
   public bool HasNewtonsoftJsonConverter { get; }

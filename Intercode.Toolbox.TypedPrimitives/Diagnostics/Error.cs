@@ -87,13 +87,6 @@ internal static class Error
   }
 
   public static DiagnosticInfo UnsupportedType(
-    Type type,
-    SyntaxNode? syntaxNode = null )
-  {
-    return UnsupportedType( type.FullName!, syntaxNode );
-  }
-
-  public static DiagnosticInfo UnsupportedType(
     string typeName,
     SyntaxNode? syntaxNode = null )
   {
@@ -106,10 +99,10 @@ internal static class Error
   }
 
   public static Result<GeneratorModel> UnsupportedTypeFailure(
-    Type type,
+    string typeName,
     SyntaxNode? syntaxNode = null )
   {
-    return Result.Fail<GeneratorModel>( UnsupportedType( type, syntaxNode ) );
+    return Result.Fail<GeneratorModel>( UnsupportedType( typeName, syntaxNode ) );
   }
 
   #endregion

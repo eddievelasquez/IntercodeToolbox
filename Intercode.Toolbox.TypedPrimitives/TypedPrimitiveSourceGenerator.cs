@@ -7,10 +7,6 @@ namespace Intercode.Toolbox.TypedPrimitives;
 using Intercode.Toolbox.TypedPrimitives.Diagnostics;
 using Microsoft.CodeAnalysis;
 
-internal record struct Package(
-  string Name,
-  Version Version );
-
 [Generator]
 public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
 {
@@ -21,63 +17,100 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   {
     AddPostInitializationSources( initializationContext );
 
-    var pipeline = GatherStructsToGenerate( initializationContext );
+    // Collect types with marker attributes
+    var modelResults = GatherStructsToGenerate( initializationContext );
 
-    // Report diagnostics from failed results
+    // Get errors from failed results
+    var failures = modelResults.Where( result => result.IsFailed )
+                               .SelectMany(
+                                 static (
+                                   modelResult,
+                                   _ ) => modelResult.Errors
+                               );
+
+    // Report diagnostics for failures
     initializationContext.RegisterSourceOutput(
-      pipeline.SelectMany(
-        static (
-          result,
-          _ ) => result.Errors
-      ),
+      failures,
       static (
-        context,
+        productionContext,
         diagnosticInfo ) =>
       {
-        var diagnostic = diagnosticInfo.ToDiagnostic();
-        context.ReportDiagnostic( diagnostic );
+        productionContext.ReportDiagnostic( diagnosticInfo );
       }
     );
 
-    // Generate source code from successful results
-    var toGenerate = pipeline.Where( result => result.IsSuccess )
-                             .Select(
-                               static (
-                                 result,
-                                 _ ) => result.Value
-                             );
+    // Get models and check if they are supported
+    var successes = modelResults.Where( result => result.IsSuccess )
+                                .Select(
+                                  static (
+                                    result,
+                                    _ ) =>
+                                  {
+                                    var model = result.Value;
+                                    TypeManager.TryGetSupportedTypeInfo( model.PrimitiveTypeName, out var typeInfo );
+                                    return ( Model: model, TypeInfo: typeInfo );
+                                  }
+                                );
 
+    // Get errors for unsupported types
+    var unsupported = successes.Where( tuple => tuple.TypeInfo is null )
+                               .SelectMany(
+                                 static (
+                                   tuple,
+                                   _ ) => Error.UnsupportedTypeFailure( tuple.Model.PrimitiveTypeName ).Errors
+                               );
+
+    // Report diagnostics for unsupported types
     initializationContext.RegisterSourceOutput(
-      toGenerate,
+      unsupported,
       static (
-        context,
-        model ) => GenerateSource( model, context )
+        productionContext,
+        diagnosticInfo ) =>
+      {
+        productionContext.ReportDiagnostic( diagnosticInfo );
+      }
     );
 
-    return;
+    // Get models for supported types
+    var supported = successes.Where( tuple => tuple.TypeInfo is not null )
+                             .Select(
+                               (
+                                 tuple,
+                                 _ ) => ( tuple.Model, TypeInfo: tuple.TypeInfo! )
+                             );
+
+    // Generate source code for supported type
+    initializationContext.RegisterSourceOutput(
+      supported,
+      static (
+        context,
+        tuple ) => GenerateSource( context, tuple.Model, tuple.TypeInfo )
+    );
   }
 
   #endregion
 
   #region Implementation
 
-
-  private static IncrementalValuesProvider<Result<GeneratorModel>> GatherStructsToGenerate(
-    IncrementalGeneratorInitializationContext initializationContext )
+  private static IncrementalValuesProvider<Result<GeneratorModel>>
+    GatherStructsToGenerate(
+      IncrementalGeneratorInitializationContext initializationContext )
   {
     // Get all the structs that are tagged with the marker attribute
-    var markerPipeline = initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
-      Parser.MarkerAttributeFullName,
-      Parser.IsGenerationTarget,
-      Parser.GetTypedPrimitiveToGenerate
-    );
+    var markerPipeline =
+      initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
+        Parser.MarkerAttributeFullName,
+        Parser.IsGenerationTarget,
+        Parser.GetTypedPrimitiveToGenerate
+      );
 
     // Get all the structs that are tagged with the generic marker attribute
-    var genericMarkerPipeline = initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
-      Parser.GenericMarkerAttributeFullName,
-      Parser.IsGenerationTarget,
-      Parser.GetTypedPrimitiveToGenerate
-    );
+    var genericMarkerPipeline =
+      initializationContext.SyntaxProvider.ForAttributeWithMetadataName(
+        Parser.GenericMarkerAttributeFullName,
+        Parser.IsGenerationTarget,
+        Parser.GetTypedPrimitiveToGenerate
+      );
 
     // Merge the results of both pipelines
     var pipeline = markerPipeline.Merge( genericMarkerPipeline );
@@ -106,12 +139,14 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   }
 
   private static void GenerateSource(
+    SourceProductionContext context,
     GeneratorModel model,
-    SourceProductionContext context )
+    SupportedTypeInfo typeInfo )
   {
     var processor = new TemplateProcessor();
 
-    foreach( var (typeName, sourceText) in processor.ProcessTemplate( model ) )
+    foreach( var (typeName, sourceText) in
+            processor.ProcessTemplate( model, typeInfo ) )
     {
       var hintName = $"{typeName}.g.cs";
       context.AddSource( hintName, sourceText );

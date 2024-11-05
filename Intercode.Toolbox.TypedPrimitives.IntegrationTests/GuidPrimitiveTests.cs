@@ -5,11 +5,14 @@
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
-using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using StjJsonException = System.Text.Json.JsonException;
+using StjJsonSerializer = System.Text.Json.JsonSerializer;
+using NsjJsonException = Newtonsoft.Json.JsonException;
 
 [TypedPrimitive<Guid>]
 public readonly partial struct UnvalidatedGuidPrimitive;
@@ -18,7 +21,8 @@ public readonly partial struct UnvalidatedGuidPrimitive;
   typeof( Guid ),
   Converters = TypedPrimitiveConverter.TypeConverter |
                TypedPrimitiveConverter.SystemTextJson |
-               TypedPrimitiveConverter.EfCoreValueConverter
+               TypedPrimitiveConverter.EfCoreValueConverter |
+               TypedPrimitiveConverter.NewtonsoftJson
 )]
 public readonly partial struct GuidPrimitive
 {
@@ -362,29 +366,92 @@ public class GuidPrimitiveTests
            .BeTrue();
   }
 
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void NewtonsoftJson_Deserialization_InvalidValue_ShouldThrow(
+    Guid? value )
+  {
+    var asString = value is null ? "null" : $"\"{value}\"";
+    var json = $$"""{"Primitive":{{asString}}}""";
+
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<NsjJsonException>()
+       .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithNull_ShouldThrow()
+  {
+    var json = """{"Primitive":null}""";
+
+    var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    act.Should()
+       .Throw<NsjJsonException>()
+       .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Deserialization_WithValidValue_ShouldSucceed()
+  {
+    var value = s_validValueA;
+    var json = $$"""{"Primitive":"{{value}}"}""";
+
+    var result = JsonConvert.DeserializeObject<JsonTestClass>( json );
+
+    result.Should()
+          .NotBeNull();
+
+    result!.Primitive.Value.Should()
+           .Be( value );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Serialization_WithDefault_ShouldSucceed()
+  {
+    var test = new JsonTestClass { Primitive = default };
+
+    var json = JsonConvert.SerializeObject( test );
+
+    json.Should()
+        .Be( """{"Primitive":null}""" );
+  }
+
+  [Fact]
+  public void NewtonsoftJson_Serialization_WithValidValue_ShouldSucceed()
+  {
+    var value = s_validValueA;
+    var test = new JsonTestClass { Primitive = ( GuidPrimitive ) value };
+
+    var json = JsonConvert.SerializeObject( test );
+
+    json.Should()
+        .Be( $$"""{"Primitive":"{{value}}"}""" );
+  }
+
   [Fact]
   public void SystemTextJson_Deserialization_WithInvalidType_ShouldThrow()
   {
-    var json = """{"GuidPrimitive":12345}""";
+    var json = """{"Primitive":12345}""";
 
-    // The JSON deserializer should use GuidPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<StjJsonException>()
        .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithNull_ShouldThrow()
   {
-    var json = """{"GuidPrimitive":null}""";
+    var json = """{"Primitive":null}""";
 
-    // The JSON deserializer should use GuidPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<StjJsonException>()
        .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
@@ -392,15 +459,14 @@ public class GuidPrimitiveTests
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
     var value = s_validValueA;
-    var json = $$"""{"GuidPrimitive":"{{value}}"}""";
+    var json = $$"""{"Primitive":"{{value}}"}""";
 
-    // The JSON deserializer should use GuidPrimitive's SystemTextJsonConverter
-    var result = JsonSerializer.Deserialize<JsonTestClass>( json );
+    var result = StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     result.Should()
           .NotBeNull();
 
-    result!.GuidPrimitive.Value.Should()
+    result!.Primitive.Value.Should()
            .Be( value );
   }
 
@@ -410,39 +476,36 @@ public class GuidPrimitiveTests
     Guid? value )
   {
     var asString = value is null ? "null" : $"\"{value}\"";
-    var json = $$"""{"GuidPrimitive":{{asString}}}""";
+    var json = $$"""{"Primitive":{{asString}}}""";
 
-    // The JSON deserializer should use GuidPrimitive's SystemTextJsonConverter
-    var act = () => JsonSerializer.Deserialize<JsonTestClass>( json );
+    var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
-       .Throw<JsonException>()
+       .Throw<StjJsonException>()
        .WithMessage( GuidPrimitive.ExpectedValidationErrorMessage );
   }
 
   [Fact]
   public void SystemTextJson_Serialization_WithDefault_ShouldSucceed()
   {
-    var test = new JsonTestClass { GuidPrimitive = default };
+    var test = new JsonTestClass { Primitive = default };
 
-    // The JSON serializer should use GuidPrimitive's SystemTextJsonConverter
-    var json = JsonSerializer.Serialize( test );
+    var json = StjJsonSerializer.Serialize( test );
 
     json.Should()
-        .Be( """{"GuidPrimitive":null}""" );
+        .Be( """{"Primitive":null}""" );
   }
 
   [Fact]
   public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
   {
     var value = s_validValueA;
-    var test = new JsonTestClass { GuidPrimitive = ( GuidPrimitive ) value };
+    var test = new JsonTestClass { Primitive = ( GuidPrimitive ) value };
 
-    // The JSON serializer should use GuidPrimitive's SystemTextJsonConverter
-    var json = JsonSerializer.Serialize( test );
+    var json = StjJsonSerializer.Serialize( test );
 
     json.Should()
-        .Be( $$"""{"GuidPrimitive":"{{value}}"}""" );
+        .Be( $$"""{"Primitive":"{{value}}"}""" );
   }
 
   [Fact]
@@ -629,7 +692,7 @@ public class GuidPrimitiveTests
     var entity = new TestEntity
     {
       Id = id,
-      GuidPrimitive = ( GuidPrimitive ) value
+      Primitive = ( GuidPrimitive ) value
     };
 
     // Act
@@ -639,7 +702,7 @@ public class GuidPrimitiveTests
     // Assert
     var result = context.Entities.Single( e => e.Id == id );
 
-    result.GuidPrimitive.Value.Should()
+    result.Primitive.Value.Should()
           .Be( value );
   }
 
@@ -657,7 +720,7 @@ public class GuidPrimitiveTests
   {
     #region Properties
 
-    public GuidPrimitive GuidPrimitive { get; set; }
+    public GuidPrimitive Primitive { get; set; }
 
     #endregion
   }
@@ -667,7 +730,7 @@ public class GuidPrimitiveTests
     #region Properties
 
     public Guid Id { get; set; } = Guid.NewGuid();
-    public GuidPrimitive GuidPrimitive { get; set; }
+    public GuidPrimitive Primitive { get; set; }
 
     #endregion
   }
@@ -700,7 +763,7 @@ public class GuidPrimitiveTests
       ModelBuilder modelBuilder )
     {
       modelBuilder.Entity<TestEntity>()
-                  .Property( e => e.GuidPrimitive )
+                  .Property( e => e.Primitive )
                   .HasConversion( new GuidPrimitiveValueConverter() )
                   .ValueGeneratedNever();
     }

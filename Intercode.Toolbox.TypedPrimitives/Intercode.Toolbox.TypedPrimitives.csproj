@@ -55,12 +55,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
-    <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter.template" />
-    <EmbeddedResource Include="Templates\Common\PrimitiveType.template" />
-    <EmbeddedResource Include="Templates\Common\SystemTextJsonConverter.template" />
+    <EmbeddedResource Include="Templates\Common\PrimitiveType.ValueType.template" />
+    <EmbeddedResource Include="Templates\Common\PrimitiveType.ReferenceType.template" />
     <EmbeddedResource Include="Templates\Common\TypeConverter.template" />
-    <EmbeddedResource Include="Templates\System.String\PrimitiveType.template" />
+    <EmbeddedResource Include="Templates\Common\SystemTextJsonConverter.template" />
+    <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter.template" />
+    <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
+    <EmbeddedResource Include="Templates\System.DateTime\NewtonsoftJsonConverter.template" />
+    <EmbeddedResource Include="Templates\System.String\PrimitiveType.ReferenceType.template" />
+    <EmbeddedResource Include="Templates\System.Uri\PrimitiveType.ReferenceType.template" />
   </ItemGroup>
 
   <ItemGroup>
@@ -86,6 +89,7 @@
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="$(PkgIntercode_Toolbox_TemplateEngine)\lib\netstandard2.0\*.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Remove="Templates\System.DateTime\NewtonsoftJsonConverter.template" />
     <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 

@@ -54,6 +54,16 @@ internal static class Macros
   public const string NewtonsoftJsonTokenType = nameof( NewtonsoftJsonTokenType );
 
   /// <summary>
+  ///   The Newtonsoft.Json method to read the primitive type.
+  /// </summary>
+  public const string NewtonsoftJsonReader = nameof( NewtonsoftJsonReader );
+
+  /// <summary>
+  ///   The Newtonsoft.Json method to write the primitive type.
+  /// </summary>
+  public const string NewtonsoftJsonWriter = nameof( NewtonsoftJsonWriter );
+
+  /// <summary>
   ///   The attribute name for the type converter.
   /// </summary>
   public const string TypeConverterAttribute = nameof( TypeConverterAttribute );

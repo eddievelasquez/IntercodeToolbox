@@ -13,39 +13,29 @@ internal class TemplateProcessor
 {
   #region Constants
 
-  private const string MAIN_TEMPLATE_NAME = "PrimitiveType";
   private const string TYPE_CONVERTER_TEMPLATE_NAME = "TypeConverter";
   private const string SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME = "SystemTextJsonConverter";
   private const string NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME = "NewtonsoftJsonConverter";
   private const string EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME = "EFCoreValueConverter";
 
-  private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.TypeQualifiedName}$TypeConverter ) )]\n";
-
-  private const string SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.TypeQualifiedName}$SystemTextJsonConverter ) )]\n";
-
-  private const string NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::Newtonsoft.Json.JsonConverter( typeof( ${Macros.TypeQualifiedName}$NewtonsoftJsonConverter ) )]\n";
-
   #endregion
 
   #region Fields
 
-  private readonly ConcurrentDictionary<string, Template> s_templateCache = new ();
+  private readonly ConcurrentDictionary<string, Template> _templateCache = new ();
 
   #endregion
 
   #region Public Methods
 
   public IEnumerable<GeneratedType> ProcessTemplate(
-    GeneratorModel model )
+    GeneratorModel model,
+    SupportedTypeInfo typeInfo )
   {
-    var context = new TemplateContext( model );
+    var context = new TemplateContext( model, typeInfo );
 
     // Set the macros needed for the primitive type
     var builder = new MacroProcessorBuilder();
-    var typeInfo = context.TypeInfo;
 
     // Set the common macros for all templates
     builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
@@ -61,21 +51,17 @@ internal class TemplateProcessor
 
     if( context.Model.HasTypeConverter )
     {
-      builder.AddMacro( Macros.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE );
+      builder.AddConverterMacros( TypedPrimitiveConverter.TypeConverter, typeInfo );
     }
 
     if( context.Model.HasSystemTextJsonConverter )
     {
-      builder.AddMacro( Macros.JsonTokenType, typeInfo.JsonTokenType );
-      builder.AddMacro( Macros.JsonReader, typeInfo.JsonReader );
-      builder.AddMacro( Macros.JsonWriter, typeInfo.JsonWriter );
-      builder.AddMacro( Macros.SystemTextJsonConverterAttribute, SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE );
+      builder.AddConverterMacros( TypedPrimitiveConverter.SystemTextJson, typeInfo );
     }
 
     if( context.Model.HasNewtonsoftJsonConverter )
     {
-      builder.AddMacro( Macros.NewtonsoftJsonTokenType, typeInfo.NewtonsoftJsonTokenType );
-      builder.AddMacro( Macros.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE );
+      builder.AddConverterMacros( TypedPrimitiveConverter.NewtonsoftJson, typeInfo );
     }
 
     var macroProcessor = builder.Build();
@@ -110,12 +96,12 @@ internal class TemplateProcessor
     }
 
     // See if we have already composed the main template
-    var compiledTemplate = s_templateCache.GetOrAdd(
+    var compiledTemplate = _templateCache.GetOrAdd(
       context.TemplateKey,
       _ =>
       {
         // Nope! Compose the template and cache it
-        var mainTemplate = context.LoadTemplate( MAIN_TEMPLATE_NAME );
+        var mainTemplate = context.LoadTemplate( context.MainTemplateName );
         return ComposeMainTemplate( mainTemplate, macroProcessor );
       }
     );
@@ -129,11 +115,11 @@ internal class TemplateProcessor
     SourceText GenerateContent(
       string templateKey )
     {
-      var compiled = s_templateCache.GetOrAdd(
+      var compiled = _templateCache.GetOrAdd(
         templateKey,
         key =>
         {
-          var template = context.LoadTemplate( key, true );
+          var template = context.LoadTemplate( key );
           return new TemplateCompiler().Compile( template );
         }
       );

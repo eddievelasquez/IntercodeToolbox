@@ -4,6 +4,7 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using System.Diagnostics;
 using Intercode.Toolbox.TypedPrimitives.Diagnostics;
 
 // FluentResults-inspired result type that works well
@@ -45,6 +46,7 @@ internal abstract class ResultBase<TResult>: ResultBase
   #endregion
 }
 
+[DebuggerDisplay( "{GetDebuggerDisplay() ,nq}" )]
 internal class Result<T>: ResultBase<Result<T>>
 {
   #region Constructors
@@ -68,6 +70,15 @@ internal class Result<T>: ResultBase<Result<T>>
   #region Properties
 
   public T? Value { get; }
+
+  #endregion
+
+  #region Implementation
+
+  private string GetDebuggerDisplay()
+  {
+    return IsSuccess ? $"Value = {Value}" : $"Errors = {Errors}";
+  }
 
   #endregion
 }

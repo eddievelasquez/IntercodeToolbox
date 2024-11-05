@@ -22,7 +22,7 @@ public partial class $TypeName$NewtonsoftJsonConverter: global::Newtonsoft.Json.
     {
       if( reader.TokenType == global::Newtonsoft.Json.JsonToken.$NewtonsoftJsonTokenType$ )
       {
-        value = ( $TypeKeyword$ ) reader.Value!;
+        value = $NewtonsoftJsonReader$;
       }
       else
       {
@@ -67,7 +67,7 @@ public partial class $TypeName$NewtonsoftJsonConverter: global::Newtonsoft.Json.
       return;
     }
 
-    writer.WriteValue( s.Value );
+    $NewtonsoftJsonWriter$;
   }
 
   partial void ConvertToPartial(

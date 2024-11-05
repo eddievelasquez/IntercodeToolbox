@@ -12,31 +12,6 @@ public class DiagnosticsSourceGenerationTests( ITestOutputHelper output )
   #region Tests
 
   [Fact]
-  public async Task Compilation_ShouldFail_WhenPrimitiveTypeAssemblyIsNotFound()
-  {
-    // MyPrimitive only exists in the in-memory assembly so it won't be found
-    var source = """
-        namespace GeneratorTest;
-      
-        using Intercode.Toolbox.TypedPrimitives;
-        using Intercode.Toolbox.TypedPrimitives.SourceGenerationTests;
-      
-        public record MyPrimitive(int Id);
-      
-        [TypedPrimitive(typeof(MyPrimitive))]
-        public readonly partial struct Test;
-      """;
-
-    var act = () => SourceGeneratorTestHelper.VerifyAsync<TypedPrimitiveSourceGenerator>( source, output );
-
-    await act.Should()
-             .ThrowAsync<CompilationException>()
-             .WithMessage(
-               "The 'SourceGeneratorTests, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null' assembly was not found"
-             );
-  }
-
-  [Fact]
   public async Task Compilation_ShouldFail_WhenPrimitiveTypeIsNotSupported()
   {
     var source = """

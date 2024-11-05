@@ -4,7 +4,7 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
-using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Collections.Immutable;
 using Intercode.Toolbox.TypedPrimitives.Diagnostics;
 using Microsoft.CodeAnalysis;
@@ -13,8 +13,11 @@ internal static class TypedConstantExtensions
 {
   #region Constants
 
-  // We use a nullable Type value so we don't have to lookup unknown types multiple times
-  private static readonly ConcurrentDictionary<string, Result<Type>> s_cachedTypes;
+  private static readonly SymbolDisplayFormat s_symbolDisplayFormat = new (
+    typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces
+  );
+
+  private static readonly FrozenDictionary<string, Type> s_cachedTypes;
 
   #endregion
 
@@ -22,10 +25,11 @@ internal static class TypedConstantExtensions
 
   static TypedConstantExtensions()
   {
-    // Preload well-known types
-    s_cachedTypes = new ConcurrentDictionary<string, Result<Type>>();
-    s_cachedTypes.TryAdd( typeof( Guid ).FullName!, Result.Ok( typeof( Guid ) ) );
-    s_cachedTypes.TryAdd( typeof( DateTimeOffset ).FullName!, Result.Ok( typeof( DateTimeOffset ) ) );
+    // Preload supported types that aren't detected by using the SpecialType enum
+    s_cachedTypes =
+      new[] { typeof( Guid ), typeof( DateTimeOffset ), typeof( TimeSpan ), typeof( Uri ) }.ToFrozenDictionary(
+        type => type.FullName!
+      );
   }
 
   #endregion
@@ -53,7 +57,7 @@ internal static class TypedConstantExtensions
     return ( T ) typedConstant.Value!;
   }
 
-  public static string? GetTypeName(
+  public static object? GetValue(
     this TypedConstant typedConstant )
   {
     if( typedConstant.IsNull )
@@ -61,38 +65,15 @@ internal static class TypedConstantExtensions
       return null;
     }
 
-    if( typedConstant.Kind != TypedConstantKind.Type )
+    return typedConstant.Kind switch
     {
-      return null;
-    }
-
-    if( typedConstant.Value is INamedTypeSymbol namedTypeSymbol )
-    {
-      return namedTypeSymbol.SpecialType switch
-      {
-        SpecialType.System_Boolean  => typeof( bool ).FullName!,
-        SpecialType.System_Byte     => typeof( byte ).FullName!,
-        SpecialType.System_Char     => typeof( char ).FullName!,
-        SpecialType.System_DateTime => typeof( DateTime ).FullName!,
-        SpecialType.System_Decimal  => typeof( decimal ).FullName!,
-        SpecialType.System_Double   => typeof( double ).FullName!,
-        SpecialType.System_Int16    => typeof( short ).FullName!,
-        SpecialType.System_Int32    => typeof( int ).FullName!,
-        SpecialType.System_Int64    => typeof( long ).FullName!,
-        SpecialType.System_SByte    => typeof( sbyte ).FullName!,
-        SpecialType.System_Single   => typeof( float ).FullName!,
-        SpecialType.System_String   => typeof( string ).FullName!,
-        SpecialType.System_UInt16   => typeof( ushort ).FullName!,
-        SpecialType.System_UInt32   => typeof( uint ).FullName!,
-        SpecialType.System_UInt64   => typeof( ulong ).FullName!,
-        _                           => namedTypeSymbol.ToDisplayString()
-      };
-    }
-
-    return null;
+      TypedConstantKind.Primitive => typedConstant.Value,
+      TypedConstantKind.Enum      => typedConstant.Value,
+      _                           => null
+    };
   }
 
-  public static Result<Type> GetTypeValue(
+  public static Result<Type> GetTypeOf(
     this TypedConstant typedConstant )
   {
     if( typedConstant.IsNull )
@@ -107,13 +88,13 @@ internal static class TypedConstantExtensions
 
     if( typedConstant.Value is INamedTypeSymbol typeSymbol )
     {
-      return typeSymbol.GetTypeValue();
+      return typeSymbol.GetTypeOf();
     }
 
     return Result.Fail<Type>( Error.UnsupportedType( typedConstant.Value!.ToString() ) );
   }
 
-  public static Result<Type> GetTypeValue(
+  public static Result<Type> GetTypeOf(
     this ITypeSymbol typeSymbol )
   {
     var type = typeSymbol.SpecialType switch
@@ -144,22 +125,6 @@ internal static class TypedConstantExtensions
     return Result.Ok( type );
   }
 
-  public static object? GetValue(
-    this TypedConstant typedConstant )
-  {
-    if( typedConstant.IsNull )
-    {
-      return null;
-    }
-
-    return typedConstant.Kind switch
-    {
-      TypedConstantKind.Primitive => typedConstant.Value,
-      TypedConstantKind.Enum      => typedConstant.Value,
-      _                           => null
-    };
-  }
-
   #endregion
 
   #region Implementation
@@ -168,39 +133,12 @@ internal static class TypedConstantExtensions
     ITypeSymbol namedTypeSymbol )
   {
     var typeName = namedTypeSymbol.ToDisplayString();
-    var type = s_cachedTypes.GetOrAdd( typeName, s => GetTypeFromSymbolCore( namedTypeSymbol, s ) );
-    return type;
-  }
-
-  private static Result<Type> GetTypeFromSymbolCore(
-    ITypeSymbol namedTypeSymbol,
-    string typeName )
-  {
-    // Get metadata reference for the named type symbol
-    var containingAssembly = namedTypeSymbol.ContainingAssembly;
-    if( containingAssembly is null )
+    if( s_cachedTypes.TryGetValue( typeName, out var type ) )
     {
-      return Result.Fail<Type>( Error.Unexpected( $"The containing assembly for the '{typeName}' was not found" ) );
+      return Result.Ok( type );
     }
 
-    var assemblyName = containingAssembly.Identity.GetDisplayName();
-
-    var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-    var assembly = assemblies
-      .FirstOrDefault( a => a.FullName == assemblyName );
-
-    if( assembly == null )
-    {
-      return Result.Fail<Type>( Error.Unexpected( $"The '{assemblyName}' assembly was not found" ) );
-    }
-
-    var type = assembly.GetType( typeName );
-    if( type is null )
-    {
-      return Result.Fail<Type>( Error.Unexpected( $"The '{typeName}' type was not found" ) );
-    }
-
-    return Result.Ok( type );
+    return Result.Fail<Type>( Error.UnsupportedType( namedTypeSymbol.ToDisplayString( s_symbolDisplayFormat ) ) );
   }
 
   #endregion
