@@ -52,7 +52,29 @@ public partial class MacroProcessingTests
   #region Public Methods
 
   [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingMacroProcessor()
+  public void UsingMacroProcessorWithPooledStringBuilder()
+  {
+    var builder = StringBuilderPool.Default.Get();
+
+    try
+    {
+      _macroProcessor.ProcessMacros( _template, builder );
+    }
+    finally
+    {
+      StringBuilderPool.Default.Return( builder );
+    }
+  }
+
+  [Benchmark( OperationsPerInvoke = 3 )]
+  public void UsingMacroProcessorWithStringBuilder()
+  {
+    var builder = new StringBuilder();
+    _macroProcessor.ProcessMacros( _template, builder );
+  }
+
+  [Benchmark( OperationsPerInvoke = 3 )]
+  public void UsingMacroProcessorWithTextWriter()
   {
     var writer = new StringWriter();
     _macroProcessor.ProcessMacros( _template, writer );

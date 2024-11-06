@@ -4,11 +4,17 @@ A fast and simple text templating engine.
 
 ## Updates
 - **Version 2.4** - Added dynamic macro support.
+- **Version 2.4.4** - Added a `MacroProcessor.ProcessMacros` overload that takes a `StringBuilder` instance; the improves performance when using pooled string builders.
 
 ## Table of Contents
 <!--TOC-->
   - [Description](#description)
   - [Processing Macros in Templates: A Quick Guide](#processing-macros-in-templates-a-quick-guide)
+  - [Step-by-Step Guide](#step-by-step-guide)
+    - [1. Create a TemplateCompiler Instance](#1.-create-a-templatecompiler-instance)
+    - [2. Build a MacroProcessor](#2.-build-a-macroprocessor)
+    - [3. Process Macros in the Template](#3.-process-macros-in-the-template)
+  - [Custom Dynamic Macros](#custom-dynamic-macros)
   - [Reference](#reference)
     - [`TemplateEngineOptions` class](#templateengineoptions-class)
       - [Constructor](#constructor)
@@ -24,6 +30,11 @@ A fast and simple text templating engine.
     - [`MacroProcessor` class](#macroprocessor-class)
       - [Methods](#methods)
   - [Benchmarks](#benchmarks)
+    - [Benchmark Setup](#benchmark-setup)
+      - [Template text](#template-text)
+      - [Macro values](#macro-values)
+      - [Benchmark Code](#benchmark-code)
+      - [Benchmark Results](#benchmark-results)
   - [License](#license)
 <!--/TOC-->
 
@@ -396,20 +407,52 @@ Using [BenchmarkDotNet](https://benchmarkdotnet.org/)
 [MemoryDiagnoser]
 public partial class MacroProcessingTests
 {
+  #region Fields
+
   private readonly Template _template;
   private readonly MacroProcessor _macroProcessor;
   private readonly IReadOnlyDictionary<string, string> _macros;
+
+  #endregion
+
+  #region Constructors
 
   public MacroProcessingTests()
   {
     var helper = new TemplateEngineHelper();
     _template = helper.Compile();
     _macroProcessor = helper.CreateMacroProcessor();
-    _macros = _macroProcessor.GetMacros();
+    _macros = helper.Macros;
+  }
+
+  #endregion
+
+  #region Public Methods
+
+  [Benchmark( OperationsPerInvoke = 3 )]
+  public void UsingMacroProcessorWithPooledStringBuilder()
+  {
+    var builder = StringBuilderPool.Default.Get();
+
+    try
+    {
+      _macroProcessor.ProcessMacros( _template, builder );
+    }
+    finally
+    {
+      StringBuilderPool.Default.Return( builder );
+    }
   }
 
   [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingMacroProcessor()
+  public void UsingMacroProcessorWithStringBuilder()
+  {
+    var builder = new StringBuilder();
+    _macroProcessor.ProcessMacros( _template, builder );
+  }
+
+  [Benchmark( OperationsPerInvoke = 3 )]
+  public void UsingMacroProcessorWithTextWriter()
   {
     var writer = new StringWriter();
     _macroProcessor.ProcessMacros( _template, writer );
@@ -441,8 +484,14 @@ public partial class MacroProcessingTests
       );
   }
 
+  #endregion
+
+  #region Implementation
+
   [GeneratedRegex( @"\$([^$]+)\$" )]
   private static partial Regex CreateMacroNameRegex();
+
+  #endregion
 }
 ```
 
@@ -451,10 +500,11 @@ It is kept in a separate class because we only want to measure the actual macro 
 
 #### Benchmark Results
 
-As the results indicate, the `MacroProcessor` demonstrates significantly 
-faster performance and lower memory allocation compared to the `StringBuilder` and `Regex` implementations.
+As the results indicate, the `MacroProcessor` demonstrates significantly faster performance and lower memory allocation compared to 
+the `StringBuilder` and `Regex` implementations. This performance increase is more dramatic when using a pooled `StringBuilder` as memory
+allocations are reduced to a fraction of the other methods.
 
-![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/refs/heads/main/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
+![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/839271e69b927451143777263ca6b6336c5155b5/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
 
 ---
 
