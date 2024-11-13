@@ -5,13 +5,15 @@ namespace $Namespace$;
 
 $TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$TypeName$ = {_value}" )]
 public readonly partial struct $TypeName$
-  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<$TypeName$, $TypeKeyword$>,
+  : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<$TypeName$, $TypeKeyword$>,
     global::System.IComparable<$TypeName$>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
-    global::System.ISpanFormattable
+    global::System.ISpanFormattable,
+    global::System.ISpanParsable<$TypeName$>
 #else
-    global::System.IFormattable
+    global::System.IFormattable,
+    global::System.IParsable<$TypeName$>
 #endif
 {
   private readonly $TypeKeyword$? _value;
@@ -31,7 +33,7 @@ public readonly partial struct $TypeName$
         throw new global::System.InvalidOperationException( "Value is null" );
       }
 
-      return _value;
+      return _value.Value;
     }
   }
 
@@ -108,15 +110,60 @@ public readonly partial struct $TypeName$
   public string ToString(
     string? format )
   {
-    return _value is null ? string.Empty : ((IFormattable) _value).ToString( format, null );
+    return _value is null ? string.Empty : _value.Value.ToString( format, null );
   }
 
   public string ToString(
     string? format,
     global::System.IFormatProvider? formatProvider )
   {
-    return _value is null ? string.Empty : ((IFormattable) _value).ToString( format, formatProvider );
+    return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
   }
+
+  public static $TypeName$ Parse(
+    string s, IFormatProvider? provider  )
+  {
+    var value = $TypeKeyword$.Parse( s, provider );
+    return CreateOrThrow( value );
+  }
+
+  public static bool TryParse(
+    string? s,
+    IFormatProvider? provider,
+    out $TypeName$ result )
+  {
+    if( !$TypeKeyword$.TryParse( s, provider, out var value ) )
+    {
+      result = default;
+      return false;
+    }
+
+    var createResult = Create( value );
+    if ( createResult.IsFailed )
+    {
+      result = default;
+      return false;
+    }
+
+    result = createResult.Value;
+    return true;
+  }
+
+#if NET8_0_OR_GREATER
+  public bool TryFormat(
+    global::System.Span<byte> utf8Destination,
+    out int bytesWritten,
+    global::System.ReadOnlySpan<char> format = default )
+  {
+    if ( _value is null )
+    {
+      bytesWritten = 0;
+      return true;
+    }
+
+    return _value.Value.TryFormat( utf8Destination, out bytesWritten, format );
+  }
+#endif
 
 #if NET7_0_OR_GREATER
   bool ISpanFormattable.TryFormat(
@@ -125,12 +172,19 @@ public readonly partial struct $TypeName$
     global::System.ReadOnlySpan<char> format,
     global::System.IFormatProvider? provider )
   {
-    return TryFormat( destination, out charsWritten );
+    if ( _value is null )
+    {
+      charsWritten = 0;
+      return true;
+    }
+
+    return TryFormat( destination, out charsWritten, format );
   }
 
   public bool TryFormat(
     global::System.Span<char> destination,
-    out int charsWritten )
+    out int charsWritten,
+    global::System.ReadOnlySpan<char> format = default )
   {
     if ( _value is null )
     {
@@ -138,8 +192,39 @@ public readonly partial struct $TypeName$
       return true;
     }
 
-    return _value.TryFormat( destination, out charsWritten );
+    return _value.Value.TryFormat( destination, out charsWritten, format );
   }
+
+  public static $TypeName$ Parse(
+    global::System.ReadOnlySpan<char> text,
+    global::System.IFormatProvider? formatProvider = null )
+  {
+    var value = $TypeKeyword$.Parse( text, formatProvider );
+    return CreateOrThrow( value );
+  }
+
+  public static bool TryParse(
+    global::System.ReadOnlySpan<char> text,
+    global::System.IFormatProvider? formatProvider,
+    out $TypeName$ result )
+  {
+    if ( !$TypeKeyword$.TryParse( text, formatProvider, out var value ) )
+    {
+      result = default;
+      return false;
+    }
+
+    var createResult = Create( value );
+    if ( createResult.IsFailed )
+    {
+      result = default;
+      return false;
+    }
+
+    result = createResult.Value;
+    return true;
+  }
+
 #endif
 
   public int CompareTo(
@@ -166,7 +251,7 @@ public readonly partial struct $TypeName$
       return 1;
     }
 
-    return Uri.Compare( _value, other._value, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
+    return _value.Value.CompareTo( other.Value );
   }
 
   public static explicit operator $TypeKeyword$(

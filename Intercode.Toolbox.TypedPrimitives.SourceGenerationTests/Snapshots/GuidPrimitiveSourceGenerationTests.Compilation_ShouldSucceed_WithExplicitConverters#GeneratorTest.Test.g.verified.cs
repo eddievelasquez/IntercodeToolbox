@@ -9,9 +9,16 @@ namespace GeneratorTest;
 [global::Newtonsoft.Json.JsonConverter( typeof( GeneratorTest.TestNewtonsoftJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::System.IComparable<Test>,
+  : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, global::System.Guid>,
+    global::System.IComparable<Test>,
     global::System.IComparable,
-    global::System.IFormattable
+#if NET7_0_OR_GREATER
+    global::System.ISpanFormattable,
+    global::System.ISpanParsable<Test>
+#else
+    global::System.IFormattable,
+    global::System.IParsable<Test>
+#endif
 {
   private readonly global::System.Guid? _value;
 
@@ -48,11 +55,39 @@ public readonly partial struct Test
     return new Test( value );
   }
 
+  public static Test CreateOrThrow( global::System.Guid? value )
+  {
+    var result = Create( value );
+    if( result.IsSuccess )
+    {
+      return result.Value;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
+  }
+
   public static global::FluentResults.Result Validate( global::System.Guid? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
+  }
+
+  public static void ValidateOrThrow( global::System.Guid? value )
+  {
+    var result = Validate( value );
+    if( result.IsSuccess )
+    {
+      return;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
   }
 
   public static bool IsValid( global::System.Guid? value )
@@ -89,6 +124,113 @@ public readonly partial struct Test
     return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
   }
 
+  public static Test Parse(
+    string s, IFormatProvider? provider  )
+  {
+    var value = global::System.Guid.Parse( s, provider );
+    return CreateOrThrow( value );
+  }
+
+  public static bool TryParse(
+    string? s,
+    IFormatProvider? provider,
+    out Test result )
+  {
+    if( !global::System.Guid.TryParse( s, provider, out var value ) )
+    {
+      result = default;
+      return false;
+    }
+
+    var createResult = Create( value );
+    if ( createResult.IsFailed )
+    {
+      result = default;
+      return false;
+    }
+
+    result = createResult.Value;
+    return true;
+  }
+
+#if NET8_0_OR_GREATER
+  public bool TryFormat(
+    global::System.Span<byte> utf8Destination,
+    out int bytesWritten,
+    global::System.ReadOnlySpan<char> format = default )
+  {
+    if ( _value is null )
+    {
+      bytesWritten = 0;
+      return true;
+    }
+
+    return _value.Value.TryFormat( utf8Destination, out bytesWritten, format );
+  }
+#endif
+
+#if NET7_0_OR_GREATER
+  bool ISpanFormattable.TryFormat(
+    global::System.Span<char> destination,
+    out int charsWritten,
+    global::System.ReadOnlySpan<char> format,
+    global::System.IFormatProvider? provider )
+  {
+    if ( _value is null )
+    {
+      charsWritten = 0;
+      return true;
+    }
+
+    return TryFormat( destination, out charsWritten, format );
+  }
+
+  public bool TryFormat(
+    global::System.Span<char> destination,
+    out int charsWritten,
+    global::System.ReadOnlySpan<char> format = default )
+  {
+    if ( _value is null )
+    {
+      charsWritten = 0;
+      return true;
+    }
+
+    return _value.Value.TryFormat( destination, out charsWritten, format );
+  }
+
+  public static Test Parse(
+    global::System.ReadOnlySpan<char> text,
+    global::System.IFormatProvider? formatProvider = null )
+  {
+    var value = global::System.Guid.Parse( text, formatProvider );
+    return CreateOrThrow( value );
+  }
+
+  public static bool TryParse(
+    global::System.ReadOnlySpan<char> text,
+    global::System.IFormatProvider? formatProvider,
+    out Test result )
+  {
+    if ( !global::System.Guid.TryParse( text, formatProvider, out var value ) )
+    {
+      result = default;
+      return false;
+    }
+
+    var createResult = Create( value );
+    if ( createResult.IsFailed )
+    {
+      result = default;
+      return false;
+    }
+
+    result = createResult.Value;
+    return true;
+  }
+
+#endif
+
   public int CompareTo(
     object? obj )
   {
@@ -113,7 +255,7 @@ public readonly partial struct Test
       return 1;
     }
 
-    return ((global::System.Guid) _value).CompareTo( ((global::System.Guid) other) );
+    return _value.Value.CompareTo( other.Value );
   }
 
   public static explicit operator global::System.Guid(

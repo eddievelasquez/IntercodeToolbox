@@ -25,10 +25,6 @@ public partial class TestNewtonsoftJsonConverter: global::Newtonsoft.Json.JsonCo
       {
         value = global::System.DateTime.Parse( ( string ) reader.Value! );
       }
-      else if (reader.TokenType == global::Newtonsoft.Json.JsonToken.Date )
-      {
-        value = ( DateTime? ) reader.Value;
-      }
       else
       {
         var converted = false;

@@ -17,6 +17,10 @@ public class MacroProcessor
   private readonly FrozenDictionary<string, MacroValueGenerator> _valueGenerators;
   private readonly TemplateEngineOptions _options;
 
+#if NET9_0_OR_GREATER
+  private readonly FrozenDictionary<string, MacroValueGenerator>.AlternateLookup<ReadOnlySpan<char>> _alternate;
+#endif
+
   #endregion
 
   #region Constructors
@@ -35,6 +39,10 @@ public class MacroProcessor
   {
     _valueGenerators = valueGenerators;
     _options = options;
+
+#if NET9_0_OR_GREATER
+    _alternate = _valueGenerators.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
   }
 
   #endregion
@@ -93,11 +101,11 @@ public class MacroProcessor
       {
         case SegmentKind.Macro:
         {
-          // Unfortunately we cannot use a Span for the macro lookup as Dictionary does not
-          // yet Span lookup support; but .NET 9.0 does.
-          // see https://blog.ndepend.com/alternate-lookup-for-dictionary-and-hashset-in-net-9/
-          var macroName = segment.Text;
-          if( _valueGenerators.TryGetValue( macroName, out var generator ) )
+#if NET9_0_OR_GREATER
+          if( _alternate.TryGetValue( segment.Memory.Span, out var generator ) )
+#else
+          if( _valueGenerators.TryGetValue( segment.Text, out var generator ) )
+#endif
           {
             string value;
 
@@ -121,26 +129,18 @@ public class MacroProcessor
           break;
 
         case SegmentKind.Constant:
-          WriteConstant( segment );
+#if NET6_0_OR_GREATER
+          writer.Write( segment.Memory.Span );
+#else
+
+          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+          writer.Write( segment.Memory.ToString() );
+#endif
           break;
 
         default:
           throw new InvalidOperationException( "Unknown segment kind" );
       }
-    }
-
-    return;
-
-    void WriteConstant(
-      Segment segment )
-    {
-#if NET6_0_OR_GREATER
-      writer.Write( segment.Memory.Span );
-#else
-
-      // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-      writer.Write( segment.Memory.ToString() );
-#endif
     }
   }
 
@@ -159,11 +159,11 @@ public class MacroProcessor
       {
         case SegmentKind.Macro:
         {
-          // Unfortunately we cannot use a Span for the macro lookup as Dictionary does not
-          // yet Span lookup support; but .NET 9.0 does.
-          // see https://blog.ndepend.com/alternate-lookup-for-dictionary-and-hashset-in-net-9/
-          var macroName = segment.Text;
-          if( _valueGenerators.TryGetValue( macroName, out var generator ) )
+#if NET9_0_OR_GREATER
+          if( _alternate.TryGetValue( segment.Memory.Span, out var generator ) )
+#else
+          if( _valueGenerators.TryGetValue( segment.Text, out var generator ) )
+#endif
           {
             string value;
 
@@ -187,26 +187,18 @@ public class MacroProcessor
           break;
 
         case SegmentKind.Constant:
-          WriteConstant( segment );
+#if NET6_0_OR_GREATER
+          builder.Append( segment.Memory.Span );
+#else
+
+          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+          builder.Append( segment.Memory.ToString() );
+#endif
           break;
 
         default:
           throw new InvalidOperationException( "Unknown segment kind" );
       }
-    }
-
-    return;
-
-    void WriteConstant(
-      Segment segment )
-    {
-#if NET6_0_OR_GREATER
-      builder.Append( segment.Memory.Span );
-#else
-
-      // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
-      builder.Append( segment.Memory.ToString() );
-#endif
     }
   }
 

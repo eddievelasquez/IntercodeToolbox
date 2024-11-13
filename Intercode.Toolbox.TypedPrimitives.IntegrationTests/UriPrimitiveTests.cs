@@ -5,26 +5,19 @@
 namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
-using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using StjJsonException = System.Text.Json.JsonException;
 using StjJsonSerializer = System.Text.Json.JsonSerializer;
 using NsjJsonException = Newtonsoft.Json.JsonException;
-using Newtonsoft.Json;
 
 [TypedPrimitive<Uri>]
 public readonly partial struct UnvalidatedUriPrimitive;
 
-[TypedPrimitive(
-  typeof( Uri ),
-  Converters = TypedPrimitiveConverter.TypeConverter |
-               TypedPrimitiveConverter.SystemTextJson |
-               TypedPrimitiveConverter.EfCoreValueConverter |
-               TypedPrimitiveConverter.NewtonsoftJson
-)]
+[TypedPrimitive( typeof( Uri ), Converters = TypedPrimitiveConverter.All )]
 public readonly partial struct UriPrimitive
 {
   #region Constants
@@ -120,6 +113,64 @@ public class UriPrimitiveTests
     // Assert
     result.Should()
           .BeGreaterThan( 0 );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Create_WithInvalidValue_ReturnsFailure(
+    Uri? value )
+  {
+    // Act
+    var result = UriPrimitive.Create( value );
+
+    // Assert
+    result.IsFailed.Should()
+          .BeTrue();
+
+    result.Errors.Select( error => error.Message )
+          .Should()
+          .ContainSingle()
+          .Which
+          .Should()
+          .Be( UriPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void Create_WithValidValue_ReturnsSuccess()
+  {
+    // Act
+    var result = UriPrimitive.Create( s_validValueA );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+
+    result.Value.Value.Should()
+          .Be( s_validValueA );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void CreateOrThrow_WithInvalidValue_Throws(
+    Uri? value )
+  {
+    // Act
+    var act = () => UriPrimitive.CreateOrThrow( value );
+
+    // Assert
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithMessage( UriPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Fact]
+  public void CreateOrThrow_WithValidValue_ReturnsPrimitive()
+  {
+    // Act
+    var primitive = UriPrimitive.CreateOrThrow( s_validValueA );
+
+    // Assert
+    primitive.Value.Should().Be( s_validValueA );
   }
 
   [Fact]
@@ -687,6 +738,44 @@ public class UriPrimitiveTests
     // Assert
     result.IsSuccess.Should()
           .BeTrue();
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void ValidateOrThrow_WithInvalidValue_ShouldThrow(
+    Uri? value )
+  {
+    // Act
+    var act = () => UriPrimitive.ValidateOrThrow( value );
+
+    // Assert
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithMessage( UriPrimitive.ExpectedValidationErrorMessage );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void ValidateOrThrow_WithUnvalidatedPrimitiveAndInvalidValue_ShouldNotThrow(
+    Uri? value )
+  {
+    // Act
+    var act = () => UnvalidatedUriPrimitive.ValidateOrThrow( value );
+
+    // Assert
+    act.Should()
+       .NotThrow();
+  }
+
+  [Fact]
+  public void ValidateOrThrow_WithValidValue_ShouldNotThrow()
+  {
+    // Act
+    var act = () => UriPrimitive.ValidateOrThrow( s_validValueA );
+
+    // Assert
+    act.Should()
+       .NotThrow();
   }
 
   [Fact]

@@ -1,4 +1,4 @@
-// Module Name: TimeSpanPrimitiveTests.cs
+// Module Name: ValueTypePrimitiveTests.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
@@ -6,48 +6,53 @@ namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using System.ComponentModel;
 using FluentAssertions;
-using FluentResults;
+using Intercode.Toolbox.Core;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Newtonsoft.Json;
 using StjJsonException = System.Text.Json.JsonException;
 using StjJsonSerializer = System.Text.Json.JsonSerializer;
 using NsjJsonException = Newtonsoft.Json.JsonException;
 
-[TypedPrimitive<TimeSpan>]
-public readonly partial struct UnvalidatedTimeSpanPrimitive;
-
-[TypedPrimitive( typeof( TimeSpan ), Converters = TypedPrimitiveConverter.All )]
-public readonly partial struct TimeSpanPrimitive
+public abstract class ValueTypePrimitiveTests<T, TPrimitive, TUnvalidatedPrimitive, TValueConverter>
+  where TPrimitive: struct, IValueTypePrimitive<TPrimitive, T>, IComparable<TPrimitive>, IComparable, ISpanFormattable,
+  ISpanParsable<TPrimitive>
+  where TUnvalidatedPrimitive: struct, IValueTypePrimitive<TUnvalidatedPrimitive, T>
+  where T: struct, IComparable<T>, IComparable, ISpanParsable<T>
+  where TValueConverter: ValueConverter, new()
 {
   #region Constants
 
-  public const string ExpectedValidationErrorMessage = "Cannot be null or empty";
+  private const string NUMERIC_VALIDATION_ERROR_MSG = "Cannot be null or zero";
+  private const string TEXT_VALIDATION_ERROR_MSG = "Cannot be null or empty";
 
   #endregion
 
-  #region Implementation
+  #region Fields
 
-  static partial void ValidatePartial(
-    TimeSpan? value,
-    ref Result result )
+  private readonly string _validationError;
+  private readonly string _jsonValidationError;
+  private readonly T[] _validValues;
+  private readonly bool _isNumeric;
+
+  #endregion
+
+  #region Setup/Teardown
+
+  protected ValueTypePrimitiveTests(
+    string jsonValidationError,
+    T[] validValues )
   {
-    result = Result.FailIf(
-      value is null || value.Value == TimeSpan.MinValue,
-      ExpectedValidationErrorMessage
-    );
+    ArgumentException.ThrowIfNullOrEmpty( jsonValidationError );
+    ArgumentNullException.ThrowIfNull( validValues );
+    ArgumentOutOfRangeException.ThrowIfLessThan( validValues.Length, 2 );
+
+    _isNumeric = typeof( T ).IsNumeric();
+    _validationError = _isNumeric ? NUMERIC_VALIDATION_ERROR_MSG : TEXT_VALIDATION_ERROR_MSG;
+    _jsonValidationError = jsonValidationError;
+    _validValues = validValues;
   }
-
-  #endregion
-}
-
-public class TimeSpanPrimitiveTests
-{
-  #region Constants
-
-  private static readonly string s_jsonInvalidTokenTypeErrorMessage = "Value must be a String";
-  private static readonly TimeSpan s_validValueA = TimeSpan.ParseExact( "1.12:24:02", "c", null );
-  private static readonly TimeSpan s_validValueB = TimeSpan.ParseExact( "3.03:14:56.1667", "c", null );
 
   #endregion
 
@@ -57,8 +62,8 @@ public class TimeSpanPrimitiveTests
   public void CompareTo_DefaultAndValue_ReturnsLessThanZero()
   {
     // Arrange
-    var a = ( TimeSpanPrimitive ) s_validValueA;
-    var b = ( TimeSpanPrimitive ) default;
+    var a = ( TPrimitive ) _validValues[0];
+    var b = ( TPrimitive ) default;
 
     // Act
     var result = b.CompareTo( a );
@@ -71,15 +76,15 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void CompareTo_DifferentObjectValues_ReturnsComparisonResult()
   {
-    var valueA = s_validValueA;
-    var valueB = s_validValueB;
+    var valueA = _validValues[0];
+    var valueB = _validValues[1];
 
     // Arrange
-    var a = ( TimeSpanPrimitive ) valueA;
-    var b = ( TimeSpanPrimitive ) valueB;
+    var a = ( TPrimitive ) valueA;
+    var b = ( TPrimitive ) valueB;
 
     // Act
-    var result = a.CompareTo( ( object ) b );
+    var result = a.CompareTo( ( object? ) b );
 
     // Assert
     result.Should()
@@ -90,7 +95,7 @@ public class TimeSpanPrimitiveTests
   public void CompareTo_ObjectIsNull_ReturnsGreaterThanZero()
   {
     // Arrange
-    var a = ( TimeSpanPrimitive ) s_validValueA;
+    var a = ( TPrimitive ) _validValues[0];
 
     // Act
     var result = a.CompareTo( null );
@@ -104,7 +109,7 @@ public class TimeSpanPrimitiveTests
   public void CompareTo_ValueAndDefault_ReturnsGreaterThanZero()
   {
     // Arrange
-    var primitive = ( TimeSpanPrimitive ) s_validValueA;
+    var primitive = ( TPrimitive ) _validValues[0];
 
     // Act
     var result = primitive.CompareTo( default );
@@ -114,12 +119,72 @@ public class TimeSpanPrimitiveTests
           .BeGreaterThan( 0 );
   }
 
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Create_WithInvalidValue_ReturnsFailure(
+    T? value )
+  {
+    // Act
+    var result = TPrimitive.Create( value );
+
+    // Assert
+    result.IsFailed.Should()
+          .BeTrue();
+
+    result.Errors.Select( error => error.Message )
+          .Should()
+          .ContainSingle()
+          .Which
+          .Should()
+          .Be( _validationError );
+  }
+
+  [Fact]
+  public void Create_WithValidValue_ReturnsSuccess()
+  {
+    // Act
+    var value = _validValues[0];
+    var result = TPrimitive.Create( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
+
+    result.Value.Value.Should()
+          .Be( value );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void CreateOrThrow_WithInvalidValue_Throws(
+    T? value )
+  {
+    // Act
+    var act = () => TPrimitive.CreateOrThrow( value );
+
+    // Assert
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithMessage( _validationError );
+  }
+
+  [Fact]
+  public void CreateOrThrow_WithValidValue_ReturnsPrimitive()
+  {
+    // Act
+    var value = _validValues[0];
+    var primitive = TPrimitive.CreateOrThrow( value );
+
+    // Assert
+    primitive.Value.Should().Be( value );
+  }
+
   [Fact]
   public void Equals_DefaultWithValue_ReturnsFalse()
   {
     // Arrange
-    var a = ( TimeSpanPrimitive ) s_validValueA;
-    var b = ( TimeSpanPrimitive ) default;
+    var a = ( TPrimitive ) _validValues[0];
+    var b = ( TPrimitive ) default;
 
     // Act
     var areEqual = b.Equals( a );
@@ -133,8 +198,8 @@ public class TimeSpanPrimitiveTests
   public void Equals_DifferentValues_ReturnsFalse()
   {
     // Arrange
-    var a = ( TimeSpanPrimitive ) s_validValueA;
-    var b = ( TimeSpanPrimitive ) s_validValueB;
+    var a = ( TPrimitive ) _validValues[0];
+    var b = ( TPrimitive ) _validValues[1];
 
     // Act
     var areEqual = a.Equals( b );
@@ -148,8 +213,8 @@ public class TimeSpanPrimitiveTests
   public void Equals_SameValue_ReturnsTrue()
   {
     // Arrange
-    var a = ( TimeSpanPrimitive ) s_validValueA;
-    var b = ( TimeSpanPrimitive ) s_validValueA;
+    var a = ( TPrimitive ) _validValues[0];
+    var b = ( TPrimitive ) _validValues[0];
 
     // Act
     var areEqual = a.Equals( b );
@@ -163,7 +228,7 @@ public class TimeSpanPrimitiveTests
   public void Equals_ValueWithDefault_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( TimeSpanPrimitive ) s_validValueA;
+    var primitive = ( TPrimitive ) _validValues[0];
 
     // Act
     var areEqual = primitive.Equals( default );
@@ -177,7 +242,7 @@ public class TimeSpanPrimitiveTests
   public void ExplicitOperator_DefaultToString_ShouldThrow()
   {
     // Arrange
-    var primitive = ( TimeSpanPrimitive ) default;
+    var primitive = ( TPrimitive ) default;
 
     // Act
     var act = () => primitive.Value;
@@ -192,8 +257,8 @@ public class TimeSpanPrimitiveTests
   public void ExplicitOperator_PrimitiveToString_ReturnsString()
   {
     // Arrange
-    var value = s_validValueA;
-    var primitive = ( TimeSpanPrimitive ) value;
+    var value = _validValues[0];
+    var primitive = ( TPrimitive ) value;
 
     // Act
     var result = primitive.Value;
@@ -206,23 +271,23 @@ public class TimeSpanPrimitiveTests
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void ExplicitOperator_StringToPrimitive_WithInvalidValue_Throws(
-    TimeSpan? value )
+    T? value )
   {
     // Act
-    var act = () => ( TimeSpanPrimitive ) value;
+    var act = () => ( TPrimitive ) value;
 
     // Assert
     act.Should()
        .Throw<InvalidOperationException>()
-       .WithMessage( TimeSpanPrimitive.ExpectedValidationErrorMessage );
+       .WithMessage( _validationError );
   }
 
   [Fact]
   public void ExplicitOperator_ValueToPrimitive_ReturnsPrimitiveWithValue()
   {
     // Act
-    var value = s_validValueA;
-    var primitive = ( TimeSpanPrimitive ) value;
+    var value = _validValues[0];
+    var primitive = ( TPrimitive ) value;
 
     // Assert
     primitive.Value.Should()
@@ -230,45 +295,10 @@ public class TimeSpanPrimitiveTests
   }
 
   [Fact]
-  public void FromInt32_WithValidValue_ReturnsSuccess()
-  {
-    // Act
-    var value = s_validValueA;
-    var result = TimeSpanPrimitive.Create( value );
-
-    // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
-
-    result.Value.Value.Should()
-          .Be( value );
-  }
-
-  [Theory]
-  [MemberData( nameof( InvalidValues ) )]
-  public void FromString_InvalidValue_ReturnsFailure(
-    TimeSpan? value )
-  {
-    // Act
-    var result = TimeSpanPrimitive.Create( value );
-
-    // Assert
-    result.IsFailed.Should()
-          .BeTrue();
-
-    result.Errors.Select( error => error.Message )
-          .Should()
-          .ContainSingle()
-          .Which
-          .Should()
-          .Be( TimeSpanPrimitive.ExpectedValidationErrorMessage );
-  }
-
-  [Fact]
   public void GetHashCode_Default_ReturnsZero()
   {
     // Act
-    var hashCodeA = ( ( TimeSpanPrimitive ) default ).GetHashCode();
+    var hashCodeA = ( ( TPrimitive ) default ).GetHashCode();
 
     // Assert
     hashCodeA.Should()
@@ -279,10 +309,10 @@ public class TimeSpanPrimitiveTests
   public void GetHashCode_DifferentValues_ReturnsDifferentHashCodes()
   {
     // Arrange
-    var valueA = s_validValueA;
-    var valueB = s_validValueB;
-    var a = ( TimeSpanPrimitive ) valueA;
-    var b = ( TimeSpanPrimitive ) valueB;
+    var valueA = _validValues[0];
+    var valueB = _validValues[1];
+    var a = ( TPrimitive ) valueA;
+    var b = ( TPrimitive ) valueB;
 
     // Act
     var hashCodeA = a.GetHashCode();
@@ -297,9 +327,9 @@ public class TimeSpanPrimitiveTests
   public void GetHashCode_SameValue_ReturnsSameHashCode()
   {
     // Arrange
-    var value = s_validValueA;
-    var a = ( TimeSpanPrimitive ) value;
-    var b = ( TimeSpanPrimitive ) value;
+    var value = _validValues[0];
+    var a = ( TPrimitive ) value;
+    var b = ( TPrimitive ) value;
 
     // Act
     var hashCodeA = a.GetHashCode();
@@ -314,7 +344,7 @@ public class TimeSpanPrimitiveTests
   public void IsDefault_WithDefaultValue_ReturnsTrue()
   {
     // Arrange
-    var primitive = ( TimeSpanPrimitive ) default;
+    var primitive = ( TPrimitive ) default;
 
     // Act
     var result = primitive.IsDefault;
@@ -327,7 +357,7 @@ public class TimeSpanPrimitiveTests
   public void IsDefault_WithValue_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( TimeSpanPrimitive ) s_validValueA;
+    var primitive = ( TPrimitive ) _validValues[0];
 
     // Act
     var result = primitive.IsDefault;
@@ -339,10 +369,10 @@ public class TimeSpanPrimitiveTests
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void IsValid_InvalidValue_ReturnsFalse(
-    TimeSpan? value )
+    T? value )
   {
     // Act
-    var isValid = TimeSpanPrimitive.IsValid( value );
+    var isValid = TPrimitive.IsValid( value );
 
     // Assert
     isValid.Should()
@@ -353,7 +383,7 @@ public class TimeSpanPrimitiveTests
   public void IsValid_StringValidValue_ReturnsTrue()
   {
     // Act
-    var isValid = TimeSpanPrimitive.IsValid( s_validValueA );
+    var isValid = TPrimitive.IsValid( _validValues[0] );
 
     // Assert
     isValid.Should()
@@ -363,17 +393,16 @@ public class TimeSpanPrimitiveTests
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void NewtonsoftJson_Deserialization_InvalidValue_ShouldThrow(
-    TimeSpan? value )
+    T? value )
   {
-    var asString = value is null ? "null" : $"\"{value:c}\"";
+    var asString = value is null ? "null" : value.ToString();
     var json = $$"""{"Primitive":{{asString}}}""";
 
-    // The JSON deserializer should use Primitive's SystemTextJsonConverter
     var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
 
     act.Should()
        .Throw<NsjJsonException>()
-       .WithMessage( TimeSpanPrimitive.ExpectedValidationErrorMessage );
+       .WithMessage( _validationError );
   }
 
   [Fact]
@@ -381,28 +410,26 @@ public class TimeSpanPrimitiveTests
   {
     var json = """{"Primitive":null}""";
 
-    // The JSON deserializer should use Primitive's SystemTextJsonConverter
     var act = () => JsonConvert.DeserializeObject<JsonTestClass>( json );
 
     act.Should()
        .Throw<NsjJsonException>()
-       .WithMessage( TimeSpanPrimitive.ExpectedValidationErrorMessage );
+       .WithMessage( _validationError );
   }
 
   [Fact]
-  public void NewtonsoftJson_Deserialization_WithValidValue_ShouldSucceed()
+  public void NewtonsoftJson_Serialization_RoundTripWithValidValue_ShouldSucceed()
   {
-    var value = s_validValueA;
-    var json = $$"""{"Primitive":"{{value:c}}"}""";
+    var value = _validValues[0];
+    var test = new JsonTestClass { Primitive = ( TPrimitive ) value };
 
-    // The JSON deserializer should use Primitive's SystemTextJsonConverter
-    var result = JsonConvert.DeserializeObject<JsonTestClass>( json );
+    var json = JsonConvert.SerializeObject( test );
 
-    result.Should()
-          .NotBeNull();
+    var deserialized = JsonConvert.DeserializeObject<JsonTestClass>( json );
+    deserialized.Should().NotBeNull();
 
-    result!.Primitive.Value.Should()
-           .Be( value );
+    deserialized!.Primitive.Value.Should()
+                 .Be( value );
   }
 
   [Fact]
@@ -410,7 +437,6 @@ public class TimeSpanPrimitiveTests
   {
     var test = new JsonTestClass { Primitive = default };
 
-    // The JSON serializer should use Primitive's SystemTextJsonConverter
     var json = JsonConvert.SerializeObject( test );
 
     json.Should()
@@ -418,29 +444,15 @@ public class TimeSpanPrimitiveTests
   }
 
   [Fact]
-  public void NewtonsoftJson_Serialization_WithValidValue_ShouldSucceed()
+  public virtual void SystemTextJson_Deserialization_WithInvalidType_ShouldThrow()
   {
-    var value = s_validValueA;
-    var test = new JsonTestClass { Primitive = ( TimeSpanPrimitive ) value };
+    var json = ToJson( "12345" );
 
-    // The JSON serializer should use Primitive's SystemTextJsonConverter
-    var json = JsonConvert.SerializeObject( test );
-
-    json.Should()
-        .Be( $$"""{"Primitive":"{{value:c}}"}""" );
-  }
-
-  [Fact]
-  public void SystemTextJson_Deserialization_WithInvalidType_ShouldThrow()
-  {
-    var json = """{"Primitive":12345}""";
-
-    // The JSON deserializer should use TimeSpanPrimitive's SystemTextJsonConverter
     var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
        .Throw<StjJsonException>()
-       .WithMessage( s_jsonInvalidTokenTypeErrorMessage );
+       .WithMessage( _jsonValidationError );
   }
 
   [Fact]
@@ -448,21 +460,19 @@ public class TimeSpanPrimitiveTests
   {
     var json = """{"Primitive":null}""";
 
-    // The JSON deserializer should use TimeSpanPrimitive's SystemTextJsonConverter
     var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
        .Throw<StjJsonException>()
-       .WithMessage( TimeSpanPrimitive.ExpectedValidationErrorMessage );
+       .WithMessage( _validationError );
   }
 
   [Fact]
   public void SystemTextJson_Deserialization_WithValidValue_ShouldSucceed()
   {
-    var value = s_validValueA;
-    var json = $$"""{"Primitive":"{{value}}"}""";
+    var value = _validValues[0];
+    var json = ToJson( value );
 
-    // The JSON deserializer should use TimeSpanPrimitive's SystemTextJsonConverter
     var result = StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     result.Should()
@@ -475,17 +485,30 @@ public class TimeSpanPrimitiveTests
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
   public void SystemTextJson_DeserializationInvalidValue_ShouldThrow(
-    TimeSpan? value )
+    T? value )
   {
-    var asString = value is null ? "null" : $"\"{value}\"";
+    var asString = value is null ? "null" : value.ToString();
     var json = $$"""{"Primitive":{{asString}}}""";
 
-    // The JSON deserializer should use TimeSpanPrimitive's SystemTextJsonConverter
     var act = () => StjJsonSerializer.Deserialize<JsonTestClass>( json );
 
     act.Should()
        .Throw<StjJsonException>()
-       .WithMessage( TimeSpanPrimitive.ExpectedValidationErrorMessage );
+       .WithMessage( _validationError );
+  }
+
+  [Fact]
+  public void SystemTextJson_Serialization_RoundTripWithValidValue_ShouldSucceed()
+  {
+    var value = _validValues[0];
+    var test = new JsonTestClass { Primitive = ( TPrimitive ) value };
+
+    var json = StjJsonSerializer.Serialize( test );
+    var deserialized = StjJsonSerializer.Deserialize<JsonTestClass>( json );
+    deserialized.Should().NotBeNull();
+
+    deserialized!.Primitive.Value.Should()
+                 .Be( value );
   }
 
   [Fact]
@@ -493,7 +516,6 @@ public class TimeSpanPrimitiveTests
   {
     var test = new JsonTestClass { Primitive = default };
 
-    // The JSON serializer should use TimeSpanPrimitive's SystemTextJsonConverter
     var json = StjJsonSerializer.Serialize( test );
 
     json.Should()
@@ -501,30 +523,10 @@ public class TimeSpanPrimitiveTests
   }
 
   [Fact]
-  public void SystemTextJson_Serialization_WithValidValue_ShouldSucceed()
-  {
-    var value = s_validValueA;
-    var expected = new JsonTestClass { Primitive = ( TimeSpanPrimitive ) value };
-
-    // The JSON serializer should use TimeSpanOffsetPrimitive's SystemTextJsonConverter
-    var json = StjJsonSerializer.Serialize( expected );
-
-    // Use roundtrip to avoid JSON encoding failures on Linux.
-    // This is safer anyway, as it ensures the JSON is valid.
-    var actual = StjJsonSerializer.Deserialize<JsonTestClass>( json );
-
-    actual.Should()
-          .NotBeNull();
-
-    actual!.Primitive.Value.Should()
-           .Be( value );
-  }
-
-  [Fact]
   public void ToString_Default_ReturnsEmpty()
   {
     // Arrange
-    var primitive = ( TimeSpanPrimitive ) default;
+    var primitive = ( TPrimitive ) default;
 
     // Act
     var result = primitive.ToString();
@@ -538,8 +540,8 @@ public class TimeSpanPrimitiveTests
   public void ToString_ReturnsValue()
   {
     // Arrange
-    var value = s_validValueA;
-    var primitive = ( TimeSpanPrimitive ) value;
+    var value = _validValues[0];
+    var primitive = ( TPrimitive ) value;
 
     // Act
     var result = primitive.ToString();
@@ -552,8 +554,8 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_CanConvertFrom_SupportedType_ReturnsTrue()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
-    converter.CanConvertFrom( typeof( TimeSpan ) )
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
+    converter.CanConvertFrom( typeof( T ) )
              .Should()
              .BeTrue();
   }
@@ -561,8 +563,8 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_CanConvertTo_SupportedType_ReturnsTrue()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
-    converter.CanConvertTo( typeof( TimeSpan ) )
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
+    converter.CanConvertTo( typeof( T ) )
              .Should()
              .BeTrue();
   }
@@ -570,7 +572,7 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_CanConvertTo_UnsupportedType_ReturnsFalse()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
     converter.CanConvertTo( typeof( string ) )
              .Should()
              .BeFalse();
@@ -579,11 +581,11 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_NullValue_ReturnsDefault()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
-    var result = ( TimeSpanPrimitive ) converter.ConvertFrom( null! )!;
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
+    var result = ( TPrimitive ) converter.ConvertFrom( null! )!;
 
     result.Should()
-          .BeOfType<TimeSpanPrimitive>()
+          .BeOfType<TPrimitive>()
           .Which.Should()
           .Be( default );
   }
@@ -591,12 +593,12 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_SupportedType_Succeeds()
   {
-    var value = s_validValueA;
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
+    var value = _validValues[0];
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
     var result = converter.ConvertFrom( value );
 
     result.Should()
-          .BeOfType<TimeSpanPrimitive>()
+          .BeOfType<TPrimitive>()
           .Which.Value.Should()
           .Be( value );
   }
@@ -604,7 +606,7 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertFrom_UnsupportedType_Throws()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
 
     var value = "12345";
     var act = () => converter.ConvertFrom( value );
@@ -616,14 +618,14 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertTo_SupportedType_Succeeds()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
 
-    var value = s_validValueA;
-    var primitive = ( TimeSpanPrimitive ) value;
-    var result = converter.ConvertTo( null, null, primitive, typeof( TimeSpan ) );
+    var value = _validValues[0];
+    var primitive = ( TPrimitive ) value;
+    var result = converter.ConvertTo( null, null, primitive, typeof( T ) );
 
     result.Should()
-          .BeOfType<TimeSpan>()
+          .BeOfType<T>()
           .Which.Should()
           .Be( value );
   }
@@ -631,9 +633,9 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_ConvertTo_UnsupportedType_Throws()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
 
-    var primitive = ( TimeSpanPrimitive ) s_validValueA;
+    var primitive = ( TPrimitive ) _validValues[0];
     var act = () => converter.ConvertTo( null, null, primitive, typeof( string ) );
 
     act.Should()
@@ -643,18 +645,18 @@ public class TimeSpanPrimitiveTests
   [Fact]
   public void TypeConverter_IsFound()
   {
-    var converter = TypeDescriptor.GetConverter( typeof( TimeSpanPrimitive ) );
+    var converter = TypeDescriptor.GetConverter( typeof( TPrimitive ) );
     converter.Should()
              .NotBeNull();
   }
 
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
-  public void Validate_InvalidValue_ReturnsFailure(
-    TimeSpan? value )
+  public void Validate_WithInvalidValue_ReturnsFailure(
+    T? value )
   {
     // Act
-    var result = TimeSpanPrimitive.Validate( value );
+    var result = TPrimitive.Validate( value );
 
     // Assert
     result.IsFailed.Should()
@@ -665,14 +667,27 @@ public class TimeSpanPrimitiveTests
           .ContainSingle()
           .Which
           .Should()
-          .Be( TimeSpanPrimitive.ExpectedValidationErrorMessage );
+          .Be( _validationError );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
+    T? value )
+  {
+    // Act
+    var result = TUnvalidatedPrimitive.Validate( value );
+
+    // Assert
+    result.IsSuccess.Should()
+          .BeTrue();
   }
 
   [Fact]
-  public void Validate_ValidValue_ReturnsSuccess()
+  public void Validate_WithValidValue_ReturnsSuccess()
   {
     // Act
-    var result = TimeSpanPrimitive.Validate( s_validValueA );
+    var result = TPrimitive.Validate( _validValues[0] );
 
     // Assert
     result.IsSuccess.Should()
@@ -681,30 +696,55 @@ public class TimeSpanPrimitiveTests
 
   [Theory]
   [MemberData( nameof( InvalidValues ) )]
-  public void Validate_WithUnvalidatedPrimitiveAndInvalidValue_ReturnsSuccess(
-    TimeSpan? value )
+  public void ValidateOrThrow_WithInvalidValue_ShouldThrow(
+    T? value )
   {
     // Act
-    var result = UnvalidatedTimeSpanPrimitive.Validate( value );
+    var act = () => TPrimitive.ValidateOrThrow( value );
 
     // Assert
-    result.IsSuccess.Should()
-          .BeTrue();
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithMessage( _validationError );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidValues ) )]
+  public void ValidateOrThrow_WithUnvalidatedPrimitiveAndInvalidValue_ShouldNotThrow(
+    T? value )
+  {
+    // Act
+    var act = () => TUnvalidatedPrimitive.ValidateOrThrow( value );
+
+    // Assert
+    act.Should()
+       .NotThrow();
+  }
+
+  [Fact]
+  public void ValidateOrThrow_WithValidValue_ShouldNotThrow()
+  {
+    // Act
+    var act = () => TPrimitive.ValidateOrThrow( _validValues[0] );
+
+    // Assert
+    act.Should()
+       .NotThrow();
   }
 
   [Fact]
   public void ValueConverter_WithValidValue_Succeeds()
   {
     // Arrange
-    using var context = new TestDbContext();
+    using var context = new TestDbContext( new TValueConverter() );
     context.Database.EnsureCreated();
 
     var id = Guid.NewGuid();
-    var value = s_validValueA;
+    var value = _validValues[0];
     var entity = new TestEntity
     {
       Id = id,
-      Primitive = ( TimeSpanPrimitive ) value
+      Primitive = ( TPrimitive ) value
     };
 
     // Act
@@ -722,33 +762,42 @@ public class TimeSpanPrimitiveTests
 
   #region Implementation
 
-  public static class Validator
+  protected static string ToJson(
+    object? value )
   {
-    #region Public Methods
-
-    public static Result Validate(
-      TimeSpan? value )
+    if( value is null )
     {
-      return Result.FailIf(
-        value is null || value.Value == TimeSpan.MinValue,
-        TimeSpanPrimitive.ExpectedValidationErrorMessage
-      );
+      return """{""Primitive"":null}""";
+    }
+
+    if( value.IsNumber() )
+    {
+      return $$"""{"Primitive":{{value}}}""";
+    }
+
+    return $$"""{"Primitive":"{{value}}"}""";
+  }
+
+  public static TheoryData<T?> InvalidValues => new InvalidTheoryData();
+
+  private class InvalidTheoryData: TheoryData<T?>
+  {
+    #region Constructors
+
+    public InvalidTheoryData()
+    {
+      Add( null );
+      Add( default );
     }
 
     #endregion
   }
 
-  public static IEnumerable<object?[]> InvalidValues => new List<object?[]>
-  {
-    new object?[] { null },
-    new object?[] { TimeSpan.MinValue }
-  };
-
   internal class JsonTestClass
   {
     #region Properties
 
-    public TimeSpanPrimitive Primitive { get; set; }
+    public TPrimitive Primitive { get; set; }
 
     #endregion
   }
@@ -758,23 +807,26 @@ public class TimeSpanPrimitiveTests
     #region Properties
 
     public Guid Id { get; set; } = Guid.NewGuid();
-    public TimeSpanPrimitive Primitive { get; set; }
+    public TPrimitive Primitive { get; set; }
 
     #endregion
   }
 
   internal class TestDbContext: DbContext
   {
+    #region Fields
+
+    private readonly ValueConverter _valueConverter;
+
+    #endregion
+
     #region Constructors
 
-    public TestDbContext()
-    {
-    }
-
     public TestDbContext(
-      DbContextOptions options )
-      : base( options )
+      ValueConverter valueConverter )
     {
+      ArgumentNullException.ThrowIfNull( valueConverter );
+      _valueConverter = valueConverter;
     }
 
     #endregion
@@ -792,7 +844,7 @@ public class TimeSpanPrimitiveTests
     {
       modelBuilder.Entity<TestEntity>()
                   .Property( e => e.Primitive )
-                  .HasConversion( new TimeSpanPrimitiveValueConverter() )
+                  .HasConversion( _valueConverter )
                   .ValueGeneratedNever();
     }
 

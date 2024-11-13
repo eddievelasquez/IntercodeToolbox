@@ -156,9 +156,8 @@ internal class TemplateProcessor
 
     try
     {
-      using var writer = new StringWriter( sb );
-      macroProcessor.ProcessMacros( template, writer );
-      return writer.ToString();
+      macroProcessor.ProcessMacros( template, sb );
+      return sb.ToString();
     }
     finally
     {

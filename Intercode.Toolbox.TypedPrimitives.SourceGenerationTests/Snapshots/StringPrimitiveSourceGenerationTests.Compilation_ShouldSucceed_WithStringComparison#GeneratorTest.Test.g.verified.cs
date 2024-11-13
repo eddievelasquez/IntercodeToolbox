@@ -6,7 +6,8 @@ namespace GeneratorTest;
 
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::System.IComparable<Test>,
+  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<Test, string>,
+    global::System.IComparable<Test>,
     global::System.IComparable
 {
   private readonly string? _value;
@@ -44,11 +45,39 @@ public readonly partial struct Test
     return new Test( value );
   }
 
+  public static Test CreateOrThrow( string? value )
+  {
+    var result = Create( value );
+    if( result.IsSuccess )
+    {
+      return result.Value;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
+  }
+
   public static global::FluentResults.Result Validate( string? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
+  }
+
+  public static void ValidateOrThrow( string? value )
+  {
+    var result = Validate( value );
+    if( result.IsSuccess )
+    {
+      return;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
   }
 
   public static bool IsValid( string? value )

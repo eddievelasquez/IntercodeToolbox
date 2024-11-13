@@ -6,9 +6,16 @@ namespace GeneratorTest;
 
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::System.IComparable<Test>,
+  : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, sbyte>,
+    global::System.IComparable<Test>,
     global::System.IComparable,
-    global::System.IFormattable
+#if NET7_0_OR_GREATER
+    global::System.ISpanFormattable,
+    global::System.ISpanParsable<Test>
+#else
+    global::System.IFormattable,
+    global::System.IParsable<Test>
+#endif
 {
   private readonly sbyte? _value;
 
@@ -45,11 +52,39 @@ public readonly partial struct Test
     return new Test( value );
   }
 
+  public static Test CreateOrThrow( sbyte? value )
+  {
+    var result = Create( value );
+    if( result.IsSuccess )
+    {
+      return result.Value;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
+  }
+
   public static global::FluentResults.Result Validate( sbyte? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
+  }
+
+  public static void ValidateOrThrow( sbyte? value )
+  {
+    var result = Validate( value );
+    if( result.IsSuccess )
+    {
+      return;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
   }
 
   public static bool IsValid( sbyte? value )
@@ -86,6 +121,83 @@ public readonly partial struct Test
     return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
   }
 
+  public static Test Parse(
+    string s, IFormatProvider? provider  )
+  {
+    var value = sbyte.Parse( s, provider );
+    return CreateOrThrow( value );
+  }
+
+  public static bool TryParse(
+    string? s,
+    IFormatProvider? provider,
+    out Test result )
+  {
+    if( !sbyte.TryParse( s, provider, out var value ) )
+    {
+      result = default;
+      return false;
+    }
+
+    var createResult = Create( value );
+    if ( createResult.IsFailed )
+    {
+      result = default;
+      return false;
+    }
+
+    result = createResult.Value;
+    return true;
+  }
+
+#if NET7_0_OR_GREATER
+  public bool TryFormat(
+    global::System.Span<char> destination,
+    out int charsWritten,
+    global::System.ReadOnlySpan<char> format,
+    global::System.IFormatProvider? provider )
+  {
+    if ( _value is null )
+    {
+      charsWritten = 0;
+      return true;
+    }
+
+    return _value.Value.TryFormat( destination, out charsWritten, format, provider );
+  }
+
+  public static Test Parse(
+    global::System.ReadOnlySpan<char> text,
+    global::System.IFormatProvider? formatProvider = null )
+  {
+    var value = sbyte.Parse( text, formatProvider );
+    return CreateOrThrow( value );
+  }
+
+  public static bool TryParse(
+    global::System.ReadOnlySpan<char> text,
+    global::System.IFormatProvider? formatProvider,
+    out Test result )
+  {
+    if ( !sbyte.TryParse( text, formatProvider, out var value ) )
+    {
+      result = default;
+      return false;
+    }
+
+    var createResult = Create( value );
+    if ( createResult.IsFailed )
+    {
+      result = default;
+      return false;
+    }
+
+    result = createResult.Value;
+    return true;
+  }
+
+#endif
+
   public int CompareTo(
     object? obj )
   {
@@ -110,7 +222,7 @@ public readonly partial struct Test
       return 1;
     }
 
-    return ((sbyte) _value).CompareTo( ((sbyte) other) );
+    return _value.Value.CompareTo( other.Value );
   }
 
   public static explicit operator sbyte(

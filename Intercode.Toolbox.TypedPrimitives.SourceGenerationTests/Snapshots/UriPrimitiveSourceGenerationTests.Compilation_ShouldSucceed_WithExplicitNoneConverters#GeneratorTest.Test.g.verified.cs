@@ -6,9 +6,14 @@ namespace GeneratorTest;
 
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::System.IComparable<Test>,
+  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<Test, global::System.Uri>,
+    global::System.IComparable<Test>,
     global::System.IComparable,
+#if NET7_0_OR_GREATER
+    global::System.ISpanFormattable
+#else
     global::System.IFormattable
+#endif
 {
   private readonly global::System.Uri? _value;
 
@@ -45,11 +50,39 @@ public readonly partial struct Test
     return new Test( value );
   }
 
+  public static Test CreateOrThrow( global::System.Uri? value )
+  {
+    var result = Create( value );
+    if( result.IsSuccess )
+    {
+      return result.Value;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
+  }
+
   public static global::FluentResults.Result Validate( global::System.Uri? value )
   {
     global::FluentResults.Result result = global::FluentResults.Result.Ok();
     ValidatePartial( value, ref result );
     return result;
+  }
+
+  public static void ValidateOrThrow( global::System.Uri? value )
+  {
+    var result = Validate( value );
+    if( result.IsSuccess )
+    {
+      return;
+    }
+
+    throw new global::System.ArgumentException(
+      global::System.Linq.Enumerable.First( result.Errors )
+            .Message
+    );
   }
 
   public static bool IsValid( global::System.Uri? value )
@@ -86,6 +119,30 @@ public readonly partial struct Test
     return _value is null ? string.Empty : ((IFormattable) _value).ToString( format, formatProvider );
   }
 
+#if NET7_0_OR_GREATER
+  bool ISpanFormattable.TryFormat(
+    global::System.Span<char> destination,
+    out int charsWritten,
+    global::System.ReadOnlySpan<char> format,
+    global::System.IFormatProvider? provider )
+  {
+    return TryFormat( destination, out charsWritten );
+  }
+
+  public bool TryFormat(
+    global::System.Span<char> destination,
+    out int charsWritten )
+  {
+    if ( _value is null )
+    {
+      charsWritten = 0;
+      return true;
+    }
+
+    return _value.TryFormat( destination, out charsWritten );
+  }
+#endif
+
   public int CompareTo(
     object? obj )
   {
@@ -110,7 +167,7 @@ public readonly partial struct Test
       return 1;
     }
 
-    return Uri.Compare( (global::System.Uri)_value, (global::System.Uri)other._value, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
+    return Uri.Compare( _value, other._value, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
   }
 
   public static explicit operator global::System.Uri(

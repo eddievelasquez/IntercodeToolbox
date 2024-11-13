@@ -3,8 +3,9 @@
 A fast and simple text templating engine.
 
 ## Updates
-- **Version 2.4** - Added dynamic macro support.
+- **Version 2.5** - Added .NET 9 support. The `MacroProcessor.ProcessMacros` method is now zero-allocation on .NET 9.
 - **Version 2.4.4** - Added a `MacroProcessor.ProcessMacros` overload that takes a `StringBuilder` instance; the improves performance when using pooled string builders.
+- **Version 2.4** - Added dynamic macro support.
 
 ## Table of Contents
 <!--TOC-->
@@ -294,6 +295,12 @@ void ProcessMacros( Template template, TextWriter writer )
 
 `ProcessMacros` replaces macros in the specified `Template` instance with their corresponding values and writes the result to the provided `TextWriter`.
 
+```csharp
+void ProcessMacros( Template template, StringBuilder builder )
+ ```
+
+`ProcessMacros` replaces macros in the specified `Template` instance with their corresponding values and writes the result to the provided `StringBuilder`.
+
  ```csharp
  string? GetMacroValue( string macroName )
  string? GetMacroValue( string macroName, ReadOnlySpan<char> argument )
@@ -502,12 +509,16 @@ It is kept in a separate class because we only want to measure the actual macro 
 
 As the results indicate, the `MacroProcessor` demonstrates significantly faster performance and lower memory allocation compared to 
 the `StringBuilder` and `Regex` implementations. This performance increase is more dramatic when using a pooled `StringBuilder` as memory
-allocations are reduced to a fraction of the other methods.
+allocations are reduced to a fraction of the other methods. 
 
-![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/839271e69b927451143777263ca6b6336c5155b5/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
+Notice that on .NET 9, the `MacroProcessor.ProcessMacro` method is zero-allocation.
+
+
+![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/refs/heads/main/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
 
 ---
 
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+

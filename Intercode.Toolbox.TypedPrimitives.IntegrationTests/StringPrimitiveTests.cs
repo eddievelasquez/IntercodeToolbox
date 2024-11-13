@@ -18,13 +18,7 @@ using SystemTextJsonSerializer = System.Text.Json.JsonSerializer;
 [TypedPrimitive<string>]
 public readonly partial struct UnvalidatedStringPrimitive;
 
-[TypedPrimitive(
-  typeof( string ),
-  Converters = TypedPrimitiveConverter.TypeConverter |
-               TypedPrimitiveConverter.SystemTextJson |
-               TypedPrimitiveConverter.EfCoreValueConverter |
-               TypedPrimitiveConverter.NewtonsoftJson
-)]
+[TypedPrimitive( typeof( string ), Converters = TypedPrimitiveConverter.All )]
 public readonly partial struct StringPrimitive
 {
   #region Constants

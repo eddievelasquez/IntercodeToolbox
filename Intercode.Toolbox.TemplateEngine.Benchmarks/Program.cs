@@ -5,6 +5,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Running;
 using Intercode.Toolbox.TemplateEngine;
 using Intercode.Toolbox.TemplateEngine.Benchmarks;
@@ -27,6 +28,8 @@ BenchmarkSwitcher.FromAssembly( typeof( MacroProcessingTests ).Assembly )
 
 [HideColumns( "Error", "StdDev", "Median", "RatioSD" )]
 [MemoryDiagnoser]
+[SimpleJob( RuntimeMoniker.Net80, baseline: true )]
+[SimpleJob( RuntimeMoniker.Net90 )]
 public partial class MacroProcessingTests
 {
   #region Fields

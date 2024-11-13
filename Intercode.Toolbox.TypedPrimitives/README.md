@@ -2,9 +2,30 @@
 
 ## Updates
 
-- **Version 2.3.1** - Moved the template processing engine to its own package: [Intercode.Toolbox.TemplateEngine](https://www.nuget.org/packages/Intercode.Toolbox.TemplateEngine/).
+- **Version 2.5** 
+    - Added .NET 9 support.
+    - All primitives now implement the `CreateOrThrow` and `ValidateOrThrow` static methods for scenarios where handling a result value is not possible.
+    - All primitives (except `string` and `Uri`) implement the `IFormatable` and `IParsable` interfaces. For .NET 7+, `ISpanFormattable` and `ISpanParsable` are implemented as well.
 - **Version 2.4.3** - Added support for the following primitive types: **Byte**, **SByte**, **Int16**, **UInt16**, **UInt32**, **UInt64**, **Single**,
-**Double**, **Decimal**, **TimeSpan**, and **Uri**.
+  **Double**, **Decimal**, **TimeSpan**, and **Uri**.
+- **Version 2.3.1** - Moved the template processing engine to its own package: [Intercode.Toolbox.TemplateEngine](https://www.nuget.org/packages/Intercode.Toolbox.TemplateEngine/).
+
+## Table of contents
+<!--TOC-->
+  - [Description](#description)
+  - [Usage](#usage)
+    - [Example](#example)
+      - [Creation](#creation)
+      - [Validation](#validation)
+      - [Normalization](#normalization)
+    - [Converters](#converters)
+      - [Type converter](#type-converter)
+      - [System.Text.Json converter](#system.text.json-converter)
+      - [Newtonsoft.Json converter](#newtonsoft.json-converter)
+      - [EF Core value converter](#ef-core-value-converter)
+  - [References](#references)
+  - [License](#license)
+<!--/TOC-->
 
 ## Description
 
@@ -78,11 +99,21 @@ public readonly partial struct ZipCode
 > **NOTE**: The `Create` uses the `Result` class from the [FluentValidation](https://www.nuget.org/packages/FluentValidation) 
 > package to indicate whether operation succeeded or failed. Typed primitives that don't implement a validation method will 
 > always succeed.
-> Returning a `Result` instead of the typed primitive was done to avoid throwing exceptions for validation errors, 
+> Returning a `Result` instead of the typed primitive is the prefered way to indicate success/failure and avoid throwing exceptions for validation errors, 
 > which can be expensive and can lead to performance issues.
-> However; the casting operator will return the type primitive directly and throw an `InvalidOperationException` if
-> provided with an invalid value.
+> However; in some scenarios, it is not possible to return a result to the caller; one example is the casting operator which will throw an `InvalidOperationException`
+> if provided with an invalid value.
 
+However; in some scenarios, you may need to throw an exception when a validation error occurs while creating a primitive because 
+there is now way to return a `Result`. In this case, you can use the `CreateOrThrow` method, which will throw an `ArgumentException` 
+if the value is invalid.
+
+```csharp
+protected override void NoReturnValue( out ZipCode zipCode )
+{
+  zipCode = ZipCode.CreateOrThrow( "12345" ); // Will throw ArgumentException
+}
+```
 
 To ensure the `ZipCode` was created with a valid value, just check the `IsSuccess` or `IsFailure` properties of the returned result; the actual `ZipCode` instance will be stored in the `Value` property of the result.
 See the **FluentResults** library [documentation](https://github.com/altmann/FluentResults?tab=readme-ov-file#processing-a-result) for more details.
@@ -118,6 +149,11 @@ if( ZipCode.IsValid( "12345" ) )
 ```
 > **NOTE**: Since validation can be very complex, it might be possible that a single value may result in multiple errors, in this case,
 > the use of the `Validate` method is recommended to get access to all the errors.
+
+In scenarios where it is not possible to return a result to the caller, the `ValidateOrThrow` method can be used to throw an `ArgumentException` if the value is invalid.
+```csharp
+  ZipCode.ValidateOrThrow( "12XYZ" ); // Will throw ArgumentException
+```
 
 #### Normalization
 Assume that your validation code allows for leading or trailing whitespaces in the value but you want to normalize the `ZipCode` value by trimming any whitespace:
@@ -315,7 +351,6 @@ and can be used to convert `ZipCode` properties to and from `string`. Deserializ
       }
     }
 ```
-
 ## References {#references}
 
 - [Dealing with primitive obsession](https://lostechies.com/jimmybogard/2007/12/03/dealing-with-primitive-obsession/) - Jimmy Bogard.

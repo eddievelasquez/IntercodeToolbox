@@ -6,6 +6,7 @@ A trimmable, AOT-compatible .NET library that provides general purpose functiona
 
 # Updates
 
+- **Version 2.5** - Added .NET 9.0 support. Added the `ObjectExtensions.IsNumeric(Type)` extension method.
 - **Version 2.1.6** - Added the `PathBuilder` class for building file and directory paths using a fluent interface.
 - **Version 2.1.7** - Added a default constructor to the `PathBuilder` class.
 
@@ -170,6 +171,11 @@ Provides extension methods for the `System.Object` class.
     Console.WriteLine( obj.IsNumber() ); // False
 ```
 
+- `IsNumeric` Determines whether the specified type is a numeric type.
+```csharp
+    Console.WriteLine( typeof( int ).IsNumeric() ); // True
+    Console.WriteLine( typeof( string ).IsNumeric() ); // False
+```
 ---
 
 ## `PathBuilder`
