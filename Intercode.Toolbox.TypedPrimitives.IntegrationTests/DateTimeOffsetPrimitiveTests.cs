@@ -128,17 +128,7 @@ public class DateTimeOffsetPrimitiveTests
   }
 
   public class NewtonsoftJson
-    : NewtonsoftJsonTests<DateTimeOffsetPrimitive, PrimitiveFactory>
-  {
-    #region Constructors
-
-    public NewtonsoftJson()
-    {
-      JsonConvert.DefaultSettings = () => new JsonSerializerSettings { DateParseHandling = DateParseHandling.None };
-    }
-
-    #endregion
-  }
+    : NewtonsoftJsonTests<DateTimeOffsetPrimitive, PrimitiveFactory>;
 
   public class PrimitiveFactory: ITestDataFactory
   {
