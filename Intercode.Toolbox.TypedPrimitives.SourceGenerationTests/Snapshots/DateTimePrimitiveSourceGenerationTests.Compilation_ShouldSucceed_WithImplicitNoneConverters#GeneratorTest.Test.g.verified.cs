@@ -41,6 +41,11 @@ public readonly partial struct Test
   public global::System.DateTime? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( global::System.DateTime );
+  }
+
   public static global::FluentResults.Result<Test> Create( global::System.DateTime? value )
   {
     var result = Validate( value );

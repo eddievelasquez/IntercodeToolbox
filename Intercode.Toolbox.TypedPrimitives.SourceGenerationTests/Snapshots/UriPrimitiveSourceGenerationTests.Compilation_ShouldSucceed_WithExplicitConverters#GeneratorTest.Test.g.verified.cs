@@ -42,6 +42,11 @@ public readonly partial struct Test
   public global::System.Uri? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( global::System.Uri );
+  }
+
   public static global::FluentResults.Result<Test> Create( global::System.Uri? value )
   {
     var result = Validate( value );

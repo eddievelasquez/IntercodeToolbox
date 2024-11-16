@@ -41,6 +41,11 @@ public readonly partial struct Test
   public ushort? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( ushort );
+  }
+
   public static global::FluentResults.Result<Test> Create( ushort? value )
   {
     var result = Validate( value );

@@ -44,6 +44,11 @@ public readonly partial struct Test
   public global::System.Guid? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( global::System.Guid );
+  }
+
   public static global::FluentResults.Result<Test> Create( global::System.Guid? value )
   {
     var result = Validate( value );

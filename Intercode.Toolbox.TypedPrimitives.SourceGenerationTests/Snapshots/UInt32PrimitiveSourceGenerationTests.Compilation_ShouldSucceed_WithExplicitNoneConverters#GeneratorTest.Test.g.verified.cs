@@ -41,6 +41,11 @@ public readonly partial struct Test
   public uint? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( uint );
+  }
+
   public static global::FluentResults.Result<Test> Create( uint? value )
   {
     var result = Validate( value );

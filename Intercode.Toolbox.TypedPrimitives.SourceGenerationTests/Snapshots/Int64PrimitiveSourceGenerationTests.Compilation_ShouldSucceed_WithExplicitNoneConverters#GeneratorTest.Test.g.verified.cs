@@ -41,6 +41,11 @@ public readonly partial struct Test
   public long? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( long );
+  }
+
   public static global::FluentResults.Result<Test> Create( long? value )
   {
     var result = Validate( value );

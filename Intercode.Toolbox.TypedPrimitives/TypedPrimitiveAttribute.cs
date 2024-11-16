@@ -40,16 +40,29 @@ public class TypedPrimitiveAttribute<T>(): TypedPrimitiveAttribute( typeof( T ) 
 
 #endif
 
-public interface IValueTypePrimitive<TSelf, T>
-  where TSelf: struct, IValueTypePrimitive<TSelf, T>
-  where T: struct
+public interface IPrimitive
 {
-  T Value { get; }
-  T? ValueOrDefault { get; }
   bool IsDefault { get; }
 
 #if NET7_0_OR_GREATER
+  static abstract Type GetPrimitiveType();
+#endif
+}
 
+public interface IPrimitive<out T>
+  : IPrimitive
+{
+  T Value { get; }
+}
+
+public interface IValueTypePrimitive<TSelf, T>
+  : IPrimitive<T>
+  where TSelf: struct, IValueTypePrimitive<TSelf, T>
+  where T: struct
+{
+  T? ValueOrDefault { get; }
+
+#if NET7_0_OR_GREATER
   static abstract FluentResults.Result<TSelf> Create(
     T? value );
 
@@ -75,15 +88,13 @@ public interface IValueTypePrimitive<TSelf, T>
 }
 
 public interface IReferenceTypePrimitive<TSelf, T>
+  : IPrimitive<T>
   where TSelf: struct, IReferenceTypePrimitive<TSelf, T>
   where T: class
 {
-  T Value { get; }
   T? ValueOrDefault { get; }
-  bool IsDefault { get; }
 
 #if NET7_0_OR_GREATER
-
   static abstract FluentResults.Result<TSelf> Create(
     T? value );
 

@@ -44,6 +44,11 @@ public readonly partial struct Test
   public byte? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( byte );
+  }
+
   public static global::FluentResults.Result<Test> Create( byte? value )
   {
     var result = Validate( value );

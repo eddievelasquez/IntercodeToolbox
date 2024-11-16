@@ -44,6 +44,11 @@ public readonly partial struct Test
   public ulong? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( ulong );
+  }
+
   public static global::FluentResults.Result<Test> Create( ulong? value )
   {
     var result = Validate( value );

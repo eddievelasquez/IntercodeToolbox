@@ -41,6 +41,11 @@ public readonly partial struct Test
   public float? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( float );
+  }
+
   public static global::FluentResults.Result<Test> Create( float? value )
   {
     var result = Validate( value );

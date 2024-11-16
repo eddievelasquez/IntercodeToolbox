@@ -41,6 +41,11 @@ public readonly partial struct Test
   public global::System.TimeSpan? ValueOrDefault => _value;
   public bool IsDefault => _value is null;
 
+  public static global::System.Type GetPrimitiveType()
+  {
+    return typeof( global::System.TimeSpan );
+  }
+
   public static global::FluentResults.Result<Test> Create( global::System.TimeSpan? value )
   {
     var result = Validate( value );
