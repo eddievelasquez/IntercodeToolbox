@@ -5,6 +5,7 @@
 namespace Intercode.Toolbox.TemplateEngine;
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 ///   Represents a text segment in a <see cref="Template" />.
@@ -34,6 +35,7 @@ public readonly record struct Segment(
   /// </summary>
   /// <param name="memory">The memory that contains the constant segment's text.</param>
   /// <returns></returns>
+  [MethodImpl( MethodImplOptions.AggressiveInlining )]
   public static Segment CreateConstant(
     ReadOnlyMemory<char> memory )
   {
@@ -44,6 +46,7 @@ public readonly record struct Segment(
   ///   Creates a delimiter segment.
   /// </summary>
   /// <returns>A new <see cref="Segment" /> representing a delimiter segment.</returns>
+  [MethodImpl( MethodImplOptions.AggressiveInlining )]
   public static Segment CreateDelimiter()
   {
     return new Segment( SegmentKind.Delimiter, ReadOnlyMemory<char>.Empty, ReadOnlyMemory<char>.Empty );
@@ -54,6 +57,7 @@ public readonly record struct Segment(
   /// </summary>
   /// <param name="memory">The memory that contains the macro segment's text.</param>
   /// <returns>A new <see cref="Segment" /> representing a macro segment.</returns>
+  [MethodImpl( MethodImplOptions.AggressiveInlining )]
   public static Segment CreateMacro(
     ReadOnlyMemory<char> memory )
   {
@@ -66,6 +70,7 @@ public readonly record struct Segment(
   /// <param name="memory">The memory that contains the macro segment's text.</param>
   /// <param name="argument">The memory that contains the macro segment's argument.</param>
   /// <returns>A new <see cref="Segment" /> representing a macro segment.</returns>
+  [MethodImpl( MethodImplOptions.AggressiveInlining )]
   public static Segment CreateMacro(
     ReadOnlyMemory<char> memory,
     ReadOnlyMemory<char> argument )

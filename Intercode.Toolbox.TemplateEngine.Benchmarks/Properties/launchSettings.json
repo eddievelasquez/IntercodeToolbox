@@ -2,7 +2,10 @@
   "profiles": {
     "TemplateEngine.Benchmarks": {
       "commandName": "Project",
-      "commandLineArgs": "--filter *"
+      "commandLineArgs": "--filter *",
+      "environmentVariables": {
+        "DOTNET_GCDynamicAdaptationMode": "0"
+      }
     }
   }
 }
