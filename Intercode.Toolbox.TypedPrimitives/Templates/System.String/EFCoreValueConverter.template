@@ -13,7 +13,7 @@ public class $TypeName$ValueConverter: global::Microsoft.EntityFrameworkCore.Sto
   public $TypeName$ValueConverter(
     global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ConverterMappingHints? mappingHints = null )
     : base(
-      primitive => !primitive.IsDefault ? primitive.Value : default,
+      primitive => primitive.Value,
       value => ( $TypeQualifiedName$ ) value,
       mappingHints
     )
