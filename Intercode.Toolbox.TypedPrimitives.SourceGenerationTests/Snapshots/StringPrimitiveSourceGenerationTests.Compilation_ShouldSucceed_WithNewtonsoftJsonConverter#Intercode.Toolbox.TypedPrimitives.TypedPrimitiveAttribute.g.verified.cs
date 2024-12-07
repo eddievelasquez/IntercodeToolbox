@@ -27,7 +27,7 @@ public class TypedPrimitiveAttribute( Type primitiveType ): Attribute
 
   public Type PrimitiveType { get; } = primitiveType;
   public TypedPrimitiveConverter Converters { get; set; }
-  public object? StringComparison { get; set; }
+  public StringComparison StringComparison { get; set; } = StringComparison.OrdinalIgnoreCase;
 
   #endregion
 }

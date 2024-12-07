@@ -57,6 +57,27 @@ internal static class TypedConstantExtensions
     return ( T ) typedConstant.Value!;
   }
 
+  public static T? GetValue<T>(
+    this ImmutableArray<KeyValuePair<string, TypedConstant>> arguments,
+    string name )
+    where T: struct
+  {
+    var typedConstant = arguments.FirstOrDefault( pair => pair.Key == name )
+                                 .Value;
+
+    if( typedConstant.IsNull )
+    {
+      return null;
+    }
+
+    if( typedConstant.Kind != TypedConstantKind.Primitive )
+    {
+      return null;
+    }
+
+    return ( T ) typedConstant.Value!;
+  }
+
   public static object? GetValue(
     this TypedConstant typedConstant )
   {
@@ -133,6 +154,7 @@ internal static class TypedConstantExtensions
     ITypeSymbol namedTypeSymbol )
   {
     var typeName = namedTypeSymbol.ToDisplayString();
+
     if( s_cachedTypes.TryGetValue( typeName, out var type ) )
     {
       return Result.Ok( type );
