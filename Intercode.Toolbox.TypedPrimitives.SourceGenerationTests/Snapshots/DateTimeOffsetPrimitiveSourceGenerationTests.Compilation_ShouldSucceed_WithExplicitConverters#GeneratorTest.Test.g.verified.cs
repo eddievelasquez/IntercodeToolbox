@@ -233,7 +233,7 @@ public readonly partial struct Test
     return _value.Value.CompareTo( other.Value );
   }
 
-  public static explicit operator global::System.DateTimeOffset(
+  public static implicit operator global::System.DateTimeOffset(
     Test primitive )
   {
     return primitive.Value;

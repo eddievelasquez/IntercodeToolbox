@@ -178,7 +178,7 @@ public readonly partial struct Test
     return Uri.Compare( _value, other._value, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
   }
 
-  public static explicit operator global::System.Uri(
+  public static implicit operator global::System.Uri(
     Test primitive )
   {
     return primitive.Value;

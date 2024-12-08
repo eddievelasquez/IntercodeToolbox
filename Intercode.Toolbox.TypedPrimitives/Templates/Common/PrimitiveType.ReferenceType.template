@@ -229,7 +229,7 @@ public readonly partial struct $TypeName$
     return _value.CompareTo( other );
   }
 
-  public static explicit operator $TypeKeyword$(
+  public static implicit operator $TypeKeyword$(
     $TypeName$ primitive )
   {
     return primitive.Value;

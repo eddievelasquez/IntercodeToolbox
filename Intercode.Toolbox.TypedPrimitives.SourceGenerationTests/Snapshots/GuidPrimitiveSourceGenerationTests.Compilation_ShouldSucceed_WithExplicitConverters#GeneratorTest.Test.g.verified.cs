@@ -263,7 +263,7 @@ public readonly partial struct Test
     return _value.Value.CompareTo( other.Value );
   }
 
-  public static explicit operator global::System.Guid(
+  public static implicit operator global::System.Guid(
     Test primitive )
   {
     return primitive.Value;

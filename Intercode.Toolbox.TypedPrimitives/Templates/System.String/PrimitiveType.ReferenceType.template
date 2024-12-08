@@ -138,7 +138,7 @@ public readonly partial struct $TypeName$
     return $TypeKeyword$.Compare( _value, other._value, $StringComparison$ );
   }
 
-  public static explicit operator $TypeKeyword$(
+  public static implicit operator $TypeKeyword$(
     $TypeName$ primitive )
   {
     return primitive.Value;

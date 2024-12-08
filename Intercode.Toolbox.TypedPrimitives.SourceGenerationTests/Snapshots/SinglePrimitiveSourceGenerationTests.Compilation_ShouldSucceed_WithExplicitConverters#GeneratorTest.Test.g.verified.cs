@@ -233,7 +233,7 @@ public readonly partial struct Test
     return _value.Value.CompareTo( other.Value );
   }
 
-  public static explicit operator float(
+  public static implicit operator float(
     Test primitive )
   {
     return primitive.Value;

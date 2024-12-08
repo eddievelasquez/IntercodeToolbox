@@ -78,7 +78,7 @@ public interface IValueTypePrimitive<TSelf, T>
   static abstract bool IsValid(
     T? value );
 
-  static abstract explicit operator T(
+  static abstract implicit operator T(
     TSelf primitive );
 
   static abstract explicit operator TSelf(
@@ -110,7 +110,7 @@ public interface IReferenceTypePrimitive<TSelf, T>
   static abstract bool IsValid(
     T? value );
 
-  static abstract explicit operator T(
+  static abstract implicit operator T(
     TSelf primitive );
 
   static abstract explicit operator TSelf(

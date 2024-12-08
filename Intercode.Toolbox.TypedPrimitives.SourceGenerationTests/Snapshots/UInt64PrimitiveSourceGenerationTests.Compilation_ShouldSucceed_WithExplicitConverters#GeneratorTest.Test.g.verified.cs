@@ -233,7 +233,7 @@ public readonly partial struct Test
     return _value.Value.CompareTo( other.Value );
   }
 
-  public static explicit operator ulong(
+  public static implicit operator ulong(
     Test primitive )
   {
     return primitive.Value;

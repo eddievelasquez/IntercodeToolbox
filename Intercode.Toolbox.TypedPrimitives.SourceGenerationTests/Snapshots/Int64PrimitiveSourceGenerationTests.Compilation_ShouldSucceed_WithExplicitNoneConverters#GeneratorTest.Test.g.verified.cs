@@ -230,7 +230,7 @@ public readonly partial struct Test
     return _value.Value.CompareTo( other.Value );
   }
 
-  public static explicit operator long(
+  public static implicit operator long(
     Test primitive )
   {
     return primitive.Value;

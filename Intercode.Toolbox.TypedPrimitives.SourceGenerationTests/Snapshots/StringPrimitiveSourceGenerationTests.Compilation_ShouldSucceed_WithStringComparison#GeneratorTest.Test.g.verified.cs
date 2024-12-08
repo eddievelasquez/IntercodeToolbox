@@ -139,7 +139,7 @@ public readonly partial struct Test
     return string.Compare( _value, other._value, System.StringComparison.Ordinal );
   }
 
-  public static explicit operator string(
+  public static implicit operator string(
     Test primitive )
   {
     return primitive.Value;

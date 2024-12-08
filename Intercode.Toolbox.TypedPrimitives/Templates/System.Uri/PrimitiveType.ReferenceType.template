@@ -174,7 +174,7 @@ public readonly partial struct $TypeName$
     return Uri.Compare( _value, other._value, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
   }
 
-  public static explicit operator $TypeKeyword$(
+  public static implicit operator $TypeKeyword$(
     $TypeName$ primitive )
   {
     return primitive.Value;
