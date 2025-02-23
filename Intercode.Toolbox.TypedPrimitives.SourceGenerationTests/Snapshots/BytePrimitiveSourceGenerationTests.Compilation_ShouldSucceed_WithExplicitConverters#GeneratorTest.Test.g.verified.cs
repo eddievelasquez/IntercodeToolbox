@@ -11,6 +11,7 @@ namespace GeneratorTest;
 public readonly partial struct Test
   : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, byte>,
     global::System.IComparable<Test>,
+    global::System.IComparable<byte>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable,
@@ -20,6 +21,8 @@ public readonly partial struct Test
     global::System.IParsable<Test>
 #endif
 {
+  public static readonly Test Empty = new Test( null );
+
   private readonly byte? _value;
 
   private Test( byte? value )
@@ -39,6 +42,18 @@ public readonly partial struct Test
 
       return _value.Value;
     }
+  }
+
+  public bool HasValue => _value.HasValue;
+
+  public byte? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public byte? GetValueOrDefault( byte defaultValue )
+  {
+    return HasValue ? _value : defaultValue;
   }
 
   public byte? ValueOrDefault => _value;
@@ -209,28 +224,40 @@ public readonly partial struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is Test primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      Test primitive => CompareTo( primitive ),
+      byte value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a Test or byte" )
+    };
   }
 
   public int CompareTo(
     Test other )
   {
-    if( _value is null )
+    if ( !_value.HasValue )
     {
-      return other._value is null ? 0 : -1;
+      return !other._value.HasValue ? 0 : -1;
     }
 
-    if( other._value is null )
+    if ( !other._value.HasValue )
     {
       return 1;
     }
 
-    return _value.Value.CompareTo( other.Value );
+    return _value.Value.CompareTo( other._value.Value );
+  }
+
+  public int CompareTo(
+    byte other )
+  {
+    if ( !_value.HasValue )
+    {
+      return -1;
+    }
+
+    return _value.Value.CompareTo( other );
   }
 
   public static implicit operator byte(

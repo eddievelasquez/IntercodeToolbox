@@ -7,6 +7,7 @@ $TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConvert
 public readonly partial struct $TypeName$
   : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<$TypeName$, $TypeKeyword$>,
     global::System.IComparable<$TypeName$>,
+    global::System.IComparable<$TypeKeyword$>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable,
@@ -16,6 +17,8 @@ public readonly partial struct $TypeName$
     global::System.IParsable<$TypeName$>
 #endif
 {
+  public static readonly $TypeName$ Empty = new $TypeName$( null );
+
   private readonly $TypeKeyword$? _value;
 
   private $TypeName$( $TypeKeyword$? value )
@@ -35,6 +38,18 @@ public readonly partial struct $TypeName$
 
       return _value.Value;
     }
+  }
+
+  public bool HasValue => _value.HasValue;
+
+  public $TypeKeyword$? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public $TypeKeyword$? GetValueOrDefault( $TypeKeyword$ defaultValue )
+  {
+    return HasValue ? _value : defaultValue;
   }
 
   public $TypeKeyword$? ValueOrDefault => _value;
@@ -205,28 +220,40 @@ public readonly partial struct $TypeName$
   public int CompareTo(
     object? obj )
   {
-    if( obj is $TypeName$ primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      $TypeName$ primitive => CompareTo( primitive ),
+      $TypeKeyword$ value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a $TypeName$ or $TypeKeyword$" )
+    };
   }
 
   public int CompareTo(
     $TypeName$ other )
   {
-    if( _value is null )
+    if ( !_value.HasValue )
     {
-      return other._value is null ? 0 : -1;
+      return !other._value.HasValue ? 0 : -1;
     }
 
-    if( other._value is null )
+    if ( !other._value.HasValue )
     {
       return 1;
     }
 
-    return _value.Value.CompareTo( other.Value );
+    return _value.Value.CompareTo( other._value.Value );
+  }
+
+  public int CompareTo(
+    $TypeKeyword$ other )
+  {
+    if ( !_value.HasValue )
+    {
+      return -1;
+    }
+
+    return _value.Value.CompareTo( other );
   }
 
   public static implicit operator $TypeKeyword$(

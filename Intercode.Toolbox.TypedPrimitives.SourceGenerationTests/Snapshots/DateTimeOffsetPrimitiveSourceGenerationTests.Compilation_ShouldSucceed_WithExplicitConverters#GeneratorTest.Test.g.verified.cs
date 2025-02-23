@@ -11,6 +11,7 @@ namespace GeneratorTest;
 public readonly partial struct Test
   : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, global::System.DateTimeOffset>,
     global::System.IComparable<Test>,
+    global::System.IComparable<global::System.DateTimeOffset>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable,
@@ -20,6 +21,8 @@ public readonly partial struct Test
     global::System.IParsable<Test>
 #endif
 {
+  public static readonly Test Empty = new Test( null );
+
   private readonly global::System.DateTimeOffset? _value;
 
   private Test( global::System.DateTimeOffset? value )
@@ -39,6 +42,18 @@ public readonly partial struct Test
 
       return _value.Value;
     }
+  }
+
+  public bool HasValue => _value.HasValue;
+
+  public global::System.DateTimeOffset? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public global::System.DateTimeOffset? GetValueOrDefault( global::System.DateTimeOffset defaultValue )
+  {
+    return HasValue ? _value : defaultValue;
   }
 
   public global::System.DateTimeOffset? ValueOrDefault => _value;
@@ -209,28 +224,40 @@ public readonly partial struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is Test primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      Test primitive => CompareTo( primitive ),
+      global::System.DateTimeOffset value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a Test or global::System.DateTimeOffset" )
+    };
   }
 
   public int CompareTo(
     Test other )
   {
-    if( _value is null )
+    if ( !_value.HasValue )
     {
-      return other._value is null ? 0 : -1;
+      return !other._value.HasValue ? 0 : -1;
     }
 
-    if( other._value is null )
+    if ( !other._value.HasValue )
     {
       return 1;
     }
 
-    return _value.Value.CompareTo( other.Value );
+    return _value.Value.CompareTo( other._value.Value );
+  }
+
+  public int CompareTo(
+    global::System.DateTimeOffset other )
+  {
+    if ( !_value.HasValue )
+    {
+      return -1;
+    }
+
+    return _value.Value.CompareTo( other );
   }
 
   public static implicit operator global::System.DateTimeOffset(

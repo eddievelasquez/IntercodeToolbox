@@ -48,7 +48,6 @@ public class DateTimePrimitiveTests
       yield return [s_primitiveA, s_primitiveB, -1];
       yield return [s_primitiveB, s_primitiveA, 1];
       yield return [s_primitiveB, null!, 1];
-      yield return [s_primitiveB, "12345", 1];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

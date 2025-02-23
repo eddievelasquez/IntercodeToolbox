@@ -11,6 +11,7 @@ namespace GeneratorTest;
 public readonly partial struct Test
   : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, short>,
     global::System.IComparable<Test>,
+    global::System.IComparable<short>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable,
@@ -20,6 +21,8 @@ public readonly partial struct Test
     global::System.IParsable<Test>
 #endif
 {
+  public static readonly Test Empty = new Test( null );
+
   private readonly short? _value;
 
   private Test( short? value )
@@ -39,6 +42,18 @@ public readonly partial struct Test
 
       return _value.Value;
     }
+  }
+
+  public bool HasValue => _value.HasValue;
+
+  public short? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public short? GetValueOrDefault( short defaultValue )
+  {
+    return HasValue ? _value : defaultValue;
   }
 
   public short? ValueOrDefault => _value;
@@ -209,28 +224,40 @@ public readonly partial struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is Test primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      Test primitive => CompareTo( primitive ),
+      short value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a Test or short" )
+    };
   }
 
   public int CompareTo(
     Test other )
   {
-    if( _value is null )
+    if ( !_value.HasValue )
     {
-      return other._value is null ? 0 : -1;
+      return !other._value.HasValue ? 0 : -1;
     }
 
-    if( other._value is null )
+    if ( !other._value.HasValue )
     {
       return 1;
     }
 
-    return _value.Value.CompareTo( other.Value );
+    return _value.Value.CompareTo( other._value.Value );
+  }
+
+  public int CompareTo(
+    short other )
+  {
+    if ( !_value.HasValue )
+    {
+      return -1;
+    }
+
+    return _value.Value.CompareTo( other );
   }
 
   public static implicit operator short(

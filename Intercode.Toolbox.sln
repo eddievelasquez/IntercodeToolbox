@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 17
+# Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intercode.Toolbox.Core", "Intercode.Toolbox.Core\Intercode.Toolbox.Core.csproj", "{6F896137-AB30-4DD7-B345-D74E31DB8995}"

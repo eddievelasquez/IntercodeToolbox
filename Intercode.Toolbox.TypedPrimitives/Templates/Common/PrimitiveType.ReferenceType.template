@@ -7,6 +7,7 @@ $TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConvert
 public readonly partial struct $TypeName$
   : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<$TypeName$, $TypeKeyword$>,
     global::System.IComparable<$TypeName$>,
+    global::System.IComparable<$TypeKeyword$>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable,
@@ -16,6 +17,8 @@ public readonly partial struct $TypeName$
     global::System.IParsable<$TypeName$>
 #endif
 {
+  public static readonly $TypeName$ Empty = new $TypeName$( null );
+
   private readonly $TypeKeyword$? _value;
 
   private $TypeName$( $TypeKeyword$? value )
@@ -35,6 +38,18 @@ public readonly partial struct $TypeName$
 
       return _value;
     }
+  }
+
+  public bool HasValue => _value is not null;
+
+  public $TypeKeyword$? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public $TypeKeyword$? GetValueOrDefault( $TypeKeyword$ defaultValue )
+  {
+    return HasValue ? _value : defaultValue;
   }
 
   public $TypeKeyword$? ValueOrDefault => _value;
@@ -205,23 +220,30 @@ public readonly partial struct $TypeName$
   public int CompareTo(
     object? obj )
   {
-    if( obj is $TypeName$ primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      $TypeName$ primitive => CompareTo( primitive ),
+      $TypeKeyword$ value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a $TypeName$ or $TypeKeyword$" )
+    };
   }
 
   public int CompareTo(
-    $TypeName$? other )
+    $TypeName$ other )
+  {
+    return CompareTo( other.GetValueOrDefault() );
+  }
+
+  public int CompareTo(
+    $TypeKeyword$? other )
   {
     if( _value is null )
     {
-      return other._value is null ? 0 : -1;
+      return other is null ? 0 : -1;
     }
 
-    if( other._value is null )
+    if( other is null )
     {
       return 1;
     }

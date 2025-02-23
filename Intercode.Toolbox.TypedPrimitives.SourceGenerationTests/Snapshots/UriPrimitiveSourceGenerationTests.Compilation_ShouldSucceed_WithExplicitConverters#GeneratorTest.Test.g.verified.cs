@@ -11,6 +11,7 @@ namespace GeneratorTest;
 public readonly partial struct Test
   : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<Test, global::System.Uri>,
     global::System.IComparable<Test>,
+    global::System.IComparable<global::System.Uri>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable
@@ -18,6 +19,8 @@ public readonly partial struct Test
     global::System.IFormattable
 #endif
 {
+  public static readonly Test Empty = new Test( null );
+
   private readonly global::System.Uri? _value;
 
   private Test( global::System.Uri? value )
@@ -37,6 +40,18 @@ public readonly partial struct Test
 
       return _value;
     }
+  }
+
+  public bool HasValue => _value is not null;
+
+  public global::System.Uri? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public global::System.Uri? GetValueOrDefault( global::System.Uri defaultValue )
+  {
+    return HasValue ? _value : defaultValue;
   }
 
   public global::System.Uri? ValueOrDefault => _value;
@@ -154,28 +169,35 @@ public readonly partial struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is Test primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      Test primitive => CompareTo( primitive ),
+      global::System.Uri value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a Test or global::System.Uri" )
+    };
   }
 
   public int CompareTo(
     Test other )
   {
+    return CompareTo( other.GetValueOrDefault() );
+  }
+
+  public int CompareTo(
+    global::System.Uri? other )
+  {
     if( _value is null )
     {
-      return other._value is null ? 0 : -1;
+      return other is null ? 0 : -1;
     }
 
-    if( other._value is null )
+    if( other is null )
     {
       return 1;
     }
 
-    return Uri.Compare( _value, other._value, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
+    return Uri.Compare( _value, other, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase );
   }
 
   public static implicit operator global::System.Uri(
