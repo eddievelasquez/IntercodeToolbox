@@ -41,29 +41,27 @@ public class TypedPrimitiveAttribute<T>(): TypedPrimitiveAttribute( typeof( T ) 
 
 #endif
 
-public interface IPrimitive
+public interface ITypedPrimitive
 {
-  bool IsDefault { get; }
+  bool HasValue { get; }
+  object? GetValueObject();
 
 #if NET7_0_OR_GREATER
-  static abstract Type GetPrimitiveType();
+  static abstract global::System.Type GetUnderlyingType();
 #endif
 }
 
-public interface IPrimitive<out T>
-  : IPrimitive
+public interface IValueTypedPrimitive<T, TSelf>
+  : ITypedPrimitive,
+    IComparable<T>
+  where T: struct
+  where TSelf: IValueTypedPrimitive<T, TSelf>
 {
   T Value { get; }
-}
-
-public interface IValueTypePrimitive<TSelf, T>
-  : IPrimitive<T>
-  where TSelf: struct, IValueTypePrimitive<TSelf, T>
-  where T: struct
-{
-  T? ValueOrDefault { get; }
+  T? GetValueOrDefault();
 
 #if NET7_0_OR_GREATER
+
   static abstract FluentResults.Result<TSelf> Create(
     T? value );
 
@@ -88,14 +86,17 @@ public interface IValueTypePrimitive<TSelf, T>
 #endif
 }
 
-public interface IReferenceTypePrimitive<TSelf, T>
-  : IPrimitive<T>
-  where TSelf: struct, IReferenceTypePrimitive<TSelf, T>
+public interface IReferenceTypedPrimitive<T, TSelf>
+  : ITypedPrimitive,
+    IComparable<T>
   where T: class
+  where TSelf: IReferenceTypedPrimitive<T, TSelf>
 {
-  T? ValueOrDefault { get; }
+  T Value { get; }
+  T? GetValueOrDefault();
 
 #if NET7_0_OR_GREATER
+
   static abstract FluentResults.Result<TSelf> Create(
     T? value );
 

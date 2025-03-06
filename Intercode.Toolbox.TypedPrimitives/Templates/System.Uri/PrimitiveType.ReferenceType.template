@@ -5,7 +5,7 @@ namespace $Namespace$;
 
 $TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$TypeName$ = {_value}" )]
 public readonly partial struct $TypeName$
-  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<$TypeName$, $TypeKeyword$>,
+  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypedPrimitive<$TypeKeyword$, $TypeName$>,
     global::System.IComparable<$TypeName$>,
     global::System.IComparable<$TypeKeyword$>,
     global::System.IComparable,
@@ -29,31 +29,36 @@ public readonly partial struct $TypeName$
   {
     get
     {
-      if( _value is null )
+      if( !HasValue )
       {
-        throw new global::System.InvalidOperationException( "Value is null" );
+        throw new global::System.InvalidOperationException( "Instance does not have a value" );
       }
 
-      return _value;
+      return _value!;
     }
   }
 
   public bool HasValue => _value is not null;
+
+  public object? GetValueObject()
+  {
+    return GetValueOrDefault();
+  }
 
   public $TypeKeyword$? GetValueOrDefault()
   {
     return _value;
   }
 
-  public $TypeKeyword$? GetValueOrDefault( $TypeKeyword$ defaultValue )
+  public $TypeKeyword$ GetValueOrDefault( $TypeKeyword$ defaultValue )
   {
-    return HasValue ? _value : defaultValue;
+    return HasValue ? _value! : defaultValue!;
   }
 
-  public $TypeKeyword$? ValueOrDefault => _value;
-  public bool IsDefault => _value is null;
+  public $TypeKeyword$? ValueOrDefault => GetValueOrDefault();
+  public bool IsDefault => !HasValue;
 
-  public static global::System.Type GetPrimitiveType()
+  public static global::System.Type GetUnderlyingType()
   {
     return typeof( $TypeKeyword$ );
   }

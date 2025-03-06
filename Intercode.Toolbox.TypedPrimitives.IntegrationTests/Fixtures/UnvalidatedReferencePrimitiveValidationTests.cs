@@ -6,10 +6,10 @@ namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests.Fixtures;
 
 using FluentAssertions;
 
-public abstract class UnvalidatedReferencePrimitiveValidationTests<T, TPrimitive, TDataFactory>
-  where TPrimitive: struct, IReferenceTypePrimitive<TPrimitive, T>
-  where T: class
+public abstract class UnvalidatedReferencePrimitiveValidationTests<T, TTypedPrimitive, TDataFactory>
+  where TTypedPrimitive: struct, IReferenceTypedPrimitive<T, TTypedPrimitive>
   where TDataFactory: ITestDataFactory
+  where T : class
 {
   #region Public Methods
 
@@ -18,7 +18,7 @@ public abstract class UnvalidatedReferencePrimitiveValidationTests<T, TPrimitive
   public void IsValid_InvalidValue_ReturnsTrue(
     T? value )
   {
-    var isValid = TPrimitive.IsValid( value );
+    var isValid = TTypedPrimitive.IsValid( value );
 
     isValid.Should()
            .BeTrue();
@@ -29,7 +29,7 @@ public abstract class UnvalidatedReferencePrimitiveValidationTests<T, TPrimitive
   public void Validate_WithInvalidValue_ReturnsSuccess(
     T? value )
   {
-    var result = TPrimitive.Validate( value );
+    var result = TTypedPrimitive.Validate( value );
 
     result.IsSuccess.Should()
           .BeTrue();
@@ -40,7 +40,7 @@ public abstract class UnvalidatedReferencePrimitiveValidationTests<T, TPrimitive
   public void ValidateOrThrow_WithInvalidValue_ShouldNotThrow(
     T? value )
   {
-    var act = () => TPrimitive.ValidateOrThrow( value );
+    var act = () => TTypedPrimitive.ValidateOrThrow( value );
     act.Should().NotThrow();
   }
 

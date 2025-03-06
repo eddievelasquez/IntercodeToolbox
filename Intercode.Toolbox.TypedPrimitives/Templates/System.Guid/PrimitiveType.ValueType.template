@@ -5,7 +5,7 @@ namespace $Namespace$;
 
 $TypeConverterAttribute$$SystemTextJsonConverterAttribute$$NewtonsoftJsonConverterAttribute$[global::System.Diagnostics.DebuggerDisplay( "$TypeName$ = {_value}" )]
 public readonly partial struct $TypeName$
-  : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<$TypeName$, $TypeKeyword$>,
+  : global::Intercode.Toolbox.TypedPrimitives.IValueTypedPrimitive<$TypeKeyword$, $TypeName$>,
     global::System.IComparable<$TypeName$>,
     global::System.IComparable<$TypeKeyword$>,
     global::System.IComparable,
@@ -27,35 +27,45 @@ public readonly partial struct $TypeName$
     NormalizePartial( ref _value );
   }
 
+  private $TypeKeyword$ GetWrappedValueUnsafe()
+  {
+    return _value.GetValueOrDefault();
+  }
+
   public $TypeKeyword$ Value
   {
     get
     {
-      if( _value is null )
+      if( !HasValue )
       {
-        throw new global::System.InvalidOperationException( "Value is null" );
+        throw new global::System.InvalidOperationException( "Instance does not have a value" );
       }
 
-      return _value.Value;
+      return GetWrappedValueUnsafe();
     }
   }
 
   public bool HasValue => _value.HasValue;
+
+  public object? GetValueObject()
+  {
+    return GetValueOrDefault();
+  }
 
   public $TypeKeyword$? GetValueOrDefault()
   {
     return _value;
   }
 
-  public $TypeKeyword$? GetValueOrDefault( $TypeKeyword$ defaultValue )
+  public $TypeKeyword$ GetValueOrDefault( $TypeKeyword$ defaultValue )
   {
-    return HasValue ? _value : defaultValue;
+    return HasValue ? GetWrappedValueUnsafe() : defaultValue;
   }
 
-  public $TypeKeyword$? ValueOrDefault => _value;
-  public bool IsDefault => _value is null;
+  public $TypeKeyword$? ValueOrDefault => GetValueOrDefault();
+  public bool IsDefault => !HasValue;
 
-  public static global::System.Type GetPrimitiveType()
+  public static global::System.Type GetUnderlyingType()
   {
     return typeof( $TypeKeyword$ );
   }
@@ -68,7 +78,7 @@ public readonly partial struct $TypeName$
       return global::FluentResults.Result.Fail<$TypeName$>( result.Errors );
     }
 
-    return new $TypeName$( value );
+    return value.HasValue ? new $TypeName$( value ) : Empty;
   }
 
   public static $TypeName$ CreateOrThrow( $TypeKeyword$? value )
@@ -119,25 +129,25 @@ public readonly partial struct $TypeName$
 
   public override int GetHashCode()
   {
-    return _value is null ? 0 : _value.GetHashCode();
+    return HasValue ? GetWrappedValueUnsafe().GetHashCode() : 0;
   }
 
   public override string ToString()
   {
-    return _value is null ? string.Empty : _value.ToString()!;
+    return HasValue ? GetWrappedValueUnsafe().ToString() : string.Empty;
   }
 
   public string ToString(
     string? format )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, null );
+    return HasValue ? GetWrappedValueUnsafe().ToString( format, null ) : string.Empty;
   }
 
   public string ToString(
     string? format,
     global::System.IFormatProvider? formatProvider )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
+    return HasValue ? GetWrappedValueUnsafe().ToString( format, formatProvider ) : string.Empty;
   }
 
   public static $TypeName$ Parse(
@@ -175,13 +185,13 @@ public readonly partial struct $TypeName$
     out int bytesWritten,
     global::System.ReadOnlySpan<char> format = default )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
       bytesWritten = 0;
       return true;
     }
 
-    return _value.Value.TryFormat( utf8Destination, out bytesWritten, format );
+    return GetWrappedValueUnsafe().TryFormat( utf8Destination, out bytesWritten, format );
   }
 #endif
 
@@ -192,7 +202,7 @@ public readonly partial struct $TypeName$
     global::System.ReadOnlySpan<char> format,
     global::System.IFormatProvider? provider )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
       charsWritten = 0;
       return true;
@@ -206,13 +216,13 @@ public readonly partial struct $TypeName$
     out int charsWritten,
     global::System.ReadOnlySpan<char> format = default )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
       charsWritten = 0;
       return true;
     }
 
-    return _value.Value.TryFormat( destination, out charsWritten, format );
+    return GetWrappedValueUnsafe().TryFormat( destination, out charsWritten, format );
   }
 
   public static $TypeName$ Parse(
@@ -254,7 +264,7 @@ public readonly partial struct $TypeName$
     {
       null => 1,
       $TypeName$ primitive => CompareTo( primitive ),
-      $TypeKeyword$ value => CompareTo( _value ),
+      $TypeKeyword$ value => CompareTo( value ),
       _ => throw new global::System.ArgumentException( "Object is not a $TypeName$ or $TypeKeyword$" )
     };
   }
@@ -262,23 +272,28 @@ public readonly partial struct $TypeName$
   public int CompareTo(
     $TypeName$ other )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
-      return other._value is null ? 0 : -1;
+      return !other.HasValue ? 0 : -1;
     }
 
-    return _value.Value.CompareTo( other._value );
+    if ( !other.HasValue )
+    {
+      return 1;
+    }
+
+    return GetWrappedValueUnsafe().CompareTo( other.GetWrappedValueUnsafe() );
   }
 
   public int CompareTo(
     $TypeKeyword$ other )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
       return -1;
     }
 
-    return _value.Value.CompareTo( other );
+    return GetWrappedValueUnsafe().CompareTo( other );
   }
 
   public static implicit operator $TypeKeyword$(

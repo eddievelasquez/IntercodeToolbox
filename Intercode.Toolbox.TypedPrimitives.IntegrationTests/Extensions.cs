@@ -27,7 +27,7 @@ public static class Extensions
   public static string ToStringForJson(
     this object? value )
   {
-    if( value is null || value is IPrimitive { IsDefault: true } primitive )
+    if( value is null || value is ITypedPrimitive { HasValue: false } primitive )
     {
       return "null";
     }

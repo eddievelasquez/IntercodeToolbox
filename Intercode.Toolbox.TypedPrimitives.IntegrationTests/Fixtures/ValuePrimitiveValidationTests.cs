@@ -6,10 +6,10 @@ namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests.Fixtures;
 
 using FluentAssertions;
 
-public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
-  where TPrimitive: struct, IValueTypePrimitive<TPrimitive, T>
-  where T: struct
+public abstract class ValuePrimitiveValidationTests<T, TTypePrimitive, TDataFactory>
+  where TTypePrimitive: IValueTypedPrimitive<T, TTypePrimitive>
   where TDataFactory: ITestDataFactory
+  where T : struct
 {
   #region Constants
 
@@ -22,29 +22,29 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
   #region Tests
 
   [Fact]
-  public void IsDefault_WithDefaultValue_ReturnsTrue()
+  public void HasValue_WithDefaultValue_ReturnsFalse()
   {
     // Arrange
-    var primitive = ( TPrimitive ) default;
+    var typedPrimitive = ( TTypePrimitive ) default!;
 
     // Act
-    var result = primitive.IsDefault;
+    var result = typedPrimitive.HasValue;
 
     result.Should()
-          .BeTrue();
+          .BeFalse();
   }
 
   [Theory]
   [MemberData( nameof( GetData ) )]
-  public void IsDefault_WithValue_ReturnsFalse(
+  public void HasValue_WithValue_ReturnsTrue(
     T value )
   {
-    var primitive = ( TPrimitive ) value;
+    var typedPrimitive = ( TTypePrimitive ) value;
 
-    var result = primitive.IsDefault;
+    var result = typedPrimitive.HasValue;
 
     result.Should()
-          .BeFalse();
+          .BeTrue();
   }
 
   [Theory]
@@ -52,7 +52,7 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
   public void IsValid_InvalidValue_ReturnsFalse(
     T? value )
   {
-    var isValid = TPrimitive.IsValid( value );
+    var isValid = TTypePrimitive.IsValid( value );
 
     isValid.Should()
            .BeFalse();
@@ -63,7 +63,7 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
   public void IsValid_ValidValue_ReturnsTrue(
     T? value )
   {
-    var isValid = TPrimitive.IsValid( value );
+    var isValid = TTypePrimitive.IsValid( value );
 
     isValid.Should()
            .BeTrue();
@@ -74,7 +74,7 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
   public void Validate_WithInvalidValue_ReturnsFailure(
     T? value )
   {
-    var result = TPrimitive.Validate( value );
+    var result = TTypePrimitive.Validate( value );
 
     result.IsFailed.Should()
           .BeTrue();
@@ -92,7 +92,7 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
   public void Validate_WithValidValue_ReturnsSuccess(
     T? value )
   {
-    var result = TPrimitive.Validate( value );
+    var result = TTypePrimitive.Validate( value );
 
     result.IsSuccess.Should()
           .BeTrue();
@@ -103,7 +103,7 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
   public void ValidateOrThrow_WithInvalidValue_ShouldThrow(
     T? value )
   {
-    var act = () => TPrimitive.ValidateOrThrow( value );
+    var act = () => TTypePrimitive.ValidateOrThrow( value );
 
     act.Should()
        .Throw<ArgumentException>()
@@ -112,15 +112,14 @@ public abstract class ValuePrimitiveValidationTests<T, TPrimitive, TDataFactory>
 
   [Theory]
   [MemberData( nameof( GetData ) )]
-  public void ValidateOrThrow_WithValidValue_ShouldNotThrow(T? value)
+  public void ValidateOrThrow_WithValidValue_ShouldNotThrow(
+    T? value )
   {
-    var act = () => TPrimitive.ValidateOrThrow( value );
+    var act = () => TTypePrimitive.ValidateOrThrow( value );
 
     act.Should()
        .NotThrow();
   }
-
-
 
   #endregion
 

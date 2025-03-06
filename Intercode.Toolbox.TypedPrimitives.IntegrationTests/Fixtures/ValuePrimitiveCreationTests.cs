@@ -6,10 +6,10 @@ namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests.Fixtures;
 
 using FluentAssertions;
 
-public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
-  where TPrimitive: struct, IValueTypePrimitive<TPrimitive, T>
-  where T: struct
+public abstract class ValuePrimitiveCreationTests<T, TTypedPrimitive, TDataFactory>
+  where TTypedPrimitive: IValueTypedPrimitive<T, TTypedPrimitive>
   where TDataFactory: ITestDataFactory
+  where T : struct
 {
   #region Constants
 
@@ -26,7 +26,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void Create_WithInvalidValue_ReturnsFailure(
     T? value )
   {
-    var result = TPrimitive.Create( value );
+    var result = TTypedPrimitive.Create( value );
 
     result.IsFailed.Should()
           .BeTrue();
@@ -44,7 +44,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void Create_WithValidValue_ReturnsSuccess(
     T value )
   {
-    var result = TPrimitive.Create( value );
+    var result = TTypedPrimitive.Create( value );
 
     // Assert
     result.IsSuccess.Should()
@@ -59,7 +59,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void CreateOrThrow_WithInvalidValue_Throws(
     object? value )
   {
-    var act = () => TPrimitive.CreateOrThrow( ( T? ) value );
+    var act = () => TTypedPrimitive.CreateOrThrow( ( T? ) value );
 
     act.Should()
        .Throw<ArgumentException>()
@@ -71,7 +71,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void CreateOrThrow_WithValidValue_ReturnsPrimitive(
     T? value )
   {
-    var primitive = TPrimitive.CreateOrThrow( value );
+    var primitive = TTypedPrimitive.CreateOrThrow( value );
 
     primitive.Value.Should().Be( value );
   }
@@ -81,7 +81,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void ExplicitOperator_ValueToPrimitive_WithInvalidValue_ShouldThrow(
     T value )
   {
-    var act = () => ( TPrimitive ) value;
+    var act = () => ( TTypedPrimitive ) value;
 
     act.Should()
        .Throw<InvalidOperationException>()
@@ -93,7 +93,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void ExplicitOperator_ValueToPrimitive_WithValidValue_Succeeds(
     T value )
   {
-    var result = ( ( TPrimitive ) value ).Value;
+    var result = ( ( TTypedPrimitive ) value ).Value;
 
     result.Should()
           .Be( value );
@@ -104,7 +104,7 @@ public abstract class ValuePrimitiveCreationTests<T, TPrimitive, TDataFactory>
   public void ExplicitOperator_PrimitiveToValue_ReturnsValue(
     T value )
   {
-    var primitive = ( TPrimitive ) value;
+    var primitive = ( TTypedPrimitive ) value;
 
     ( ( T ) primitive ).Should()
                        .Be( value );

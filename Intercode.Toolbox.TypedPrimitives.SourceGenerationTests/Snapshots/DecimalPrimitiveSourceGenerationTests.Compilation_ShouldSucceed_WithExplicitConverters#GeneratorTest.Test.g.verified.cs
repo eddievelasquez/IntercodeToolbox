@@ -9,7 +9,7 @@ namespace GeneratorTest;
 [global::Newtonsoft.Json.JsonConverter( typeof( GeneratorTest.TestNewtonsoftJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, double>,
+  : global::Intercode.Toolbox.TypedPrimitives.IValueTypedPrimitive<double, Test>,
     global::System.IComparable<Test>,
     global::System.IComparable<double>,
     global::System.IComparable,
@@ -31,35 +31,45 @@ public readonly partial struct Test
     NormalizePartial( ref _value );
   }
 
+  private double GetWrappedValueUnsafe()
+  {
+    return _value.GetValueOrDefault();
+  }
+
   public double Value
   {
     get
     {
-      if( _value is null )
+      if( !HasValue )
       {
-        throw new global::System.InvalidOperationException( "Value is null" );
+        throw new global::System.InvalidOperationException( "Instance does not have a value" );
       }
 
-      return _value.Value;
+      return GetWrappedValueUnsafe();
     }
   }
 
   public bool HasValue => _value.HasValue;
+
+  public object? GetValueObject()
+  {
+    return GetValueOrDefault();
+  }
 
   public double? GetValueOrDefault()
   {
     return _value;
   }
 
-  public double? GetValueOrDefault( double defaultValue )
+  public double GetValueOrDefault( double defaultValue )
   {
-    return HasValue ? _value : defaultValue;
+    return HasValue ? GetWrappedValueUnsafe() : defaultValue;
   }
 
-  public double? ValueOrDefault => _value;
-  public bool IsDefault => _value is null;
+  public double? ValueOrDefault => GetValueOrDefault();
+  public bool IsDefault => !HasValue;
 
-  public static global::System.Type GetPrimitiveType()
+  public static global::System.Type GetUnderlyingType()
   {
     return typeof( double );
   }
@@ -72,7 +82,7 @@ public readonly partial struct Test
       return global::FluentResults.Result.Fail<Test>( result.Errors );
     }
 
-    return new Test( value );
+    return value.HasValue ? new Test( value.Value ) : Empty;
   }
 
   public static Test CreateOrThrow( double? value )
@@ -123,25 +133,25 @@ public readonly partial struct Test
 
   public override int GetHashCode()
   {
-    return _value is null ? 0 : _value.GetHashCode();
+    return HasValue ? GetWrappedValueUnsafe().GetHashCode() : 0;
   }
 
   public override string ToString()
   {
-    return _value is null ? string.Empty : _value.ToString()!;
+    return HasValue ? GetWrappedValueUnsafe().ToString() : string.Empty;
   }
 
   public string ToString(
     string? format )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, null );
+    return HasValue ? GetWrappedValueUnsafe().ToString( format, null ) : string.Empty;
   }
 
   public string ToString(
     string? format,
     global::System.IFormatProvider? formatProvider )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
+    return HasValue ? GetWrappedValueUnsafe().ToString( format, formatProvider ) : string.Empty;
   }
 
   public static Test Parse(
@@ -180,13 +190,13 @@ public readonly partial struct Test
     global::System.ReadOnlySpan<char> format,
     global::System.IFormatProvider? provider )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
       charsWritten = 0;
       return true;
     }
 
-    return _value.Value.TryFormat( destination, out charsWritten, format, provider );
+    return GetWrappedValueUnsafe().TryFormat( destination, out charsWritten, format, provider );
   }
 
   public static Test Parse(
@@ -228,7 +238,7 @@ public readonly partial struct Test
     {
       null => 1,
       Test primitive => CompareTo( primitive ),
-      double value => CompareTo( _value ),
+      double value => CompareTo( value ),
       _ => throw new global::System.ArgumentException( "Object is not a Test or double" )
     };
   }
@@ -236,28 +246,28 @@ public readonly partial struct Test
   public int CompareTo(
     Test other )
   {
-    if ( !_value.HasValue )
+    if ( !HasValue )
     {
-      return !other._value.HasValue ? 0 : -1;
+      return !other.HasValue ? 0 : -1;
     }
 
-    if ( !other._value.HasValue )
+    if ( !other.HasValue )
     {
       return 1;
     }
 
-    return _value.Value.CompareTo( other._value.Value );
+    return GetWrappedValueUnsafe().CompareTo( other.GetWrappedValueUnsafe() );
   }
 
   public int CompareTo(
     double other )
   {
-    if ( !_value.HasValue )
+    if ( !HasValue )
     {
       return -1;
     }
 
-    return _value.Value.CompareTo( other );
+    return GetWrappedValueUnsafe().CompareTo( other );
   }
 
   public static implicit operator double(

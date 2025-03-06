@@ -6,7 +6,7 @@ namespace GeneratorTest;
 
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<Test, global::System.Uri>,
+  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypedPrimitive<global::System.Uri, Test>,
     global::System.IComparable<Test>,
     global::System.IComparable<global::System.Uri>,
     global::System.IComparable,
@@ -30,31 +30,36 @@ public readonly partial struct Test
   {
     get
     {
-      if( _value is null )
+      if( !HasValue )
       {
-        throw new global::System.InvalidOperationException( "Value is null" );
+        throw new global::System.InvalidOperationException( "Instance does not have a value" );
       }
 
-      return _value;
+      return _value!;
     }
   }
 
   public bool HasValue => _value is not null;
+
+  public object? GetValueObject()
+  {
+    return GetValueOrDefault();
+  }
 
   public global::System.Uri? GetValueOrDefault()
   {
     return _value;
   }
 
-  public global::System.Uri? GetValueOrDefault( global::System.Uri defaultValue )
+  public global::System.Uri GetValueOrDefault( global::System.Uri defaultValue )
   {
-    return HasValue ? _value : defaultValue;
+    return HasValue ? _value! : defaultValue!;
   }
 
-  public global::System.Uri? ValueOrDefault => _value;
-  public bool IsDefault => _value is null;
+  public global::System.Uri? ValueOrDefault => GetValueOrDefault();
+  public bool IsDefault => !HasValue;
 
-  public static global::System.Type GetPrimitiveType()
+  public static global::System.Type GetUnderlyingType()
   {
     return typeof( global::System.Uri );
   }
