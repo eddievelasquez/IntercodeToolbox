@@ -38,15 +38,15 @@ internal class TemplateProcessor
     var builder = new MacroProcessorBuilder();
 
     // Set the common macros for all templates
-    builder.AddMacro( Macros.TypeKeyword, typeInfo.Keyword );
-    builder.AddMacro( Macros.Namespace, context.Model.Namespace );
-    builder.AddMacro( Macros.TypeName, context.Model.TypeName );
-    builder.AddMacro( Macros.TypeQualifiedName, $"{context.Model.Namespace}.{context.Model.TypeName}" );
+    builder.AddMacro( MacroNames.PrimitiveName, typeInfo.Keyword );
+    builder.AddMacro( MacroNames.TypedPrimitiveNamespace, context.Model.Namespace );
+    builder.AddMacro( MacroNames.TypedPrimitiveName, context.Model.TypeName );
+    builder.AddMacro( MacroNames.TypedPrimitiveQualifiedName, $"{context.Model.Namespace}.{context.Model.TypeName}" );
 
     // If the template uses a non-default StringComparison, set the StringComparison macro
     if( context.Model.StringComparison is not null )
     {
-      builder.AddMacro( Macros.StringComparison, context.Model.StringComparison! );
+      builder.AddMacro( MacroNames.StringComparison, context.Model.StringComparison! );
     }
 
     if( context.Model.HasTypeConverter )

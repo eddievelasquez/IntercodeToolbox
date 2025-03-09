@@ -29,13 +29,13 @@ internal static class TypeManager
   #region Constants
 
   private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.ComponentModel.TypeConverter( typeof( ${Macros.TypeQualifiedName}$TypeConverter ) )]\n";
+    $"[global::System.ComponentModel.TypeConverter( typeof( ${MacroNames.TypedPrimitiveQualifiedName}$TypeConverter ) )]\n";
 
   private const string SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${Macros.TypeQualifiedName}$SystemTextJsonConverter ) )]\n";
+    $"[global::System.Text.Json.Serialization.JsonConverter( typeof( ${MacroNames.TypedPrimitiveQualifiedName}$SystemTextJsonConverter ) )]\n";
 
   private const string NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
-    $"[global::Newtonsoft.Json.JsonConverter( typeof( ${Macros.TypeQualifiedName}$NewtonsoftJsonConverter ) )]\n";
+    $"[global::Newtonsoft.Json.JsonConverter( typeof( ${MacroNames.TypedPrimitiveQualifiedName}$NewtonsoftJsonConverter ) )]\n";
 
   private static readonly Dictionary<string, SupportedTypeInfo> s_supportedTypes = new ( StringComparer.Ordinal );
 
@@ -141,22 +141,22 @@ internal static class TypeManager
     {
       // @formatter:off
       var typeInfo = new SupportedTypeInfoBuilder( typeof( T ) ).AddConverterCustomMacros( TypedPrimitiveConverter.SystemTextJson,
-                                                                  AddMacro( Macros.JsonTokenType, systemTextJson.TokenType ),
-                                                                  AddMacro( Macros.JsonReader, systemTextJson.Reader ),
-                                                                  AddMacro( Macros.JsonWriter, systemTextJson.Writer ),
+                                                                  AddMacro( MacroNames.SystemTextJsonTokenType, systemTextJson.TokenType ),
+                                                                  AddMacro( MacroNames.SystemTextJsonReader, systemTextJson.Reader ),
+                                                                  AddMacro( MacroNames.SystemTextJsonWriter, systemTextJson.Writer ),
                                                                   AddMacro(
-                                                                    Macros.SystemTextJsonConverterAttribute,
+                                                                    MacroNames.SystemTextJsonConverterAttribute,
                                                                     SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE
                                                                   )
                                                                 )
                                                                 .AddConverterCustomMacros( TypedPrimitiveConverter.NewtonsoftJson,
-                                                                  AddMacro( Macros.NewtonsoftJsonTokenType, newtonsoftJson.TokenType ),
-                                                                  AddMacro( Macros.NewtonsoftJsonReader, newtonsoftJson.Reader ),
-                                                                  AddMacro( Macros.NewtonsoftJsonWriter, newtonsoftJson.Writer ),
-                                                                  AddMacro( Macros.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
+                                                                  AddMacro( MacroNames.NewtonsoftJsonTokenType, newtonsoftJson.TokenType ),
+                                                                  AddMacro( MacroNames.NewtonsoftJsonReader, newtonsoftJson.Reader ),
+                                                                  AddMacro( MacroNames.NewtonsoftJsonWriter, newtonsoftJson.Writer ),
+                                                                  AddMacro( MacroNames.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
                                                                 )
                                                                 .AddConverterCustomMacros( TypedPrimitiveConverter.TypeConverter,
-                                                                  AddMacro( Macros.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE )
+                                                                  AddMacro( MacroNames.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE )
                                                                 )
                                                                 .Build();
       // @formatter:on

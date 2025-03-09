@@ -4,29 +4,29 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
-internal static class Macros
+internal static class MacroNames
 {
   #region Constants
 
   /// <summary>
-  ///   The namespace of the generated type.
+  ///   The namespace of the generated primitive type.
   /// </summary>
-  public const string Namespace = nameof( Namespace );
+  public const string TypedPrimitiveNamespace = nameof( TypedPrimitiveNamespace );
 
   /// <summary>
-  ///   The C# keyword or full type name of the primitive type.
+  ///   The C# keyword or full type name of the wrapped primitive type.
   /// </summary>
-  public const string TypeKeyword = nameof( TypeKeyword );
+  public const string PrimitiveName = nameof( PrimitiveName );
 
   /// <summary>
-  ///   The name of the generated type.
+  ///   The name of the generated primitive type.
   /// </summary>
-  public const string TypeName = nameof( TypeName );
+  public const string TypedPrimitiveName = nameof( TypedPrimitiveName );
 
   /// <summary>
-  ///   The fully qualified name of the generated type.
+  ///   The fully qualified name of the generated primitive type.
   /// </summary>
-  public const string TypeQualifiedName = nameof( TypeQualifiedName );
+  public const string TypedPrimitiveQualifiedName = nameof( TypedPrimitiveQualifiedName );
 
   /// <summary>
   ///   The string comparison to use for string primitive operations.
@@ -36,17 +36,17 @@ internal static class Macros
   /// <summary>
   ///   The System.Text.Json type of the token for the primitive type.
   /// </summary>
-  public const string JsonTokenType = nameof( JsonTokenType );
+  public const string SystemTextJsonTokenType = nameof( SystemTextJsonTokenType );
 
   /// <summary>
   ///   The System.Text.Json Utf8JsonReader method to read the primitive type.
   /// </summary>
-  public const string JsonReader = nameof( JsonReader );
+  public const string SystemTextJsonReader = nameof( SystemTextJsonReader );
 
   /// <summary>
   ///   The System.Text.Json Utf8JsonWriter method to write the primitive type.
   /// </summary>
-  public const string JsonWriter = nameof( JsonWriter );
+  public const string SystemTextJsonWriter = nameof( SystemTextJsonWriter );
 
   /// <summary>
   ///   The Newtonsoft.Json type of the token for the primitive type.
