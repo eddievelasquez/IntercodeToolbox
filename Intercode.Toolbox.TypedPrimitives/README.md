@@ -2,6 +2,20 @@
 
 ## Updates
 
+- **Version 2.5.1**
+    - *Improvements*:
+        - Typed primitives now implement `IComparable<T>` with the underlying primitive type.
+        - Added the `Empty` static readonly instance.
+        - Added the `HasValue` property. It replaces the `IsDefault` property, which may be deprecated in the future.
+        - Added the `GetValueOrDefault()` method. It replaces the `ValueOrDefault` property, which may be deprecated in the future.
+        - Added the `GetValueOrDefault(defaultValue)` method, which returns the provided default value if `HasValue` returns `false`.
+        - `CompareTo(object?)` now supports comparisons with the underlying primitive type as well.
+        - The conversion operator to underlying primitive type is now implicit.
+        - No longer need to change the `DateParseHandling` setting for the Newtonsoft Json deserialization.
+        - Internal cleanup and refactoring to enable better unit testing and future enhancements.
+
+    - *Bugfix*: The EF Value converters were not properly supporting nullable fields.
+
 - **Version 2.5** 
     - Added .NET 9 support.
     - All primitives now implement the `CreateOrThrow` and `ValidateOrThrow` static methods for scenarios where handling a result value is not possible.
@@ -35,18 +49,18 @@
 There are several [projects](#references) that also attempt to tackle this problem, but most of them are focused on providing a way encapsulate object identifiers, 
 hence not supporting other primitive types. **TypedPrimitives** is focused on providing a way to encapsulate most commonly-used primitive type, including `string`, 
 `byte`, `sbyte`, `short`, `ushort`, `int`, `uint`, `long`, `ulong`, `float`, `double`, `decimal`, `Guid`, `DateTime`, `DateTimeOffset`, `TimeSpan`, and `Uri`.
-Support for other types can be added in the future.
+Support for other types may be added in the future.
 
 Additionally, **TypedPrimitives** adds multiple features to the generated code, including:.
 - Debugger display.
-- `IComparable<T>`, `IComparable`, `IFormattable` and equality implementations.
-- Casting to and from the primitive type.
+- `IComparable<T>`, `IComparable`, `IFormattable` and equality implementations. For .NET 7+, `ISpanFormattable` and `ISpanParsable` are implemented as well.
+- Casting to and from the underlying primitive type.
 - Hooks for adding custom validation and normalization of primitive values.
 - Optional generation of JSON converters for `System.Text.Json` and `Newtonsoft.Json`.
 - Optional generation of Entity Framework Core value converters.
 - Optional generation of type converters.
 
-A source generator automatically write the necessary code to encapsulate the primitive type by adding an attribute to a readonly struct.
+A source generator automatically writes the necessary code to encapsulate the primitive type by adding an attribute to a `readonly` `struct`.
 
 ## Usage
 
@@ -82,7 +96,7 @@ By having a stronly-typed `ZipCode` type, instead of a string value, we can avoi
 same type to a method; this is an error the compiler will not detect and can be hard to track down.
 
 #### Validation
-However, the `ZipCode` type is not very useful without adding some validation logic. The following example shows how to add a partial method to validate when a `ZipCode` instance is beinmg created.
+However, the `ZipCode` type is not very useful without adding some validation logic. The following example shows how to add a partial method to validate when a `ZipCode` instance is being created.
 
 ```csharp
 [TypedPrimitive<string>]
@@ -100,19 +114,16 @@ public readonly partial struct ZipCode
 > package to indicate whether operation succeeded or failed. Typed primitives that don't implement a validation method will 
 > always succeed.
 > Returning a `Result` instead of the typed primitive is the prefered way to indicate success/failure and avoid throwing exceptions for validation errors, 
-> which can be expensive and can lead to performance issues.
+> which can be expensive and may lead to issues in performance-critical code.
 > However; in some scenarios, it is not possible to return a result to the caller; one example is the casting operator which will throw an `InvalidOperationException`
 > if provided with an invalid value.
 
 However; in some scenarios, you may need to throw an exception when a validation error occurs while creating a primitive because 
-there is now way to return a `Result`. In this case, you can use the `CreateOrThrow` method, which will throw an `ArgumentException` 
+there is no way to return a `Result`. In this case, you can use the `CreateOrThrow` method, which will throw an `ArgumentException` 
 if the value is invalid.
 
 ```csharp
-protected override void NoReturnValue( out ZipCode zipCode )
-{
-  zipCode = ZipCode.CreateOrThrow( "12345" ); // Will throw ArgumentException
-}
+  zipCode = ZipCode.CreateOrThrow( "12345X" ); // Will throw ArgumentException
 ```
 
 To ensure the `ZipCode` was created with a valid value, just check the `IsSuccess` or `IsFailure` properties of the returned result; the actual `ZipCode` instance will be stored in the `Value` property of the result.
@@ -122,14 +133,14 @@ See the **FluentResults** library [documentation](https://github.com/altmann/Flu
 var result = ZipCode.Create( "12345" );
 if( result.IsSuccess )
 {
-  var zipCode = result.Value;
+  string zipCode = result.Value;
 }
 
 result = ZipCode.Create( "123XY" );
 if ( result.IsFailure )
 {
-  Console.WriteLine( "Invalid zipcode" );
-})
+  DisplayErrors( result.Errors );
+}
 ```
 
 The validation code can be invoked directly by calling the `Validate` method, which returns a `Result` instance; or calling the 
@@ -204,7 +215,7 @@ var zipCode = (ZipCode) converter.ConvertFromString( "12345" );
 Console.WriteLine( converter.ConvertToString( zipCode ) );
 ```
 
-The generated type converter can be extended to provide custom conversion logic by providing implementations for the following partial methods (where `T` is the primitive type):
+The generated type converter can be extended to provide custom conversion logic by providing implementations for the following partial methods (where `T` is the underlying primitive type):
 ```csharp
 partial void CanConvertFromPartial(
   System.ComponentModel.ITypeDescriptorContext? context,
@@ -251,17 +262,17 @@ public readonly partial struct ZipCode
 and can be used to convert `ZipCode` json properties to and from `string`. Deserializing invalid values will throw a `System.Text.Json.JsonException` exception.
 
 ```csharp
-    public class Test
-    {
-      public ZipCode ZipCode { get; set; }
-    }
+public class Test
+{
+  public ZipCode ZipCode { get; set; }
+}
 
-    var json = """{"ZipCode":"12345"}""";
-    var test = JsonSerializer.Deserialize<Test>( json );
-    Console.WriteLine( test.ZipCode );  // Should print "12345"
+var json = """{"ZipCode":"12345"}""";
+var test = JsonSerializer.Deserialize<Test>( json );
+Console.WriteLine( test.ZipCode );  // Should print "12345"
 ```
 
-The generated JSON converter can be extended to provide custom conversion logic by providing implementations for the following partial method (where `T` is the primitive type):
+The generated JSON converter can be extended to provide custom conversion logic by providing implementations for the following partial method (where `T` is the underlying primitive type):
 ```csharp
 partial void ConvertToPartial(
   ref System.Text.Json.Utf8JsonReader reader,
@@ -290,17 +301,17 @@ public readonly partial struct ZipCode
 and can be used to convert `ZipCode` json properties to and from `string`. Deserializing invalid values will throw a `Newtonsoft.Json.JsonSerializationException` exception.
 
 ```csharp
-    public class Test
-    {
-      public ZipCode ZipCode { get; set; }
-    }
+public class Test
+{
+  public ZipCode ZipCode { get; set; }
+}
 
-    var json = """{"ZipCode":"12345"}""";
-    var result = JsonConvert.DeserializeObject<Test>( json );
-    Console.WriteLine( test.ZipCode );  // Should print "12345"
+var json = """{"ZipCode":"12345"}""";
+var result = JsonConvert.DeserializeObject<Test>( json );
+Console.WriteLine( test.ZipCode );  // Should print "12345"
 ```
 
-The generated JSON converter can be extended to provide custom conversion logic by providing implementations for the following partial method (where `T` is the primitive type):
+The generated JSON converter can be extended to provide custom conversion logic by providing implementations for the following partial method (where `T` is the underlying primitive type):
 ```csharp
 partial void ConvertToPartial(
   ref Newtonsoft.Json.JsonReader reader,
@@ -328,29 +339,57 @@ public readonly partial struct ZipCode
 and can be used to convert `ZipCode` properties to and from `string`. Deserializing invalid values will throw a `InvalidOperationException` exception.
 
 ```csharp
-    public class TestEntity
-    {
-      public int Id { get; set; }
-      public ZipCode ZipCode { get; set; }
-    }
+public class TestEntity
+{
+  public int Id { get; set; }
+  public ZipCode ZipCode { get; set; }
+}
 
-    dbContext.TestEntities.Add( new TestEntity { ZipCode = "12345" } );
-    dbContext.SaveChanges();
+dbContext.TestEntities.Add( new TestEntity { ZipCode = "12345" } );
+dbContext.SaveChanges();
 
-    // 
+// ...
 
-    public class TestDbContext : DbContext
-    {
-      public DbSet<TestEntity> TestEntities { get; set; }
+public class TestDbContext : DbContext
+{
+  public DbSet<TestEntity> TestEntities { get; set; }
 
-      protected override void OnModelCreating( ModelBuilder modelBuilder )
-      {
-        modelBuilder.Entity<TestEntity>()
-          .Property( e => e.ZipCode )
-          .HasConversion( new ZipCodeEFCoreValueConverter() );
-      }
-    }
+  protected override void OnModelCreating( ModelBuilder modelBuilder )
+  {
+    modelBuilder.Entity<TestEntity>()
+      .Property( e => e.ZipCode )
+      .HasConversion( new ZipCodeEFCoreValueConverter() );
+  }
+}
 ```
+
+The value converter can also be added to all the instances of the typed primitive in any entity by overriding the `ConfigureConventions` method of the your `DbContext` class:
+```csharp
+public class TestEntity
+{
+  public int Id { get; set; }
+  public ZipCode ZipCode { get; set; }
+}
+
+dbContext.TestEntities.Add( new TestEntity { ZipCode = "12345" } );
+dbContext.SaveChanges();
+
+// ...
+
+public class TestDbContext : DbContext
+{
+  public DbSet<TestEntity> TestEntities { get; set; }
+
+  protected override void ConfigureConventions( ModelConfigurationBuilder configurationBuilder )
+  {
+    configurationBuilder.DefaultTypeMapping<ZipCode>()
+      .HasConversion<ZipCodeEFCoreValueConverter>();
+
+      base.ConfigureConventions( configurationBuilder );
+  }
+}
+```
+
 ## References {#references}
 
 - [Dealing with primitive obsession](https://lostechies.com/jimmybogard/2007/12/03/dealing-with-primitive-obsession/) - Jimmy Bogard.
