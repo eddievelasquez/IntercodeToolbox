@@ -53,7 +53,7 @@ public partial class TestSystemTextJsonConverter: global::System.Text.Json.Seria
     GeneratorTest.Test value,
     global::System.Text.Json.JsonSerializerOptions options )
   {
-    if ( value.IsDefault )
+    if ( !value.HasValue )
     {
       writer.WriteNullValue();
       return;

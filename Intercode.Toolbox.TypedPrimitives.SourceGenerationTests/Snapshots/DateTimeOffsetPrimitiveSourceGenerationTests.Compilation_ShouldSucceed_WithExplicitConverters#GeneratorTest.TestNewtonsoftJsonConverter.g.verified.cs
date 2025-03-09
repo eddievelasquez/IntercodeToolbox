@@ -77,7 +77,7 @@ public partial class TestNewtonsoftJsonConverter: global::Newtonsoft.Json.JsonCo
       throw new global::Newtonsoft.Json.JsonSerializationException( $"Unexpected object type: {value.GetType().Name}" );
     }
 
-    if( s.IsDefault )
+    if( !s.HasValue )
     {
       writer.WriteNull();
       return;

@@ -14,7 +14,7 @@ public class TestValueConverter: global::Microsoft.EntityFrameworkCore.Storage.V
   public TestValueConverter(
     global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ConverterMappingHints? mappingHints = null )
     : base(
-      primitive => !primitive.IsDefault ? primitive.Value : default,
+      typedPrimitive => typedPrimitive.HasValue ? typedPrimitive.Value : default,
       value => ( GeneratorTest.Test ) value,
       mappingHints
     )

@@ -52,7 +52,7 @@ public partial class $TypedPrimitiveName$SystemTextJsonConverter: global::System
     $TypedPrimitiveQualifiedName$ value,
     global::System.Text.Json.JsonSerializerOptions options )
   {
-    if ( value.IsDefault )
+    if ( !value.HasValue )
     {
       writer.WriteNullValue();
       return;

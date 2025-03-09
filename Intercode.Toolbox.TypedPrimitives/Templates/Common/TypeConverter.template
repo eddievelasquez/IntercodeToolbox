@@ -66,16 +66,16 @@ public partial class $TypedPrimitiveName$TypeConverter: global::System.Component
     object? value,
     global::System.Type destinationType )
   {
-    if( value is $TypedPrimitiveQualifiedName$ primitive )
+    if( value is $TypedPrimitiveQualifiedName$ typedPrimitive )
     {
       if( destinationType == typeof( $PrimitiveName$ ) )
       {
-        return primitive.ValueOrDefault;
+        return typedPrimitive.GetValueOrDefault();
       }
 
       bool converted = false;
       object? convertedValue = null;
-      ConvertToPartial( context, culture, primitive.ValueOrDefault, destinationType, ref convertedValue, ref converted );
+      ConvertToPartial( context, culture, typedPrimitive.GetValueOrDefault(), destinationType, ref convertedValue, ref converted );
 
       if ( !converted )
       {
