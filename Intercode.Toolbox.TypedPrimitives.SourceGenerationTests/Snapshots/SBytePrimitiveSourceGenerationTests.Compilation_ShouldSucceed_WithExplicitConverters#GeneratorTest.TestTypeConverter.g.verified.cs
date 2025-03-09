@@ -67,16 +67,16 @@ public partial class TestTypeConverter: global::System.ComponentModel.TypeConver
     object? value,
     global::System.Type destinationType )
   {
-    if( value is GeneratorTest.Test primitive )
+    if( value is GeneratorTest.Test typedPrimitive )
     {
       if( destinationType == typeof( sbyte ) )
       {
-        return primitive.ValueOrDefault;
+        return typedPrimitive.GetValueOrDefault();
       }
 
       bool converted = false;
       object? convertedValue = null;
-      ConvertToPartial( context, culture, primitive.ValueOrDefault, destinationType, ref convertedValue, ref converted );
+      ConvertToPartial( context, culture, typedPrimitive.GetValueOrDefault(), destinationType, ref convertedValue, ref converted );
 
       if ( !converted )
       {

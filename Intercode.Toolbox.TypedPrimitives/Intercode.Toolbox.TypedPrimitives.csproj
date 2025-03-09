@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -51,6 +51,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Templates\System.DateTimeOffset\NewtonsoftJsonConverter.template" />
+    <EmbeddedResource Include="Templates\System.String\EFCoreValueConverter.template" />
+    <EmbeddedResource Include="Templates\System.Uri\EFCoreValueConverter.template" />
     <EmbeddedResource Include="TypedPrimitiveAttribute.cs" />
   </ItemGroup>
 
@@ -61,6 +64,7 @@
     <EmbeddedResource Include="Templates\Common\SystemTextJsonConverter.template" />
     <EmbeddedResource Include="Templates\Common\NewtonsoftJsonConverter.template" />
     <EmbeddedResource Include="Templates\Common\EFCoreValueConverter.template" />
+    <EmbeddedResource Include="Templates\System.DateTime\NewtonsoftJsonConverter.template" />
     <EmbeddedResource Include="Templates\System.Guid\PrimitiveType.ValueType.template" />
     <EmbeddedResource Include="Templates\System.String\PrimitiveType.ReferenceType.template" />
     <EmbeddedResource Include="Templates\System.Uri\PrimitiveType.ReferenceType.template" />

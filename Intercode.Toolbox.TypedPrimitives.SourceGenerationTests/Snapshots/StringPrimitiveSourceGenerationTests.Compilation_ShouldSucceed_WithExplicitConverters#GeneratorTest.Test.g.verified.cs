@@ -8,10 +8,13 @@ namespace GeneratorTest;
 [global::System.Text.Json.Serialization.JsonConverter( typeof( GeneratorTest.TestSystemTextJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypePrimitive<Test, string>,
+  : global::Intercode.Toolbox.TypedPrimitives.IReferenceTypedPrimitive<string, Test>,
     global::System.IComparable<Test>,
+    global::System.IComparable<string>,
     global::System.IComparable
 {
+  public static readonly Test Empty = new Test( null );
+
   private readonly string? _value;
 
   private Test( string? value )
@@ -24,17 +27,39 @@ public readonly partial struct Test
   {
     get
     {
-      if( _value is null )
+      if( !HasValue )
       {
-        throw new global::System.InvalidOperationException( "Value is null" );
+        throw new global::System.InvalidOperationException( "Instance does not have a value" );
       }
 
       return _value!;
     }
   }
 
-  public string? ValueOrDefault => _value;
-  public bool IsDefault => _value is null;
+  public bool HasValue => _value is not null;
+
+  public object? GetValueObject()
+  {
+    return GetValueOrDefault();
+  }
+
+  public string? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public string GetValueOrDefault( string defaultValue )
+  {
+    return HasValue ? _value! : defaultValue!;
+  }
+
+  public string? ValueOrDefault => GetValueOrDefault();
+  public bool IsDefault => !HasValue;
+
+  public static global::System.Type GetUnderlyingType()
+  {
+    return typeof( string );
+  }
 
   public static global::FluentResults.Result<Test> Create( string? value )
   {
@@ -112,31 +137,38 @@ public readonly partial struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is Test primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      Test primitive => CompareTo( primitive ),
+      string value => CompareTo( _value ),
+      _ => throw new global::System.ArgumentException( "Object is not a Test or string" )
+    };
   }
 
   public int CompareTo(
     Test other )
   {
+    return CompareTo( other.GetValueOrDefault() );
+  }
+
+  public int CompareTo(
+    string? other )
+  {
     if( _value is null )
     {
-      return other._value is null ? 0 : -1;
+      return other is null ? 0 : -1;
     }
 
-    if( other._value is null )
+    if( other is null )
     {
       return 1;
     }
 
-    return string.Compare( _value, other._value, System.StringComparison.OrdinalIgnoreCase );
+    return string.Compare( _value, other, System.StringComparison.OrdinalIgnoreCase );
   }
 
-  public static explicit operator string(
+  public static implicit operator string(
     Test primitive )
   {
     return primitive.Value;

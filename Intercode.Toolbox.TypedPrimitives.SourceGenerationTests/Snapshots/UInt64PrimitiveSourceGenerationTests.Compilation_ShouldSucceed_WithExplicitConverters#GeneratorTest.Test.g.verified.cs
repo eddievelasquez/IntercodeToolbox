@@ -9,8 +9,9 @@ namespace GeneratorTest;
 [global::Newtonsoft.Json.JsonConverter( typeof( GeneratorTest.TestNewtonsoftJsonConverter ) )]
 [global::System.Diagnostics.DebuggerDisplay( "Test = {_value}" )]
 public readonly partial struct Test
-  : global::Intercode.Toolbox.TypedPrimitives.IValueTypePrimitive<Test, ulong>,
+  : global::Intercode.Toolbox.TypedPrimitives.IValueTypedPrimitive<ulong, Test>,
     global::System.IComparable<Test>,
+    global::System.IComparable<ulong>,
     global::System.IComparable,
 #if NET7_0_OR_GREATER
     global::System.ISpanFormattable,
@@ -20,6 +21,8 @@ public readonly partial struct Test
     global::System.IParsable<Test>
 #endif
 {
+  public static readonly Test Empty = new Test( null );
+
   private readonly ulong? _value;
 
   private Test( ulong? value )
@@ -28,21 +31,48 @@ public readonly partial struct Test
     NormalizePartial( ref _value );
   }
 
+  private ulong GetWrappedValueUnsafe()
+  {
+    return _value.GetValueOrDefault();
+  }
+
   public ulong Value
   {
     get
     {
-      if( _value is null )
+      if( !HasValue )
       {
-        throw new global::System.InvalidOperationException( "Value is null" );
+        throw new global::System.InvalidOperationException( "Instance does not have a value" );
       }
 
-      return _value.Value;
+      return GetWrappedValueUnsafe();
     }
   }
 
-  public ulong? ValueOrDefault => _value;
-  public bool IsDefault => _value is null;
+  public bool HasValue => _value.HasValue;
+
+  public object? GetValueObject()
+  {
+    return GetValueOrDefault();
+  }
+
+  public ulong? GetValueOrDefault()
+  {
+    return _value;
+  }
+
+  public ulong GetValueOrDefault( ulong defaultValue )
+  {
+    return HasValue ? GetWrappedValueUnsafe() : defaultValue;
+  }
+
+  public ulong? ValueOrDefault => GetValueOrDefault();
+  public bool IsDefault => !HasValue;
+
+  public static global::System.Type GetUnderlyingType()
+  {
+    return typeof( ulong );
+  }
 
   public static global::FluentResults.Result<Test> Create( ulong? value )
   {
@@ -52,7 +82,7 @@ public readonly partial struct Test
       return global::FluentResults.Result.Fail<Test>( result.Errors );
     }
 
-    return new Test( value );
+    return value.HasValue ? new Test( value.Value ) : Empty;
   }
 
   public static Test CreateOrThrow( ulong? value )
@@ -103,25 +133,25 @@ public readonly partial struct Test
 
   public override int GetHashCode()
   {
-    return _value is null ? 0 : _value.GetHashCode();
+    return HasValue ? GetWrappedValueUnsafe().GetHashCode() : 0;
   }
 
   public override string ToString()
   {
-    return _value is null ? string.Empty : _value.ToString()!;
+    return HasValue ? GetWrappedValueUnsafe().ToString() : string.Empty;
   }
 
   public string ToString(
     string? format )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, null );
+    return HasValue ? GetWrappedValueUnsafe().ToString( format, null ) : string.Empty;
   }
 
   public string ToString(
     string? format,
     global::System.IFormatProvider? formatProvider )
   {
-    return _value is null ? string.Empty : _value.Value.ToString( format, formatProvider );
+    return HasValue ? GetWrappedValueUnsafe().ToString( format, formatProvider ) : string.Empty;
   }
 
   public static Test Parse(
@@ -160,13 +190,13 @@ public readonly partial struct Test
     global::System.ReadOnlySpan<char> format,
     global::System.IFormatProvider? provider )
   {
-    if ( _value is null )
+    if ( !HasValue )
     {
       charsWritten = 0;
       return true;
     }
 
-    return _value.Value.TryFormat( destination, out charsWritten, format, provider );
+    return GetWrappedValueUnsafe().TryFormat( destination, out charsWritten, format, provider );
   }
 
   public static Test Parse(
@@ -204,31 +234,43 @@ public readonly partial struct Test
   public int CompareTo(
     object? obj )
   {
-    if( obj is Test primitive )
+    return obj switch
     {
-      return CompareTo( primitive );
-    }
-
-    return 1;
+      null => 1,
+      Test primitive => CompareTo( primitive ),
+      ulong value => CompareTo( value ),
+      _ => throw new global::System.ArgumentException( "Object is not a Test or ulong" )
+    };
   }
 
   public int CompareTo(
     Test other )
   {
-    if( _value is null )
+    if ( !HasValue )
     {
-      return other._value is null ? 0 : -1;
+      return !other.HasValue ? 0 : -1;
     }
 
-    if( other._value is null )
+    if ( !other.HasValue )
     {
       return 1;
     }
 
-    return _value.Value.CompareTo( other.Value );
+    return GetWrappedValueUnsafe().CompareTo( other.GetWrappedValueUnsafe() );
   }
 
-  public static explicit operator ulong(
+  public int CompareTo(
+    ulong other )
+  {
+    if ( !HasValue )
+    {
+      return -1;
+    }
+
+    return GetWrappedValueUnsafe().CompareTo( other );
+  }
+
+  public static implicit operator ulong(
     Test primitive )
   {
     return primitive.Value;

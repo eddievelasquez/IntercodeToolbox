@@ -27,7 +27,7 @@ public class TypedPrimitiveAttribute( Type primitiveType ): Attribute
 
   public Type PrimitiveType { get; } = primitiveType;
   public TypedPrimitiveConverter Converters { get; set; }
-  public object? StringComparison { get; set; }
+  public StringComparison StringComparison { get; set; } = StringComparison.OrdinalIgnoreCase;
 
   #endregion
 }
@@ -41,13 +41,24 @@ public class TypedPrimitiveAttribute<T>(): TypedPrimitiveAttribute( typeof( T ) 
 
 #endif
 
-public interface IValueTypePrimitive<TSelf, T>
-  where TSelf: struct, IValueTypePrimitive<TSelf, T>
+public interface ITypedPrimitive
+{
+  bool HasValue { get; }
+  object? GetValueObject();
+
+#if NET7_0_OR_GREATER
+  static abstract global::System.Type GetUnderlyingType();
+#endif
+}
+
+public interface IValueTypedPrimitive<T, TSelf>
+  : ITypedPrimitive,
+    IComparable<T>
   where T: struct
+  where TSelf: IValueTypedPrimitive<T, TSelf>
 {
   T Value { get; }
-  T? ValueOrDefault { get; }
-  bool IsDefault { get; }
+  T? GetValueOrDefault();
 
 #if NET7_0_OR_GREATER
 
@@ -66,7 +77,7 @@ public interface IValueTypePrimitive<TSelf, T>
   static abstract bool IsValid(
     T? value );
 
-  static abstract explicit operator T(
+  static abstract implicit operator T(
     TSelf primitive );
 
   static abstract explicit operator TSelf(
@@ -75,13 +86,14 @@ public interface IValueTypePrimitive<TSelf, T>
 #endif
 }
 
-public interface IReferenceTypePrimitive<TSelf, T>
-  where TSelf: struct, IReferenceTypePrimitive<TSelf, T>
+public interface IReferenceTypedPrimitive<T, TSelf>
+  : ITypedPrimitive,
+    IComparable<T>
   where T: class
+  where TSelf: IReferenceTypedPrimitive<T, TSelf>
 {
   T Value { get; }
-  T? ValueOrDefault { get; }
-  bool IsDefault { get; }
+  T? GetValueOrDefault();
 
 #if NET7_0_OR_GREATER
 
@@ -100,7 +112,7 @@ public interface IReferenceTypePrimitive<TSelf, T>
   static abstract bool IsValid(
     T? value );
 
-  static abstract explicit operator T(
+  static abstract implicit operator T(
     TSelf primitive );
 
   static abstract explicit operator TSelf(

@@ -25,6 +25,21 @@ public partial class TestNewtonsoftJsonConverter: global::Newtonsoft.Json.JsonCo
       {
         value = global::System.DateTime.Parse( ( string ) reader.Value! );
       }
+      else if ( reader.TokenType == global::Newtonsoft.Json.JsonToken.Date )
+      {
+        if ( reader.Value is global::System.DateTime dateTime )
+        {
+          value = dateTime;
+        }
+        else if ( reader.Value is global::System.DateTimeOffset dateTimeOffset )
+        {
+          value = dateTimeOffset.DateTime;
+        }
+        else
+        {
+          throw new global::Newtonsoft.Json.JsonSerializationException( "Value must be a DateTime" );
+        }
+      }
       else
       {
         var converted = false;
@@ -62,7 +77,7 @@ public partial class TestNewtonsoftJsonConverter: global::Newtonsoft.Json.JsonCo
       throw new global::Newtonsoft.Json.JsonSerializationException( $"Unexpected object type: {value.GetType().Name}" );
     }
 
-    if( s.IsDefault )
+    if( !s.HasValue )
     {
       writer.WriteNull();
       return;

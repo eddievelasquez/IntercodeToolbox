@@ -63,12 +63,12 @@ public partial class TemplateCompiler
     var segments = new List<Segment>();
     var delimiter = _options.MacroDelimiter;
     var separator = _options.ArgumentSeparator;
+    var span = text.Span;
     var currentIndex = 0;
 
     while( currentIndex < text.Length )
     {
-      var macroStart = text.Span.Slice( currentIndex )
-                           .IndexOf( delimiter );
+      var macroStart = span.Slice( currentIndex ).IndexOf( delimiter );
 
       if( macroStart == -1 )
       {
@@ -86,8 +86,7 @@ public partial class TemplateCompiler
       }
 
       // Look for the closing macro delimiter
-      var macroEnd = text.Span.Slice( ( macroStart + 1 ) )
-                         .IndexOf( delimiter );
+      var macroEnd = span.Slice( macroStart + 1 ).IndexOf( delimiter );
 
       if( macroEnd == -1 )
       {
@@ -108,6 +107,7 @@ public partial class TemplateCompiler
       {
         var name = text.Slice( macroStart + 1, macroEnd - macroStart - 1 );
         var argStart = name.Span.IndexOf( separator );
+
         if( argStart != -1 )
         {
           var argument = name.Slice( argStart + 1 );
