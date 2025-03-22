@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Intercode.Toolbox.TypedPrimitives.Standard\Intercode.Toolbox.TypedPrimitives.Standard.csproj" />
+    <ProjectReference Include="..\Intercode.Toolbox.TypedPrimitives.Standard.Core\Intercode.Toolbox.TypedPrimitives.Standard.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

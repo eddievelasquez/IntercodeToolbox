@@ -2,10 +2,10 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2025, Intercode Consulting, Inc.
 
-namespace Intercode.Toolbox.TypedPrimitives.Standard.PostalCodes.CA;
+namespace Intercode.Toolbox.TypedPrimitives.Standard.Ca;
 
-using FluentResults;
 using System.Text.RegularExpressions;
+using FluentResults;
 
 [TypedPrimitive<string>]
 public readonly partial struct PostalCode

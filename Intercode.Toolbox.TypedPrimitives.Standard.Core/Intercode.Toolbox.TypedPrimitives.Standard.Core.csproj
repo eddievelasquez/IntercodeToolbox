@@ -16,13 +16,13 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <PackageId>Intercode.Toolbox.TypedPrimitives.Standard</PackageId>
-    <Title>Standard Typed Primitives</Title>
-    <Description>Collection of commonly used typed primitives.</Description>
+    <PackageId>Intercode.Toolbox.TypedPrimitives.Standard.US</PackageId>
+    <Title>Standard US Typed Primitives</Title>
+    <Description>Collection of commonly used US typed primitives.</Description>
     <Product>Intercode.Toolbox</Product>
     <Copyright>Intercode Consulting</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>;AOT;trim-compatible</PackageTags>
+    <PackageTags>TypePrimitive;US;ZipCode;SSN;AOT;trim-compatible</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
