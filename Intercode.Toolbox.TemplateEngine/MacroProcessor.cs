@@ -5,6 +5,7 @@
 namespace Intercode.Toolbox.TemplateEngine;
 
 using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 /// <summary>
@@ -28,11 +29,33 @@ public class MacroProcessor
   /// <summary>
   ///   Initializes a new instance of the <see cref="MacroProcessor" /> class.
   /// </summary>
+  /// <param name="options">The Template Engine options.</param>
+  public MacroProcessor(
+    TemplateEngineOptions? options = null )
+  {
+    // NOTE: _valueGenerators is unused with the new TemplateMacroValues class.The related methods have been deprecated
+    // and will be removed in a future release.
+    _valueGenerators = new Dictionary<string, MacroValueGenerator>().ToFrozenDictionary();
+    _options = options ?? TemplateEngineOptions.Default;
+
+#if NET9_0_OR_GREATER
+    _alternate = _valueGenerators.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
+  }
+
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="MacroProcessor" /> class.
+  /// </summary>
   /// <param name="valueGenerators">Macros with their corresponding value generators.</param>
   /// <param name="options">The Template Engine options.</param>
   /// <remarks>
   ///   The macro names in the <paramref name="valueGenerators" /> dictionary come surrounded by the delimiter character.
   /// </remarks>
+  [Obsolete(
+    "The MacroProcessorBuilder class is obsolete; use the constructor that doesn't take a valueGenerators dictionary.",
+    false
+  )]
+  [ExcludeFromCodeCoverage] // Obsolete code
   internal MacroProcessor(
     FrozenDictionary<string, MacroValueGenerator> valueGenerators,
     TemplateEngineOptions options )
@@ -65,6 +88,8 @@ public class MacroProcessor
   ///   The name of the macro. The macro name used here does not include the delimiter character.
   /// </param>
   /// <returns>The value of the macro, or null if the macro does not exist.</returns>
+  [Obsolete( "Macro values are obtained from a TemplateMacroValues instance", false )]
+  [ExcludeFromCodeCoverage] // Obsolete code
   public string? GetMacroValue(
     string macroName )
   {
@@ -79,6 +104,8 @@ public class MacroProcessor
   /// </param>
   /// <param name="argument">Data passed into the value generator.</param>
   /// <returns>The value of the macro, or null if the macro does not exist.</returns>
+  [Obsolete( "Macro values are obtained from a TemplateMacroValues instance", false )]
+  [ExcludeFromCodeCoverage] // Obsolete code
   public string? GetMacroValue(
     string macroName,
     ReadOnlySpan<char> argument )
@@ -91,6 +118,8 @@ public class MacroProcessor
   /// </summary>
   /// <param name="template">The template to process.</param>
   /// <param name="writer">The <see cref="TextWriter" /> to write the processed template to.</param>
+  [Obsolete( "Use the ProcessMacros overload that takes a TemplateMacroValues instance", false )]
+  [ExcludeFromCodeCoverage] // Obsolete code
   public void ProcessMacros(
     Template template,
     TextWriter writer )
@@ -149,6 +178,8 @@ public class MacroProcessor
   /// </summary>
   /// <param name="template">The template to process.</param>
   /// <param name="builder">The <see cref="Stream" /> to write the processed template to.</param>
+  [Obsolete( "Use the ProcessMacros overload that takes a TemplateMacroValues instance", false )]
+  [ExcludeFromCodeCoverage] // Obsolete code
   public void ProcessMacros(
     Template template,
     StringBuilder builder )
@@ -178,6 +209,107 @@ public class MacroProcessor
 
             builder.Append( value );
           }
+
+          break;
+        }
+
+        case SegmentKind.Delimiter:
+          builder.Append( _options.MacroDelimiter );
+          break;
+
+        case SegmentKind.Constant:
+#if NET6_0_OR_GREATER
+          builder.Append( segment.Memory.Span );
+#else
+
+          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+          builder.Append( segment.Memory.ToString() );
+#endif
+          break;
+
+        default:
+          throw new InvalidOperationException( "Unknown segment kind" );
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
+  /// </summary>
+  /// <param name="values">The set of macro values to process.</param>
+  /// <param name="writer">The <see cref="TextWriter" /> to write the processed template to.</param>
+  public void ProcessMacros(
+    TemplateMacroValues values,
+    TextWriter writer )
+  {
+    foreach( var segment in values.Template.Segments )
+    {
+      switch( segment.Kind )
+      {
+        case SegmentKind.Macro:
+        {
+          string value;
+
+          try
+          {
+            value = values.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
+          }
+          catch( Exception exception )
+          {
+            value = exception.Message;
+          }
+
+          writer.Write( value );
+          break;
+        }
+
+        case SegmentKind.Delimiter:
+          writer.Write( _options.MacroDelimiter );
+          break;
+
+        case SegmentKind.Constant:
+#if NET6_0_OR_GREATER
+          writer.Write( segment.Memory.Span );
+#else
+
+          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+          writer.Write( segment.Memory.ToString() );
+#endif
+          break;
+
+        default:
+          throw new InvalidOperationException( "Unknown segment kind" );
+      }
+    }
+  }
+
+  /// <summary>
+  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
+  /// </summary>
+  /// <param name="values">The template to process.</param>
+  /// <param name="builder">The <see cref="Stream" /> to write the processed template to.</param>
+  public void ProcessMacros(
+    TemplateMacroValues values,
+    StringBuilder builder )
+  {
+    foreach( var segment in values.Template.Segments )
+    {
+      switch( segment.Kind )
+      {
+        case SegmentKind.Macro:
+        {
+          string value;
+
+          try
+          {
+            value = values.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
+          }
+          catch( Exception exception )
+          {
+            value = exception.Message;
+          }
+
+          builder.Append( value );
 
           break;
         }

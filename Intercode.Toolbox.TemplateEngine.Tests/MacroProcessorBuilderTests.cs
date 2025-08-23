@@ -2,6 +2,8 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace Intercode.Toolbox.TemplateEngine.Tests;
 
 using FluentAssertions;
@@ -64,19 +66,19 @@ public class MacroProcessorBuilderTests
   }
 
   [Fact]
-  public void AddMacro_ShouldThrow_WhenMacroNameIsNull()
+  public void AddMacro_ShouldThrow_WhenMacroNameIsEmpty()
   {
     var builder = new MacroProcessorBuilder();
-    var act = () => builder.AddMacro( null!, "value" );
+    var act = () => builder.AddMacro( "", "value" );
 
     act.Should().Throw<ArgumentException>().WithMessage( "Value cannot be null or empty*" );
   }
 
   [Fact]
-  public void AddMacro_ShouldThrow_WhenMacroNameIsEmpty()
+  public void AddMacro_ShouldThrow_WhenMacroNameIsNull()
   {
     var builder = new MacroProcessorBuilder();
-    var act = () => builder.AddMacro( "", "value" );
+    var act = () => builder.AddMacro( null!, "value" );
 
     act.Should().Throw<ArgumentException>().WithMessage( "Value cannot be null or empty*" );
   }

@@ -2,6 +2,8 @@
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace Intercode.Toolbox.TemplateEngine.Benchmarks;
 
 internal class TemplateEngineHelper
@@ -113,6 +115,12 @@ internal class TemplateEngineHelper
     return new MacroProcessorBuilder()
            .AddMacros( Macros )
            .Build();
+  }
+
+  public TemplateMacroValues CreateMacroValues( Template template )
+  {
+    var values = template.CreateMacroValues().SetMacros( Macros );
+    return values;
   }
 
   #endregion

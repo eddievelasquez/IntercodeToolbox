@@ -48,8 +48,9 @@ public partial class TemplateCompiler
       throw new ArgumentException( "The template's text cannot be null or empty.", nameof( text ) );
     }
 
-    var segments = SplitIntoSegments( text.AsMemory() );
-    var template = new Template( segments );
+    var macroTable = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
+    var segments = SplitIntoSegments( text.AsMemory(), macroTable );
+    var template = new Template( segments, macroTable );
     return template;
   }
 
@@ -58,13 +59,18 @@ public partial class TemplateCompiler
   #region Implementation
 
   private Segment[] SplitIntoSegments(
-    ReadOnlyMemory<char> text )
+    ReadOnlyMemory<char> text,
+    Dictionary<string, int> macroTable )
   {
     var segments = new List<Segment>();
     var delimiter = _options.MacroDelimiter;
     var separator = _options.ArgumentSeparator;
     var span = text.Span;
     var currentIndex = 0;
+
+#if NET9_0_OR_GREATER
+    var macroTableLookup = macroTable.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
 
     while( currentIndex < text.Length )
     {
@@ -106,19 +112,38 @@ public partial class TemplateCompiler
       else
       {
         var name = text.Slice( macroStart + 1, macroEnd - macroStart - 1 );
+        var argument = ReadOnlyMemory<char>.Empty;
         var argStart = name.Span.IndexOf( separator );
 
         if( argStart != -1 )
         {
-          var argument = name.Slice( argStart + 1 );
+          argument = name.Slice( argStart + 1 );
           name = name.Slice( 0, argStart );
-          segments.Add( Segment.CreateMacro( name, argument ) );
         }
-        else
 
+#if NET9_0_OR_GREATER
+
+        // Use AlternateLookup to avoid allocations when possible
+        var macroName = name.Span;
+
+        // Use the existing slot number if the macro already exists; otherwise, create a new one
+        if( !macroTableLookup.TryGetValue( macroName, out var slotNumber ) )
         {
-          segments.Add( Segment.CreateMacro( name ) );
+          slotNumber = macroTable.Count;
+          macroTableLookup.TryAdd( macroName, slotNumber );
         }
+#else
+        var macroName = name.ToString();
+
+        // Use the existing slot number if the macro already exists; otherwise, create a new one
+        if( !macroTable.TryGetValue( macroName, out var slotNumber ) )
+        {
+          slotNumber = macroTable.Count;
+          macroTable.Add( macroName, slotNumber );
+        }
+#endif
+
+        segments.Add( Segment.CreateMacro( name, argument, slotNumber ) );
       }
 
       // Move the current index after the closing delimiter index

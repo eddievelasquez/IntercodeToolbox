@@ -53,6 +53,9 @@
     <None Include="README.md" Pack="True" PackagePath="" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Intercode.Toolbox.TemplateEngine.Tests" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" />

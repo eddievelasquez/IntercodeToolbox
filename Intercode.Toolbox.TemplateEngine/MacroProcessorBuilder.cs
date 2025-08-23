@@ -5,6 +5,7 @@
 namespace Intercode.Toolbox.TemplateEngine;
 
 using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 ///   Callback for dynamic macros.
@@ -16,6 +17,8 @@ public delegate string MacroValueGenerator(
 /// <summary>
 ///   Creates a <see cref="MacroProcessor" /> instance.
 /// </summary>
+[Obsolete( "The MacroProcessorBuilder class is obsolete; use the TemplateMacroValues class instead.", false )]
+[ExcludeFromCodeCoverage] // Obsolete class
 public class MacroProcessorBuilder
 {
   #region Fields
@@ -148,6 +151,7 @@ public class MacroProcessorBuilder
       for( var index = 0; index < input.Length; index++ )
       {
         var c = span[index];
+
         if( !char.IsLetterOrDigit( c ) && c is not ('_' or '-') )
         {
           return false;

@@ -4,6 +4,7 @@
 
 namespace Intercode.Toolbox.TemplateEngine;
 
+using System.Collections.Frozen;
 using System.Runtime.InteropServices;
 
 /// <summary>
@@ -16,21 +17,29 @@ public record Template
   /// <summary>
   ///   Represents a template with text and segments within the text.
   /// </summary>
-  /// <param name="Segments">The text segments that have been identified by the <see cref="TemplateCompiler" />.</param>
-  public Template(
-    Segment[] Segments )
+  /// <param name="segments">The text segments that have been identified by the <see cref="TemplateCompiler" />.</param>
+  /// <param name="macroTable">The dictionary containing macro names and their corresponding slot indices.</param>
+  internal Template(
+    Segment[] segments,
+    IDictionary<string, int> macroTable )
   {
-    if( Segments == null )
+    if( segments == null )
     {
-      throw new ArgumentNullException( nameof( Segments ) );
+      throw new ArgumentNullException( nameof( segments ) );
     }
 
-    if( Segments.Length == 0 )
+    if( segments.Length == 0 )
     {
-      throw new ArgumentException( "The template must have at least one segment.", nameof( Segments ) );
+      throw new ArgumentException( "The template must have at least one segment.", nameof( segments ) );
     }
 
-    this.Segments = Segments;
+    if( macroTable == null )
+    {
+      throw new ArgumentNullException( nameof( macroTable ) );
+    }
+
+    Segments = segments;
+    MacroTable = macroTable.ToFrozenDictionary( StringComparer.OrdinalIgnoreCase );
   }
 
   #endregion
@@ -56,9 +65,23 @@ public record Template
   /// <summary>The text segments that have been identified by the <see cref="TemplateCompiler" />.</summary>
   public Segment[] Segments { get; init; }
 
+  internal FrozenDictionary<string, int> MacroTable { get; init; }
+
   #endregion
 
   #region Public Methods
+
+  /// <summary>
+  ///   Creates an instance of <see cref="TemplateMacroValues" /> for the current template.
+  /// </summary>
+  /// <returns>
+  ///   A new <see cref="TemplateMacroValues" /> object that provides functionality
+  ///   to manage and retrieve macro values associated with the template.
+  /// </returns>
+  public TemplateMacroValues CreateMacroValues()
+  {
+    return new TemplateMacroValues( this );
+  }
 
   /// <summary>
   ///   Deconstructs the <see cref="Template" /> into its segments.

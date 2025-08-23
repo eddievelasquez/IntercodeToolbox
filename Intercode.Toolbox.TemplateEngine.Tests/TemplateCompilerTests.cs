@@ -128,6 +128,51 @@ public class TemplateCompilerTests
   }
 
   [Fact]
+  public void Compile_ShouldReturnThreeMacroValues_WhenTemplateContainsThreeDifferentMacros()
+  {
+    const string Text = "$macroA$$macroB$$macroC$";
+
+    var compiler = new TemplateCompiler();
+    var template = compiler.Compile( Text );
+
+    template.Should()
+            .NotBeNull();
+
+    template.Segments.Should()
+            .HaveCount( 3 );
+
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
+
+    template.Segments[1]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.ValueSlot == 1 );
+
+    template.Segments[2]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroC" && s.ValueSlot == 2 );
+
+    template.MacroTable.Should()
+            .HaveCount( 3 );
+
+    template.MacroTable.Should()
+            .ContainKey( "macroA" )
+            .WhoseValue.Should()
+            .Be( 0 );
+
+    template.MacroTable.Should()
+            .ContainKey( "macroB" )
+            .WhoseValue.Should()
+            .Be( 1 );
+
+    template.MacroTable.Should()
+            .ContainKey( "macroC" )
+            .WhoseValue.Should()
+            .Be( 2 );
+  }
+
+  [Fact]
   public void Compile_ShouldReturnThreeSegments_WhenEscapedDelimiterIsBetweenMacroSegments()
   {
     const string Text = "$macro$$$$macro$";
@@ -179,6 +224,46 @@ public class TemplateCompilerTests
     template.Segments[2]
             .Should()
             .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == " template." );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnTwoMacroValues_WhenTemplateContainsTwoDifferentMacrosAndOneRepeated()
+  {
+    const string Text = "$macroA$$macroB$$macroA$";
+
+    var compiler = new TemplateCompiler();
+    var template = compiler.Compile( Text );
+
+    template.Should()
+            .NotBeNull();
+
+    template.Segments.Should()
+            .HaveCount( 3 );
+
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
+
+    template.Segments[1]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.ValueSlot == 1 );
+
+    template.Segments[2]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
+
+    template.MacroTable.Should()
+            .HaveCount( 2 );
+
+    template.MacroTable.Should()
+            .ContainKey( "macroA" )
+            .WhoseValue.Should()
+            .Be( 0 );
+
+    template.MacroTable.Should()
+            .ContainKey( "macroB" )
+            .WhoseValue.Should()
+            .Be( 1 );
   }
 
   #endregion
