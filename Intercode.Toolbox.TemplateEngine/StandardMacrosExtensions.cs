@@ -60,10 +60,10 @@ public static class StandardMacrosExtensions
   #region Public Methods
 
   /// <summary>
-  ///   Adds standard macros to the <see cref="MacroProcessorBuilder" />.
+  ///   Adds standard macros to the <see cref="TemplateContext" />.
   /// </summary>
-  /// <param name="builder">The <see cref="MacroProcessorBuilder" /> to add macros to.</param>
-  /// <returns>The <see cref="MacroProcessorBuilder" /> with the added macros.</returns>
+  /// <param name="context">The <see cref="TemplateContext" /> to add macros to.</param>
+  /// <returns>The <see cref="TemplateContext" /> with the added macros.</returns>
   /// <remarks>
   ///   <list type="table">
   ///     <listheader>
@@ -120,94 +120,19 @@ public static class StandardMacrosExtensions
   ///   </list>
   ///   <para>NOTE: If a generator throws an exception, the macro's value will be the exception's error message.</para>
   /// </remarks>
-  [Obsolete( "The MacroProcessorBuilder class is obsolete; use the TemplateMacroValues class instead.", false )]
-  public static MacroProcessorBuilder AddStandardMacros(
-    this MacroProcessorBuilder builder )
+  public static TemplateContext AddStandardMacros(
+    this TemplateContext context )
   {
-    return builder
-           .AddMacro( NowMacroName, NowGenerator )
-           .AddMacro( UtcNowMacroName, UtcNowGenerator )
-           .AddMacro( GuidMacroName, GuidGenerator )
-           .AddMacro( MachineMacroName, _ => Environment.MachineName )
-           .AddMacro( OsMacroName, _ => Environment.OSVersion.VersionString )
-           .AddMacro( UserMacroName, _ => Environment.UserName )
-           .AddMacro( ClrVersionMacroName, _ => Environment.Version.ToString() )
-           .AddMacro( EnvMacroName, EnvironmentVarGenerator );
-  }
+    context.AddMacro( NowMacroName, NowGenerator );
+    context.AddMacro( UtcNowMacroName, UtcNowGenerator );
+    context.AddMacro( GuidMacroName, GuidGenerator );
+    context.AddMacro( MachineMacroName, _ => Environment.MachineName );
+    context.AddMacro( OsMacroName, _ => Environment.OSVersion.VersionString );
+    context.AddMacro( UserMacroName, _ => Environment.UserName );
+    context.AddMacro( ClrVersionMacroName, _ => Environment.Version.ToString() );
+    context.AddMacro( EnvMacroName, EnvironmentVarGenerator );
 
-  /// <summary>
-  ///   Adds standard macros to the <see cref="MacroProcessorBuilder" />.
-  /// </summary>
-  /// <param name="macroValues">The <see cref="MacroProcessorBuilder" /> to add macros to.</param>
-  /// <returns>The <see cref="MacroProcessorBuilder" /> with the added macros.</returns>
-  /// <remarks>
-  ///   <list type="table">
-  ///     <listheader>
-  ///       <term>Name</term>
-  ///       <description>Description</description>
-  ///     </listheader>
-  ///     <item>
-  ///       <term>NOW</term>
-  ///       <description>
-  ///         Gets the current local date and time. The optional argument is the format string passed to the
-  ///         <see cref="DateTime.ToString(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>UTC_NOW</term>
-  ///       <description>
-  ///         Gets the current UTC date and time. The optional argument is the format string passed to the
-  ///         <see cref="DateTime.ToString(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>GUID</term>
-  ///       <description>
-  ///         Generates a new Guid. The optional argument is the format string passed to the
-  ///         <see cref="Guid.ToString(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>MACHINE</term>
-  ///       <description>
-  ///         Gets the name of the local computer as returned by the <see cref="Environment.MachineName" />
-  ///         property.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>OS</term>
-  ///       <description>Gets the operating system version as returned by the <see cref="Environment.OSVersion" /> property.</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>USER</term>
-  ///       <description>Gets the name of the current user as returned by the <see cref="Environment.UserName" /> property.</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>CLR_VERSION</term>
-  ///       <description>Gets the CLR version as returned by the <see cref="Environment.Version" /> property.</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>ENV</term>
-  ///       <description>
-  ///         Gets the value of the environment variable specified by the argument as return by the
-  ///         <see cref="Environment.GetEnvironmentVariable(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///   </list>
-  ///   <para>NOTE: If a generator throws an exception, the macro's value will be the exception's error message.</para>
-  /// </remarks>
-  public static TemplateMacroValues AddStandardMacros(
-    this TemplateMacroValues macroValues )
-  {
-    return macroValues
-           .SetMacro( NowMacroName, NowGenerator )
-           .SetMacro( UtcNowMacroName, UtcNowGenerator )
-           .SetMacro( GuidMacroName, GuidGenerator )
-           .SetMacro( MachineMacroName, _ => Environment.MachineName )
-           .SetMacro( OsMacroName, _ => Environment.OSVersion.VersionString )
-           .SetMacro( UserMacroName, _ => Environment.UserName )
-           .SetMacro( ClrVersionMacroName, _ => Environment.Version.ToString() )
-           .SetMacro( EnvMacroName, EnvironmentVarGenerator );
+    return context;
   }
 
   #endregion

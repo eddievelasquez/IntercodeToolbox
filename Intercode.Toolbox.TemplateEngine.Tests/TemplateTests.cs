@@ -11,17 +11,9 @@ public class TemplateTests
   #region Tests
 
   [Fact]
-  public void Constructor_ShouldThrow_WhenMacroTableIsNull()
-  {
-    Action act = () => new Template( [new Segment()], null! );
-
-    act.Should().Throw<ArgumentException>().WithParameterName( "macroTable" );
-  }
-
-  [Fact]
   public void Constructor_ShouldThrow_WhenSegmentsIsEmpty()
   {
-    Action act = () => new Template( [], new Dictionary<string, int>() );
+    Action act = () => new Template( new TemplateContext(), [] );
 
     act.Should().Throw<ArgumentException>().WithParameterName( "segments" );
   }
@@ -29,7 +21,7 @@ public class TemplateTests
   [Fact]
   public void Constructor_ShouldThrow_WhenSegmentsIsNull()
   {
-    Action act = () => new Template( null!, new Dictionary<string, int>() );
+    Action act = () => new Template( new TemplateContext(), null! );
 
     act.Should().Throw<ArgumentNullException>().WithParameterName( "segments" );
   }
@@ -43,8 +35,10 @@ public class TemplateTests
       Segment.CreateMacro( ReadOnlyMemory<char>.Empty, 0 )
     ];
 
-    var template = new Template( segments, new Dictionary<string, int>() );
-    template.Deconstruct( out var actualSegments );
+    var context = new TemplateContext();
+    var template = new Template( context, segments );
+    template.Deconstruct( out var actualContext, out var actualSegments );
+    actualContext.Should().Be( context );
     actualSegments.Should().BeSameAs( segments );
   }
 

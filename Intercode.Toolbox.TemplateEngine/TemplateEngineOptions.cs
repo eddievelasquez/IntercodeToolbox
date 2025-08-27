@@ -28,61 +28,63 @@ public class TemplateEngineOptions
 
   #endregion
 
-  #region Constructors
+  #region Fields
 
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="TemplateEngineOptions" /> class.
-  /// </summary>
-  /// <param name="macroDelimiter">
-  ///   The macro delimiter. Will default to <see cref="DefaultMacroDelimiter" /> if <c>null</c>.
-  /// </param>
-  /// <param name="argumentSeparator">
-  ///   The macro's argument separator. Will default to <see cref="DefaultArgumentSeparator" /> if <c>null</c>.
-  /// </param>
-  /// <exception cref="ArgumentException">
-  ///   Thrown if <paramref name="macroDelimiter" /> or <paramref name="argumentSeparator" /> is not a punctuation character.
-  /// </exception>
-  public TemplateEngineOptions(
-    char? macroDelimiter = null,
-    char? argumentSeparator = null )
-  {
-    MacroDelimiter = EnsureIsPunctuation( macroDelimiter, DefaultMacroDelimiter, nameof( macroDelimiter ) );
-    ArgumentSeparator = EnsureIsPunctuation( argumentSeparator, DefaultArgumentSeparator, nameof( argumentSeparator ) );
-    return;
-
-    static char EnsureIsPunctuation(
-      char? c,
-      char defaultValue,
-      string argName )
-    {
-      if( c is null )
-      {
-        return defaultValue;
-      }
-
-      var p = c.Value;
-      if( !char.IsPunctuation( p ) )
-      {
-        throw new ArgumentException( "Must be a punctuation character", argName );
-      }
-
-      return p;
-    }
-  }
+  private readonly char _macroDelimiter = DefaultMacroDelimiter;
+  private readonly char _argumentSeparator = DefaultArgumentSeparator;
 
   #endregion
 
   #region Properties
 
   /// <summary>
-  ///   Gets the macro delimiter.
+  ///   Gets or initializes the macro delimiter. Will default to <see cref="DefaultMacroDelimiter" /> if <c>null</c>.
   /// </summary>
-  public char MacroDelimiter { get; }
+  /// <exception cref="ArgumentException">
+  ///   Thrown if <paramref name="value" /> is not a punctuation character.
+  /// </exception>
+  public char MacroDelimiter
+  {
+    get => _macroDelimiter;
+    init => _macroDelimiter = EnsureIsPunctuation( value, nameof( MacroDelimiter ) );
+  }
 
   /// <summary>
-  ///   Gets the macro's argument separator
+  ///   Gets the macro's argument separator. Will default to <see cref="DefaultArgumentSeparator" /> if <c>null</c>.
   /// </summary>
-  public char ArgumentSeparator { get; }
+  /// <exception cref="ArgumentException">
+  ///   Thrown if <paramref name="value" /> is not a punctuation character.
+  /// </exception>
+  public char ArgumentSeparator
+  {
+    get => _argumentSeparator;
+    init => _argumentSeparator = EnsureIsPunctuation( value, nameof( ArgumentSeparator ) );
+  }
+
+  /// <summary>
+  ///   Gets or initializes a value indicating whether the standard macros should be registered
+  ///   by the template engine.
+  /// </summary>
+  /// <value>
+  ///   <c>true</c> if the standard macros should be registered; otherwise, <c>false</c>.
+  /// </value>
+  public bool RegisterStandardMacros { get; init; }
+
+  #endregion
+
+  #region Implementation
+
+  private static char EnsureIsPunctuation(
+    char c,
+    string argName )
+  {
+    if( !char.IsPunctuation( c ) )
+    {
+      throw new ArgumentException( "Must be a punctuation character", argName );
+    }
+
+    return c;
+  }
 
   #endregion
 }

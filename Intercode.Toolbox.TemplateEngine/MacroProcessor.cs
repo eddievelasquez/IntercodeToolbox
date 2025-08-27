@@ -1,248 +1,36 @@
 // Module Name: MacroProcessor.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine;
 
-using System.Collections.Frozen;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 /// <summary>
 ///   Processes macros in a template.
 /// </summary>
-public class MacroProcessor
+public static class MacroProcessor
 {
-  #region Fields
-
-  private readonly FrozenDictionary<string, MacroValueGenerator> _valueGenerators;
-  private readonly TemplateEngineOptions _options;
-
-#if NET9_0_OR_GREATER
-  private readonly FrozenDictionary<string, MacroValueGenerator>.AlternateLookup<ReadOnlySpan<char>> _alternate;
-#endif
-
-  #endregion
-
-  #region Constructors
-
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="MacroProcessor" /> class.
-  /// </summary>
-  /// <param name="options">The Template Engine options.</param>
-  public MacroProcessor(
-    TemplateEngineOptions? options = null )
-  {
-    // NOTE: _valueGenerators is unused with the new TemplateMacroValues class.The related methods have been deprecated
-    // and will be removed in a future release.
-    _valueGenerators = new Dictionary<string, MacroValueGenerator>().ToFrozenDictionary();
-    _options = options ?? TemplateEngineOptions.Default;
-
-#if NET9_0_OR_GREATER
-    _alternate = _valueGenerators.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
-  }
-
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="MacroProcessor" /> class.
-  /// </summary>
-  /// <param name="valueGenerators">Macros with their corresponding value generators.</param>
-  /// <param name="options">The Template Engine options.</param>
-  /// <remarks>
-  ///   The macro names in the <paramref name="valueGenerators" /> dictionary come surrounded by the delimiter character.
-  /// </remarks>
-  [Obsolete(
-    "The MacroProcessorBuilder class is obsolete; use the constructor that doesn't take a valueGenerators dictionary.",
-    false
-  )]
-  [ExcludeFromCodeCoverage] // Obsolete code
-  internal MacroProcessor(
-    FrozenDictionary<string, MacroValueGenerator> valueGenerators,
-    TemplateEngineOptions options )
-  {
-    _valueGenerators = valueGenerators;
-    _options = options;
-
-#if NET9_0_OR_GREATER
-    _alternate = _valueGenerators.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
-  }
-
-  #endregion
-
-  #region Properties
-
-  /// <summary>
-  ///   Gets the number of registered macros.
-  /// </summary>
-  public int MacroCount => _valueGenerators.Count;
-
-  #endregion
-
   #region Public Methods
 
   /// <summary>
-  ///   Gets the value of a macro or <c>null</c> if not found.
-  /// </summary>
-  /// <param name="macroName">
-  ///   The name of the macro. The macro name used here does not include the delimiter character.
-  /// </param>
-  /// <returns>The value of the macro, or null if the macro does not exist.</returns>
-  [Obsolete( "Macro values are obtained from a TemplateMacroValues instance", false )]
-  [ExcludeFromCodeCoverage] // Obsolete code
-  public string? GetMacroValue(
-    string macroName )
-  {
-    return _valueGenerators.TryGetValue( macroName, out var generator ) ? generator( ReadOnlySpan<char>.Empty ) : null;
-  }
-
-  /// <summary>
-  ///   Gets the value of a macro or <c>null</c> if not found.
-  /// </summary>
-  /// <param name="macroName">
-  ///   The name of the macro. The macro name used here does not include the delimiter character.
-  /// </param>
-  /// <param name="argument">Data passed into the value generator.</param>
-  /// <returns>The value of the macro, or null if the macro does not exist.</returns>
-  [Obsolete( "Macro values are obtained from a TemplateMacroValues instance", false )]
-  [ExcludeFromCodeCoverage] // Obsolete code
-  public string? GetMacroValue(
-    string macroName,
-    ReadOnlySpan<char> argument )
-  {
-    return _valueGenerators.TryGetValue( macroName, out var generator ) ? generator( argument ) : null;
-  }
-
-  /// <summary>
   ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
   /// </summary>
-  /// <param name="template">The template to process.</param>
+  /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
   /// <param name="writer">The <see cref="TextWriter" /> to write the processed template to.</param>
-  [Obsolete( "Use the ProcessMacros overload that takes a TemplateMacroValues instance", false )]
-  [ExcludeFromCodeCoverage] // Obsolete code
-  public void ProcessMacros(
+  /// <exception cref="InvalidOperationException">Thrown when an unknown segment kind is encountered.</exception>
+  /// <remarks>
+  ///   This method iterates through the segments of the provided template, processes macros, and writes the result to the
+  ///   specified <see cref="TextWriter" />.
+  /// </remarks>
+  public static void ProcessMacros(
     Template template,
     TextWriter writer )
   {
+    var context = template.Context;
+    var macroDelimiter = context.Options.MacroDelimiter;
+
     foreach( var segment in template.Segments )
-    {
-      switch( segment.Kind )
-      {
-        case SegmentKind.Macro:
-        {
-#if NET9_0_OR_GREATER
-          if( _alternate.TryGetValue( segment.Memory.Span, out var generator ) )
-#else
-          if( _valueGenerators.TryGetValue( segment.Text, out var generator ) )
-#endif
-          {
-            string value;
-
-            try
-            {
-              value = generator( segment.ArgumentMemory.Span );
-            }
-            catch( Exception exception )
-            {
-              value = exception.Message;
-            }
-
-            writer.Write( value );
-          }
-
-          break;
-        }
-
-        case SegmentKind.Delimiter:
-          writer.Write( _options.MacroDelimiter );
-          break;
-
-        case SegmentKind.Constant:
-#if NET6_0_OR_GREATER
-          writer.Write( segment.Memory.Span );
-#else
-
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-          writer.Write( segment.Memory.ToString() );
-#endif
-          break;
-
-        default:
-          throw new InvalidOperationException( "Unknown segment kind" );
-      }
-    }
-  }
-
-  /// <summary>
-  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
-  /// </summary>
-  /// <param name="template">The template to process.</param>
-  /// <param name="builder">The <see cref="Stream" /> to write the processed template to.</param>
-  [Obsolete( "Use the ProcessMacros overload that takes a TemplateMacroValues instance", false )]
-  [ExcludeFromCodeCoverage] // Obsolete code
-  public void ProcessMacros(
-    Template template,
-    StringBuilder builder )
-  {
-    foreach( var segment in template.Segments )
-    {
-      switch( segment.Kind )
-      {
-        case SegmentKind.Macro:
-        {
-#if NET9_0_OR_GREATER
-          if( _alternate.TryGetValue( segment.Memory.Span, out var generator ) )
-#else
-          if( _valueGenerators.TryGetValue( segment.Text, out var generator ) )
-#endif
-          {
-            string value;
-
-            try
-            {
-              value = generator( segment.ArgumentMemory.Span );
-            }
-            catch( Exception exception )
-            {
-              value = exception.Message;
-            }
-
-            builder.Append( value );
-          }
-
-          break;
-        }
-
-        case SegmentKind.Delimiter:
-          builder.Append( _options.MacroDelimiter );
-          break;
-
-        case SegmentKind.Constant:
-#if NET6_0_OR_GREATER
-          builder.Append( segment.Memory.Span );
-#else
-
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-          builder.Append( segment.Memory.ToString() );
-#endif
-          break;
-
-        default:
-          throw new InvalidOperationException( "Unknown segment kind" );
-      }
-    }
-  }
-
-  /// <summary>
-  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
-  /// </summary>
-  /// <param name="values">The set of macro values to process.</param>
-  /// <param name="writer">The <see cref="TextWriter" /> to write the processed template to.</param>
-  public void ProcessMacros(
-    TemplateMacroValues values,
-    TextWriter writer )
-  {
-    foreach( var segment in values.Template.Segments )
     {
       switch( segment.Kind )
       {
@@ -252,7 +40,7 @@ public class MacroProcessor
 
           try
           {
-            value = values.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
+            value = context.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
           }
           catch( Exception exception )
           {
@@ -264,7 +52,7 @@ public class MacroProcessor
         }
 
         case SegmentKind.Delimiter:
-          writer.Write( _options.MacroDelimiter );
+          writer.Write( macroDelimiter );
           break;
 
         case SegmentKind.Constant:
@@ -284,15 +72,19 @@ public class MacroProcessor
   }
 
   /// <summary>
-  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
+  ///   Processes macros in a template and writes the result to a <see cref="StringBuilder" />.
   /// </summary>
-  /// <param name="values">The template to process.</param>
-  /// <param name="builder">The <see cref="Stream" /> to write the processed template to.</param>
-  public void ProcessMacros(
-    TemplateMacroValues values,
+  /// <param name="template">The template containing the macros to process.</param>
+  /// <param name="builder">The <see cref="StringBuilder" /> to write the processed template to.</param>
+  /// <exception cref="InvalidOperationException">Thrown when an unknown segment kind is encountered.</exception>
+  public static void ProcessMacros(
+    Template template,
     StringBuilder builder )
   {
-    foreach( var segment in values.Template.Segments )
+    var context = template.Context;
+    var macroDelimiter = context.Options.MacroDelimiter;
+
+    foreach( var segment in template.Segments )
     {
       switch( segment.Kind )
       {
@@ -302,7 +94,7 @@ public class MacroProcessor
 
           try
           {
-            value = values.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
+            value = context.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
           }
           catch( Exception exception )
           {
@@ -315,7 +107,7 @@ public class MacroProcessor
         }
 
         case SegmentKind.Delimiter:
-          builder.Append( _options.MacroDelimiter );
+          builder.Append( macroDelimiter );
           break;
 
         case SegmentKind.Constant:

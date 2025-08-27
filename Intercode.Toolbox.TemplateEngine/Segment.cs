@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 /// <summary>
 ///   Represents a text segment in a <see cref="Template" />.
 /// </summary>
-[DebuggerDisplay( "Kind = {Kind}, Text = {Memory}" )]
+[DebuggerDisplay( "Kind = {Kind}, Text = {Memory}, Slot = {ValueSlot}" )]
 public readonly record struct Segment
 {
   #region Constructors

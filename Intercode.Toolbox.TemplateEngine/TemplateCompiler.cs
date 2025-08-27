@@ -1,76 +1,58 @@
 // Module Name: TemplateCompiler.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine;
 
 /// <summary>
 ///   Compiles a template text into a <see cref="Template" />.
 /// </summary>
-public partial class TemplateCompiler
+public static class TemplateCompiler
 {
-  #region Fields
-
-  private readonly TemplateEngineOptions _options;
-
-  #endregion
-
-  #region Constructors
-
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="TemplateCompiler" /> class.
-  /// </summary>
-  /// <param name="options">
-  ///   The Template Engine Options. Will use to <see cref="TemplateEngineOptions.Default" /> if
-  ///   <c>null</c>.
-  /// </param>
-  public TemplateCompiler(
-    TemplateEngineOptions? options = null )
-  {
-    _options = options ?? TemplateEngineOptions.Default;
-  }
-
-  #endregion
-
   #region Public Methods
 
   /// <summary>
-  ///   Compiles a template text into a <see cref="Template" />.
+  ///   Compiles the specified template text into a <see cref="Template" />.
   /// </summary>
+  /// <param name="context">The <see cref="TemplateContext" /> providing macros and options for compilation.</param>
   /// <param name="text">The template text to compile.</param>
   /// <returns>The compiled <see cref="Template" />.</returns>
-  /// <exception cref="ArgumentException">Thrown with the template <paramref name="text" /> is <c>null</c> or empty.</exception>
-  public Template Compile(
+  /// <exception cref="ArgumentNullException">Thrown when <paramref name="context" /> is <c>null</c>.</exception>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the template <paramref name="text" /> is <c>null</c>, empty, or
+  ///   consists only of whitespace.
+  /// </exception>
+  public static Template Compile(
+    TemplateContext context,
     string text )
   {
-    if( string.IsNullOrEmpty( text ) )
+    if( context == null )
     {
-      throw new ArgumentException( "The template's text cannot be null or empty.", nameof( text ) );
+      throw new ArgumentNullException( nameof( context ) );
     }
 
-    var macroTable = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
-    var segments = SplitIntoSegments( text.AsMemory(), macroTable );
-    var template = new Template( segments, macroTable );
-    return template;
+    if( string.IsNullOrWhiteSpace( text ) )
+    {
+      throw new ArgumentException( "The template's text cannot be null, empty, or whitespace.", nameof( text ) );
+    }
+
+    var segments = SplitIntoSegments( context, text.AsMemory() );
+    return new Template( context, segments );
   }
 
   #endregion
 
   #region Implementation
 
-  private Segment[] SplitIntoSegments(
-    ReadOnlyMemory<char> text,
-    Dictionary<string, int> macroTable )
+  private static Segment[] SplitIntoSegments(
+    TemplateContext context,
+    ReadOnlyMemory<char> text )
   {
     var segments = new List<Segment>();
-    var delimiter = _options.MacroDelimiter;
-    var separator = _options.ArgumentSeparator;
+    var delimiter = context.Options.MacroDelimiter;
+    var separator = context.Options.ArgumentSeparator;
     var span = text.Span;
     var currentIndex = 0;
-
-#if NET9_0_OR_GREATER
-    var macroTableLookup = macroTable.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
 
     while( currentIndex < text.Length )
     {
@@ -122,25 +104,9 @@ public partial class TemplateCompiler
         }
 
 #if NET9_0_OR_GREATER
-
-        // Use AlternateLookup to avoid allocations when possible
-        var macroName = name.Span;
-
-        // Use the existing slot number if the macro already exists; otherwise, create a new one
-        if( !macroTableLookup.TryGetValue( macroName, out var slotNumber ) )
-        {
-          slotNumber = macroTable.Count;
-          macroTableLookup.TryAdd( macroName, slotNumber );
-        }
+        var slotNumber = context.AddMacro( name.Span );
 #else
-        var macroName = name.ToString();
-
-        // Use the existing slot number if the macro already exists; otherwise, create a new one
-        if( !macroTable.TryGetValue( macroName, out var slotNumber ) )
-        {
-          slotNumber = macroTable.Count;
-          macroTable.Add( macroName, slotNumber );
-        }
+        var slotNumber = context.AddMacro( name.ToString() );
 #endif
 
         segments.Add( Segment.CreateMacro( name, argument, slotNumber ) );

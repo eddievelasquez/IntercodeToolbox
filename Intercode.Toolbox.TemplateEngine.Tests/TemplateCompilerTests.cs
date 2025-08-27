@@ -1,6 +1,6 @@
 // Module Name: TemplateCompilerTests.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine.Tests;
 
@@ -15,8 +15,7 @@ public class TemplateCompilerTests
   {
     const string Text = "template $$";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -38,8 +37,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$$ template.";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -61,8 +59,7 @@ public class TemplateCompilerTests
   {
     const string Text = "012345$$$$012345";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -92,10 +89,9 @@ public class TemplateCompilerTests
   [Fact]
   public void Compile_ShouldReturnSingleConstantSegment_WhenTemplateHasNoMacros()
   {
-    var text = "I have no macros";
+    const string Text = "I have no macros";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -105,16 +101,15 @@ public class TemplateCompilerTests
 
     template.Segments.Single()
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == text );
+            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == Text );
   }
 
   [Fact]
   public void Compile_ShouldReturnSingleMacroSegment_WhenTemplateIsOnlyTheMacro()
   {
-    var text = "$macro$";
+    const string Text = "$macro$";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -132,8 +127,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$macroA$$macroB$$macroC$";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var context = new TemplateContext();
+    var template = TemplateCompiler.Compile( context, Text );
 
     template.Should()
             .NotBeNull();
@@ -153,23 +148,11 @@ public class TemplateCompilerTests
             .Should()
             .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroC" && s.ValueSlot == 2 );
 
-    template.MacroTable.Should()
-            .HaveCount( 3 );
+    context.MacroCount.Should().Be( 3 );
 
-    template.MacroTable.Should()
-            .ContainKey( "macroA" )
-            .WhoseValue.Should()
-            .Be( 0 );
-
-    template.MacroTable.Should()
-            .ContainKey( "macroB" )
-            .WhoseValue.Should()
-            .Be( 1 );
-
-    template.MacroTable.Should()
-            .ContainKey( "macroC" )
-            .WhoseValue.Should()
-            .Be( 2 );
+    context.GetMacroSlot( "macroA" ).Should().Be( 0 );
+    context.GetMacroSlot( "macroB" ).Should().Be( 1 );
+    context.GetMacroSlot( "macroC" ).Should().Be( 2 );
   }
 
   [Fact]
@@ -177,8 +160,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro$$$$macro$";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -204,8 +186,7 @@ public class TemplateCompilerTests
   {
     const string Text = "This is a $macro$ template.";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -231,8 +212,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$macroA$$macroB$$macroA$";
 
-    var compiler = new TemplateCompiler();
-    var template = compiler.Compile( Text );
+    var context = new TemplateContext();
+    var template = TemplateCompiler.Compile( context, Text );
 
     template.Should()
             .NotBeNull();
@@ -252,18 +233,9 @@ public class TemplateCompilerTests
             .Should()
             .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
 
-    template.MacroTable.Should()
-            .HaveCount( 2 );
-
-    template.MacroTable.Should()
-            .ContainKey( "macroA" )
-            .WhoseValue.Should()
-            .Be( 0 );
-
-    template.MacroTable.Should()
-            .ContainKey( "macroB" )
-            .WhoseValue.Should()
-            .Be( 1 );
+    context.MacroCount.Should().Be( 2 );
+    context.GetMacroSlot( "macroA" ).Should().Be( 0 );
+    context.GetMacroSlot( "macroB" ).Should().Be( 1 );
   }
 
   #endregion
