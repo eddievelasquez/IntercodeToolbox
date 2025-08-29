@@ -11,6 +11,14 @@ namespace Intercode.Toolbox.TemplateEngine;
 public delegate string MacroValueGenerator(
   ReadOnlySpan<char> argument );
 
+/// <summary>
+///   Represents the context for a template engine, providing functionality to manage macros and their values.
+/// </summary>
+/// <remarks>
+///   This class is used to define and manage macros within a template engine. It supports adding macros with
+///   static or dynamic values, retrieving macro values, and managing macro slots. The context is initialized
+///   with options that configure its behavior, such as registering standard macros.
+/// </remarks>
 public class TemplateContext
 {
   #region Constants

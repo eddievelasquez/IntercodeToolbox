@@ -1,12 +1,21 @@
-// Module Name: TemplateEngineHelper.cs
+// Module Name: MacroProcessingBenchmarks.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Intercode.Toolbox.TemplateEngine.Benchmarks;
 
-internal class TemplateEngineHelper
+using System.Text;
+using System.Text.RegularExpressions;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
+
+[HideColumns( "Error", "StdDev", "Median", "RatioSD" )]
+[MemoryDiagnoser]
+[SimpleJob( RuntimeMoniker.Net80, baseline: true )]
+[SimpleJob( RuntimeMoniker.Net90 )]
+public partial class MacroProcessingBenchmarks
 {
   #region Constants
 
@@ -85,6 +94,24 @@ internal class TemplateEngineHelper
 
   #endregion
 
+  #region Fields
+
+  private readonly Template _template;
+
+  #endregion
+
+  #region Constructors
+
+  public MacroProcessingBenchmarks()
+  {
+    var context = new TemplateContext();
+    context.AddMacros( Macros );
+
+    _template = TemplateCompiler.Compile( context, TemplateText );
+  }
+
+  #endregion
+
   #region Properties
 
   public IReadOnlyDictionary<string, string> Macros =>
@@ -103,25 +130,79 @@ internal class TemplateEngineHelper
 
   #region Public Methods
 
-  public Template Compile(
-    string? templateText = null )
+  [Benchmark]
+  public void UsingMacroProcessorWithPooledStringBuilder()
   {
-    var compiler = new TemplateCompiler();
-    return compiler.Compile( templateText ?? TemplateText );
+    var builder = StringBuilderPool.Default.Get();
+
+    try
+    {
+      MacroProcessor.ProcessMacros( _template, builder );
+    }
+    finally
+    {
+      StringBuilderPool.Default.Return( builder );
+    }
   }
 
-  public MacroProcessor CreateMacroProcessor()
+  [Benchmark]
+  public void UsingMacroProcessorWithStringBuilder()
   {
-    return new MacroProcessorBuilder()
-           .AddMacros( Macros )
-           .Build();
+    var builder = new StringBuilder();
+    MacroProcessor.ProcessMacros( _template, builder );
   }
 
-  public TemplateMacroValues CreateMacroValues( Template template )
+  [Benchmark]
+  public void UsingMacroProcessorWithTextWriter()
   {
-    var values = template.CreateMacroValues().SetMacros( Macros );
-    return values;
+    var writer = new StringWriter();
+    MacroProcessor.ProcessMacros( _template, writer );
   }
+
+  [Benchmark]
+  public void UsingStringBuilderReplace()
+  {
+    var sb = new StringBuilder( TemplateText );
+
+    foreach( var (macro, value) in Macros )
+    {
+      sb.Replace( macro, value );
+    }
+
+    var processed = sb.ToString();
+  }
+
+  [Benchmark]
+  public void UsingRegularExpressions()
+  {
+    var result = CreateMacroNameRegex()
+      .Replace(
+        TemplateText,
+        match =>
+        {
+          var key = match.Groups[1].Value;
+          return Macros.TryGetValue( key, out var value ) ? value : match.Value;
+        }
+      );
+  }
+
+  [Benchmark( Baseline = true )]
+  public void UsingStringReplace()
+  {
+    var result = TemplateText;
+
+    foreach( var (macroName, value) in Macros )
+    {
+      result = result.Replace( $"${macroName}$", value, StringComparison.OrdinalIgnoreCase );
+    }
+  }
+
+  #endregion
+
+  #region Implementation
+
+  [GeneratedRegex( @"\$([^$]+)\$" )]
+  private static partial Regex CreateMacroNameRegex();
 
   #endregion
 }
