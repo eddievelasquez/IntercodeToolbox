@@ -96,14 +96,16 @@ public class MacroProcessorContext
   /// </exception>
   public int AddMacro(
     string macroName,
-    string value )
+    string? value )
   {
-    if( value == null )
+    MacroValueGenerator? generator = null;
+
+    if( value != null )
     {
-      throw new ArgumentNullException( nameof( value ) );
+      generator = _ => value;
     }
 
-    return AddMacro( macroName, _ => value );
+    return AddMacro( macroName, generator );
   }
 
   /// <summary>

@@ -137,14 +137,6 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void AddMacro_WithStringNameAndValue_ShouldThrow_WhenValueIsNull()
-  {
-    var ctx = new MacroProcessorContext();
-    var act = () => ctx.AddMacro( "macro", ( string ) null! );
-    act.Should().Throw<ArgumentNullException>();
-  }
-
-  [Fact]
   public void AddMacros_WithGenerators_ShouldAddMacros_WhenValid()
   {
     var ctx = new MacroProcessorContext();
