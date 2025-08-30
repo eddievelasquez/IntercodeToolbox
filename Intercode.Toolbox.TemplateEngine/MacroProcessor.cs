@@ -94,7 +94,7 @@ public static class MacroProcessor
 
           try
           {
-            value = context.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
+            value = context.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? string.Empty;
           }
           catch( Exception exception )
           {

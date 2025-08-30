@@ -282,30 +282,30 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldProcessConstantOnlyTemplate()
   {
     const string Text = "Just text.";
-    var template = TemplateCompiler.Compile(new MacroProcessorContext(), Text);
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros(template, builder);
-    builder.ToString().Should().Be(Text);
+    MacroProcessor.ProcessMacros( template, builder );
+    builder.ToString().Should().Be( Text );
   }
 
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldProcessDelimiterOnlyTemplate()
   {
     const string Text = "$$";
-    var template = TemplateCompiler.Compile(new MacroProcessorContext(), Text);
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros(template, builder);
-    builder.ToString().Should().Be("$");
+    MacroProcessor.ProcessMacros( template, builder );
+    builder.ToString().Should().Be( "$" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldProcessUnclosedMacroAsConstant()
   {
     const string Text = "$macro";
-    var template = TemplateCompiler.Compile(new MacroProcessorContext(), Text);
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros(template, builder);
-    builder.ToString().Should().Be(Text);
+    MacroProcessor.ProcessMacros( template, builder );
+    builder.ToString().Should().Be( Text );
   }
 
   [Fact]
@@ -313,10 +313,10 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $who$!";
     var context = new MacroProcessorContext(); // No macro value set
-    var template = TemplateCompiler.Compile(context, Text);
+    var template = TemplateCompiler.Compile( context, Text );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros(template, builder);
-    builder.ToString().Should().Be("Hello, who!");
+    MacroProcessor.ProcessMacros( template, builder );
+    builder.ToString().Should().Be( "Hello, !" );
   }
 
   [Fact]
@@ -324,41 +324,41 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $fail$!";
     var context = new MacroProcessorContext();
-    context.AddMacro("fail", _ => throw new InvalidOperationException("fail macro error"));
-    var template = TemplateCompiler.Compile(context, Text);
+    context.AddMacro( "fail", _ => throw new InvalidOperationException( "fail macro error" ) );
+    var template = TemplateCompiler.Compile( context, Text );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros(template, builder);
-    builder.ToString().Should().Contain("fail macro error");
+    MacroProcessor.ProcessMacros( template, builder );
+    builder.ToString().Should().Contain( "fail macro error" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldProcessConstantOnlyTemplate()
   {
     const string Text = "Just text.";
-    var template = TemplateCompiler.Compile(new MacroProcessorContext(), Text);
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros(template, writer);
-    writer.ToString().Should().Be(Text);
+    MacroProcessor.ProcessMacros( template, writer );
+    writer.ToString().Should().Be( Text );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldProcessDelimiterOnlyTemplate()
   {
     const string Text = "$$";
-    var template = TemplateCompiler.Compile(new MacroProcessorContext(), Text);
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros(template, writer);
-    writer.ToString().Should().Be("$");
+    MacroProcessor.ProcessMacros( template, writer );
+    writer.ToString().Should().Be( "$" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldProcessUnclosedMacroAsConstant()
   {
     const string Text = "$macro";
-    var template = TemplateCompiler.Compile(new MacroProcessorContext(), Text);
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros(template, writer);
-    writer.ToString().Should().Be(Text);
+    MacroProcessor.ProcessMacros( template, writer );
+    writer.ToString().Should().Be( Text );
   }
 
   [Fact]
@@ -366,10 +366,10 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $who$!";
     var context = new MacroProcessorContext(); // No macro value set
-    var template = TemplateCompiler.Compile(context, Text);
+    var template = TemplateCompiler.Compile( context, Text );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros(template, writer);
-    writer.ToString().Should().Be("Hello, who!");
+    MacroProcessor.ProcessMacros( template, writer );
+    writer.ToString().Should().Be( "Hello, who!" );
   }
 
   [Fact]
@@ -377,11 +377,11 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $fail$!";
     var context = new MacroProcessorContext();
-    context.AddMacro("fail", _ => throw new InvalidOperationException("fail macro error"));
-    var template = TemplateCompiler.Compile(context, Text);
+    context.AddMacro( "fail", _ => throw new InvalidOperationException( "fail macro error" ) );
+    var template = TemplateCompiler.Compile( context, Text );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros(template, writer);
-    writer.ToString().Should().Contain("fail macro error");
+    MacroProcessor.ProcessMacros( template, writer );
+    writer.ToString().Should().Contain( "fail macro error" );
   }
 
   #endregion
