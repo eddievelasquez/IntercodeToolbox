@@ -14,7 +14,7 @@ public static class TemplateCompiler
   /// <summary>
   ///   Compiles the specified template text into a <see cref="Template" />.
   /// </summary>
-  /// <param name="context">The <see cref="TemplateContext" /> providing macros and options for compilation.</param>
+  /// <param name="context">The <see cref="MacroProcessorContext" /> providing macros and options for compilation.</param>
   /// <param name="text">The template text to compile.</param>
   /// <returns>The compiled <see cref="Template" />.</returns>
   /// <exception cref="ArgumentNullException">Thrown when <paramref name="context" /> is <c>null</c>.</exception>
@@ -23,7 +23,7 @@ public static class TemplateCompiler
   ///   consists only of whitespace.
   /// </exception>
   public static Template Compile(
-    TemplateContext context,
+    MacroProcessorContext context,
     string text )
   {
     if( context == null )
@@ -45,12 +45,12 @@ public static class TemplateCompiler
   #region Implementation
 
   private static Segment[] SplitIntoSegments(
-    TemplateContext context,
+    MacroProcessorContext context,
     ReadOnlyMemory<char> text )
   {
     var segments = new List<Segment>();
-    var delimiter = context.Options.MacroDelimiter;
-    var separator = context.Options.ArgumentSeparator;
+    var delimiter = context.CompilerOptions.MacroDelimiter;
+    var separator = context.CompilerOptions.ArgumentSeparator;
     var span = text.Span;
     var currentIndex = 0;
 

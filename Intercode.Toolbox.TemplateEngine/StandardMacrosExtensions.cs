@@ -60,10 +60,10 @@ public static class StandardMacrosExtensions
   #region Public Methods
 
   /// <summary>
-  ///   Adds standard macros to the <see cref="TemplateContext" />.
+  ///   Adds standard macros to the <see cref="MacroProcessorContext" />.
   /// </summary>
-  /// <param name="context">The <see cref="TemplateContext" /> to add macros to.</param>
-  /// <returns>The <see cref="TemplateContext" /> with the added macros.</returns>
+  /// <param name="context">The <see cref="MacroProcessorContext" /> to add macros to.</param>
+  /// <returns>The <see cref="MacroProcessorContext" /> with the added macros.</returns>
   /// <remarks>
   ///   <list type="table">
   ///     <listheader>
@@ -120,8 +120,8 @@ public static class StandardMacrosExtensions
   ///   </list>
   ///   <para>NOTE: If a generator throws an exception, the macro's value will be the exception's error message.</para>
   /// </remarks>
-  public static TemplateContext AddStandardMacros(
-    this TemplateContext context )
+  public static MacroProcessorContext AddStandardMacros(
+    this MacroProcessorContext context )
   {
     context.AddMacro( NowMacroName, NowGenerator );
     context.AddMacro( UtcNowMacroName, UtcNowGenerator );

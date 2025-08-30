@@ -104,7 +104,7 @@ public partial class MacroProcessingBenchmarks
 
   public MacroProcessingBenchmarks()
   {
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacros( Macros );
 
     _template = TemplateCompiler.Compile( context, TemplateText );

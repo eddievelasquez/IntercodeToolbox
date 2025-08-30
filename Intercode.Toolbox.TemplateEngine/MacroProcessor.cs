@@ -28,7 +28,7 @@ public static class MacroProcessor
     TextWriter writer )
   {
     var context = template.Context;
-    var macroDelimiter = context.Options.MacroDelimiter;
+    var macroDelimiter = context.CompilerOptions.MacroDelimiter;
 
     foreach( var segment in template.Segments )
     {
@@ -82,7 +82,7 @@ public static class MacroProcessor
     StringBuilder builder )
   {
     var context = template.Context;
-    var macroDelimiter = context.Options.MacroDelimiter;
+    var macroDelimiter = context.CompilerOptions.MacroDelimiter;
 
     foreach( var segment in template.Segments )
     {

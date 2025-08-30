@@ -1,13 +1,13 @@
-// Module Name: TemplateEngineOptions.cs
+// Module Name: TemplateCompilerOptions.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine;
 
 /// <summary>
-///   Represents the options for the template engine.
+///   Represents the options for the <see cref="TemplateCompiler" />.
 /// </summary>
-public class TemplateEngineOptions
+public class TemplateCompilerOptions
 {
   #region Constants
 
@@ -24,7 +24,7 @@ public class TemplateEngineOptions
   /// <summary>
   ///   The default template engine options.
   /// </summary>
-  public static readonly TemplateEngineOptions Default = new ();
+  public static readonly TemplateCompilerOptions Default = new ();
 
   #endregion
 
@@ -60,15 +60,6 @@ public class TemplateEngineOptions
     get => _argumentSeparator;
     init => _argumentSeparator = EnsureIsPunctuation( value, nameof( ArgumentSeparator ) );
   }
-
-  /// <summary>
-  ///   Gets or initializes a value indicating whether the standard macros should be registered
-  ///   by the template engine.
-  /// </summary>
-  /// <value>
-  ///   <c>true</c> if the standard macros should be registered; otherwise, <c>false</c>.
-  /// </value>
-  public bool RegisterStandardMacros { get; init; }
 
   #endregion
 

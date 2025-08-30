@@ -1,25 +1,19 @@
-// Module Name: TemplateContext.cs
+// Module Name: MacroProcessorContext.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine;
 
 /// <summary>
-///   Callback for dynamic macros.
-/// </summary>
-/// <param name="argument">Optional data passed to the callback for generating a value.</param>
-public delegate string MacroValueGenerator(
-  ReadOnlySpan<char> argument );
-
-/// <summary>
-///   Represents the context for a template engine, providing functionality to manage macros and their values.
+///   Represents the context for the <see cref="MacroProcessor" />, providing functionality to manage macros and their
+///   values.
 /// </summary>
 /// <remarks>
-///   This class is used to define and manage macros within a template engine. It supports adding macros with
+///   This class is used to define and manage macros for the macro processor. It supports adding macros with
 ///   static or dynamic values, retrieving macro values, and managing macro slots. The context is initialized
 ///   with options that configure its behavior, such as registering standard macros.
 /// </remarks>
-public class TemplateContext
+public class MacroProcessorContext
 {
   #region Constants
 
@@ -41,25 +35,20 @@ public class TemplateContext
   #region Constructors
 
   /// <summary>
-  ///   Initializes a new instance of the <see cref="TemplateContext" /> class.
+  ///   Initializes a new instance of the <see cref="MacroProcessorContext" /> class.
   /// </summary>
-  /// <param name="options">
-  ///   The Template Engine Options. Will use to <see cref="TemplateEngineOptions.Default" /> if
+  /// <param name="compilerOptions">
+  ///   The Template Engine CompilerOptions. Will use to <see cref="TemplateCompilerOptions.Default" /> if
   ///   <c>null</c>.
   /// </param>
-  public TemplateContext(
-    TemplateEngineOptions? options = null )
+  public MacroProcessorContext(
+    TemplateCompilerOptions? compilerOptions = null )
   {
-    Options = options ?? TemplateEngineOptions.Default;
+    CompilerOptions = compilerOptions ?? TemplateCompilerOptions.Default;
 
 #if NET9_0_OR_GREATER
     _alternate = _generatorsSlots.GetAlternateLookup<ReadOnlySpan<char>>();
 #endif
-
-    if( Options.RegisterStandardMacros )
-    {
-      this.AddStandardMacros();
-    }
   }
 
   #endregion
@@ -70,10 +59,10 @@ public class TemplateContext
   ///   Gets the options for the template engine.
   /// </summary>
   /// <value>
-  ///   An instance of <see cref="TemplateEngineOptions" /> representing the configuration
-  ///   for the template engine. Defaults to <see cref="TemplateEngineOptions.Default" /> if not explicitly set.
+  ///   An instance of <see cref="TemplateCompilerOptions" /> representing the configuration
+  ///   for the template engine. Defaults to <see cref="TemplateCompilerOptions.Default" /> if not explicitly set.
   /// </value>
-  public TemplateEngineOptions Options { get; }
+  public TemplateCompilerOptions CompilerOptions { get; }
 
   /// <summary>
   ///   Gets the total number of macros currently added to the template context.

@@ -35,7 +35,7 @@ public class MacroProcessorTests
   {
     const string Text = "Give me the $$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -51,7 +51,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -67,7 +67,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now:yyyyMMdd$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -83,7 +83,7 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $who$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -99,7 +99,7 @@ public class MacroProcessorTests
   {
     const string Text = "Give me the $$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -114,7 +114,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -129,7 +129,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now:yyyyMMdd$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -144,7 +144,7 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $who$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -159,7 +159,7 @@ public class MacroProcessorTests
   {
     const string Text = "Give me the $$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -174,7 +174,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -190,7 +190,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now:yyyyMMdd$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -206,7 +206,7 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $who$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -222,7 +222,7 @@ public class MacroProcessorTests
   {
     const string Text = "Give me the $$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -237,7 +237,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -252,7 +252,7 @@ public class MacroProcessorTests
   {
     const string Text = "Timestamp: $now:yyyyMMdd$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
 
     var template = TemplateCompiler.Compile( context, Text );
@@ -268,7 +268,7 @@ public class MacroProcessorTests
   {
     const string Text = "Hello, $who$!";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     context.AddMacro( "who", "World" );
 
     var template = TemplateCompiler.Compile( context, Text );

@@ -19,7 +19,7 @@ public record Template
   /// <param name="context"></param>
   /// <param name="segments">The text segments that have been identified by the <see cref="TemplateCompiler" />.</param>
   internal Template(
-    TemplateContext context,
+    MacroProcessorContext context,
     Segment[] segments )
   {
     if( segments == null )
@@ -44,7 +44,7 @@ public record Template
   ///   Gets the context associated with the template, which provides configuration
   ///   and macro definitions for processing the template.
   /// </summary>
-  public TemplateContext Context { get; }
+  public MacroProcessorContext Context { get; }
 
   /// <summary>
   ///   The template's text
@@ -75,7 +75,7 @@ public record Template
   /// <param name="context">The context associated with the template.</param>
   /// <param name="segments">The array of segments that make up the template.</param>
   public void Deconstruct(
-    out TemplateContext context,
+    out MacroProcessorContext context,
     out Segment[] segments )
   {
     context = Context;

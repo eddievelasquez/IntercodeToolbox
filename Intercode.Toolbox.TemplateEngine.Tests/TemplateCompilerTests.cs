@@ -15,7 +15,7 @@ public class TemplateCompilerTests
   {
     const string Text = "template $$";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -37,7 +37,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$$ template.";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -59,7 +59,7 @@ public class TemplateCompilerTests
   {
     const string Text = "012345$$$$012345";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -91,7 +91,7 @@ public class TemplateCompilerTests
   {
     const string Text = "I have no macros";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -109,7 +109,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro$";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -127,7 +127,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macroA$$macroB$$macroC$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     var template = TemplateCompiler.Compile( context, Text );
 
     template.Should()
@@ -160,7 +160,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro$$$$macro$";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -186,7 +186,7 @@ public class TemplateCompilerTests
   {
     const string Text = "This is a $macro$ template.";
 
-    var template = TemplateCompiler.Compile( new TemplateContext(), Text );
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
 
     template.Should()
             .NotBeNull();
@@ -212,7 +212,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macroA$$macroB$$macroA$";
 
-    var context = new TemplateContext();
+    var context = new MacroProcessorContext();
     var template = TemplateCompiler.Compile( context, Text );
 
     template.Should()
