@@ -8,10 +8,22 @@ using FluentAssertions;
 
 public class MacroProcessorContextTests
 {
+  #region Constants
+
+  public static readonly TheoryData<string?> InvalidMacroNames = new ()
+  {
+    null,
+    "",
+    "   ",
+    "Bad#"
+  };
+
+  #endregion
+
   #region Tests
 
   [Fact]
-  public void AddMacro_WithGenerator_ShouldAddMacro_WhenValid()
+  public void AddMacro_WithStringNameAndGenerator_ShouldAddMacro_WhenValid()
   {
     var ctx = new MacroProcessorContext();
     var slot = ctx.AddMacro( "macro", _ => "dynamic" );
@@ -20,7 +32,7 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void AddMacro_WithGenerator_ShouldAddMacroWithNullValue_WhenGeneratorIsNull()
+  public void AddMacro_WithStringNameAndGenerator_ShouldAddMacroWithNullValue_WhenGeneratorIsNull()
   {
     var ctx = new MacroProcessorContext();
     var slot = ctx.AddMacro( "macro" );
@@ -28,11 +40,22 @@ public class MacroProcessorContextTests
     ctx.GetMacroValue( slot ).Should().BeNull();
   }
 
+  [Fact]
+  public void AddMacro_WithStringNameAndGenerator_ShouldReturnSameSlotAndOverwriteValue_WhenMacroExists()
+  {
+    var ctx = new MacroProcessorContext();
+    var firstSlot = ctx.AddMacro( "macro", _ => "valueOne" );
+    firstSlot.Should().Be( 0 );
+    ctx.GetMacroValue( firstSlot ).Should().Be( "valueOne" );
+
+    var secondSlot = ctx.AddMacro( "macro", _ => "valueTwo" );
+    secondSlot.Should().Be( firstSlot );
+    ctx.GetMacroValue( secondSlot, "valueTwo" );
+  }
+
   [Theory]
-  [InlineData( null )]
-  [InlineData( "" )]
-  [InlineData( "   " )]
-  public void AddMacro_WithGenerator_ShouldThrow_WhenMacroNameIsInvalid(
+  [MemberData( nameof( InvalidMacroNames ) )]
+  public void AddMacro_WithStringNameAndGenerator_ShouldThrow_WhenMacroNameIsInvalid(
     string? macroName )
   {
     var ctx = new MacroProcessorContext();
@@ -41,7 +64,48 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void AddMacro_WithStringValue_ShouldAddMacro_WhenValid()
+  public void AddMacro_WithSpanNameAndGenerator_ShouldAddMacro_WhenValid()
+  {
+    var ctx = new MacroProcessorContext();
+    var slot = ctx.AddMacro( "macro".AsSpan(), _ => "dynamic" );
+    slot.Should().Be( 0 );
+    ctx.GetMacroValue( slot ).Should().Be( "dynamic" );
+  }
+
+  [Fact]
+  public void AddMacro_WithSpanNameAndGenerator_ShouldAddMacroWithNullValue_WhenGeneratorIsNull()
+  {
+    var ctx = new MacroProcessorContext();
+    var slot = ctx.AddMacro( "macro".AsSpan() );
+    slot.Should().Be( 0 );
+    ctx.GetMacroValue( slot ).Should().BeNull();
+  }
+
+  [Fact]
+  public void AddMacro_WithSpanNameAndGenerator_ShouldReturnSameSlotAndOverwriteValue_WhenMacroExists()
+  {
+    var ctx = new MacroProcessorContext();
+    var firstSlot = ctx.AddMacro( "macro".AsSpan(), _ => "valueOne" );
+    firstSlot.Should().Be( 0 );
+    ctx.GetMacroValue( firstSlot ).Should().Be( "valueOne" );
+
+    var secondSlot = ctx.AddMacro( "macro".AsSpan(), _ => "valueTwo" );
+    secondSlot.Should().Be( firstSlot );
+    ctx.GetMacroValue( secondSlot, "valueTwo" );
+  }
+
+  [Theory]
+  [MemberData( nameof( InvalidMacroNames ) )]
+  public void AddMacro_WithSpanNameAndGenerator_ShouldThrow_WhenMacroNameIsInvalid(
+    string? macroName )
+  {
+    var ctx = new MacroProcessorContext();
+    var act = () => ctx.AddMacro( macroName.AsSpan(), _ => "value" );
+    act.Should().Throw<ArgumentException>();
+  }
+
+  [Fact]
+  public void AddMacro_WithStringNameAndValue_ShouldAddMacro_WhenValid()
   {
     var ctx = new MacroProcessorContext();
     var slot = ctx.AddMacro( "macro", "value" );
@@ -49,11 +113,22 @@ public class MacroProcessorContextTests
     ctx.GetMacroValue( slot ).Should().Be( "value" );
   }
 
+  [Fact]
+  public void AddMacro_WithStringNameAndValue_ShouldReturnSameSlotAndOverwriteValue_WhenMacroExists()
+  {
+    var ctx = new MacroProcessorContext();
+    var firstSlot = ctx.AddMacro( "macro", "valueOne" );
+    firstSlot.Should().Be( 0 );
+    ctx.GetMacroValue( firstSlot ).Should().Be( "valueOne" );
+
+    var secondSlot = ctx.AddMacro( "macro", "valueTwo" );
+    secondSlot.Should().Be( firstSlot );
+    ctx.GetMacroValue( secondSlot, "valueTwo" );
+  }
+
   [Theory]
-  [InlineData( null )]
-  [InlineData( "" )]
-  [InlineData( "   " )]
-  public void AddMacro_WithStringValue_ShouldThrow_WhenMacroNameIsInvalid(
+  [MemberData( nameof( InvalidMacroNames ) )]
+  public void AddMacro_WithStringNameAndValue_ShouldThrow_WhenMacroNameIsInvalid(
     string? macroName )
   {
     var ctx = new MacroProcessorContext();
@@ -62,7 +137,7 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void AddMacro_WithStringValue_ShouldThrow_WhenValueIsNull()
+  public void AddMacro_WithStringNameAndValue_ShouldThrow_WhenValueIsNull()
   {
     var ctx = new MacroProcessorContext();
     var act = () => ctx.AddMacro( "macro", ( string ) null! );
@@ -70,7 +145,7 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void AddMacros_WithGenerator_ShouldAddMacros_WhenValid()
+  public void AddMacros_WithGenerators_ShouldAddMacros_WhenValid()
   {
     var ctx = new MacroProcessorContext();
 
@@ -85,7 +160,7 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void AddMacros_WithString_ShouldAddMacros_WhenValid()
+  public void AddMacros_WithStringValues_ShouldAddMacros_WhenValid()
   {
     var ctx = new MacroProcessorContext();
     var macros = new[] { new KeyValuePair<string, string>( "A", "1" ), new KeyValuePair<string, string>( "B", "2" ) };
@@ -96,14 +171,37 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void GetMacroSlot_ShouldReturnMinusOne_WhenNotFound()
+  public void GetMacroSlot_WithSpan_ShouldReturnMinusOne_WhenMacroNameIsEmpty()
+  {
+    var ctx = new MacroProcessorContext();
+    var slot = ctx.GetMacroSlot( ReadOnlySpan<char>.Empty );
+    slot.Should().Be( -1 );
+  }
+
+  [Fact]
+  public void GetMacroSlot_WithSpan_ShouldReturnMinusOne_WhenNotFound()
+  {
+    var ctx = new MacroProcessorContext();
+    ctx.GetMacroSlot( "not_found".AsSpan() ).Should().Be( -1 );
+  }
+
+  [Fact]
+  public void GetMacroSlot_WithSpan_ShouldReturnSlot_WhenFound()
+  {
+    var ctx = new MacroProcessorContext();
+    ctx.AddMacro( "macro", "value" );
+    ctx.GetMacroSlot( "macro".AsSpan() ).Should().Be( 0 );
+  }
+
+  [Fact]
+  public void GetMacroSlot_WithString_ShouldReturnMinusOne_WhenNotFound()
   {
     var ctx = new MacroProcessorContext();
     ctx.GetMacroSlot( "not_found" ).Should().Be( -1 );
   }
 
   [Fact]
-  public void GetMacroSlot_ShouldReturnSlot_WhenFound()
+  public void GetMacroSlot_WithString_ShouldReturnSlot_WhenFound()
   {
     var ctx = new MacroProcessorContext();
     ctx.AddMacro( "macro", "value" );
@@ -111,7 +209,7 @@ public class MacroProcessorContextTests
   }
 
   [Fact]
-  public void GetMacroSlot_ShouldThrow_WhenMacroNameIsNull()
+  public void GetMacroSlot_WithString_ShouldThrow_WhenMacroNameIsNull()
   {
     var ctx = new MacroProcessorContext();
     var act = () => ctx.GetMacroSlot( null! );

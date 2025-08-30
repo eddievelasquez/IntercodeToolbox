@@ -87,6 +87,37 @@ public class TemplateCompilerTests
   }
 
   [Fact]
+  public void Compile_ShouldReturnConstantSegment_WhenTextIsOnlyDelimiter()
+  {
+    const string Text = "$";
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    template.Should().NotBeNull();
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$" );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnConstantSegment_WhenTextIsUnclosedMacro()
+  {
+    const string Text = "$macro";
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    template.Should().NotBeNull();
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$macro" );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnDelimiterSegments_WhenTextIsMultipleEscapedDelimitersOnly()
+  {
+    const string Text = "$$$$";
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    template.Should().NotBeNull();
+    template.Segments.Should().HaveCount( 2 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+  }
+
+  [Fact]
   public void Compile_ShouldReturnSingleConstantSegment_WhenTemplateHasNoMacros()
   {
     const string Text = "I have no macros";
@@ -236,6 +267,31 @@ public class TemplateCompilerTests
     context.MacroCount.Should().Be( 2 );
     context.GetMacroSlot( "macroA" ).Should().Be( 0 );
     context.GetMacroSlot( "macroB" ).Should().Be( 1 );
+  }
+
+  [Theory]
+  [InlineData( null )]
+  [InlineData( "" )]
+  [InlineData( "   " )]
+  public void Compile_ShouldThrowArgumentException_WhenTextIsNullOrWhitespace(
+    string? text )
+  {
+    Action act = () => TemplateCompiler.Compile( new MacroProcessorContext(), text! );
+
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithParameterName( "text" )
+       .WithMessage( "*cannot be null, empty, or whitespace*" );
+  }
+
+  [Fact]
+  public void Compile_ShouldThrowArgumentNullException_WhenContextIsNull()
+  {
+    Action act = () => TemplateCompiler.Compile( null!, "text" );
+
+    act.Should()
+       .Throw<ArgumentNullException>()
+       .WithParameterName( "context" );
   }
 
   #endregion

@@ -12,70 +12,31 @@ public class TemplateCompilerOptions
   #region Constants
 
   /// <summary>
-  ///   The default macro delimiter.
-  /// </summary>
-  public const char DefaultMacroDelimiter = '$';
-
-  /// <summary>
-  ///   Character used to separate the macro's name from its arguments.
-  /// </summary>
-  public const char DefaultArgumentSeparator = ':';
-
-  /// <summary>
   ///   The default template engine options.
   /// </summary>
-  public static readonly TemplateCompilerOptions Default = new ();
+  public static readonly TemplateCompilerOptions Default = new TemplateCompilerOptionsBuilder().Build();
 
   #endregion
 
-  #region Fields
+  #region Constructors
 
-  private readonly char _macroDelimiter = DefaultMacroDelimiter;
-  private readonly char _argumentSeparator = DefaultArgumentSeparator;
+  internal TemplateCompilerOptions()
+  {
+  }
 
   #endregion
 
   #region Properties
 
   /// <summary>
-  ///   Gets or initializes the macro delimiter. Will default to <see cref="DefaultMacroDelimiter" /> if <c>null</c>.
+  ///   Gets or initializes the macro delimiter.
   /// </summary>
-  /// <exception cref="ArgumentException">
-  ///   Thrown if <paramref name="value" /> is not a punctuation character.
-  /// </exception>
-  public char MacroDelimiter
-  {
-    get => _macroDelimiter;
-    init => _macroDelimiter = EnsureIsPunctuation( value, nameof( MacroDelimiter ) );
-  }
+  public char MacroDelimiter { get; internal init; }
 
   /// <summary>
-  ///   Gets the macro's argument separator. Will default to <see cref="DefaultArgumentSeparator" /> if <c>null</c>.
+  ///   Gets the macro's argument separator.
   /// </summary>
-  /// <exception cref="ArgumentException">
-  ///   Thrown if <paramref name="value" /> is not a punctuation character.
-  /// </exception>
-  public char ArgumentSeparator
-  {
-    get => _argumentSeparator;
-    init => _argumentSeparator = EnsureIsPunctuation( value, nameof( ArgumentSeparator ) );
-  }
-
-  #endregion
-
-  #region Implementation
-
-  private static char EnsureIsPunctuation(
-    char c,
-    string argName )
-  {
-    if( !char.IsPunctuation( c ) )
-    {
-      throw new ArgumentException( "Must be a punctuation character", argName );
-    }
-
-    return c;
-  }
+  public char ArgumentSeparator { get; internal init; }
 
   #endregion
 }

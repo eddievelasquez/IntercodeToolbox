@@ -337,7 +337,7 @@ public class MacroProcessorContext
       {
         var c = macroName[index];
 
-        if( !char.IsLetterOrDigit( c ) && c is not ('_' or '-') )
+        if( !c.IsMacroNameChar() )
         {
           return false;
         }
