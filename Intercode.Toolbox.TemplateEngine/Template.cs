@@ -66,21 +66,4 @@ public record Template
   public Segment[] Segments { get; init; }
 
   #endregion
-
-  #region Public Methods
-
-  /// <summary>
-  ///   Deconstructs the <see cref="Template" /> into its context and segments.
-  /// </summary>
-  /// <param name="context">The context associated with the template.</param>
-  /// <param name="segments">The array of segments that make up the template.</param>
-  public void Deconstruct(
-    out MacroProcessorContext context,
-    out Segment[] segments )
-  {
-    context = Context;
-    segments = Segments;
-  }
-
-  #endregion
 }

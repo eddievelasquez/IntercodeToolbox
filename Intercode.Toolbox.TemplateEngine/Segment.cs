@@ -118,24 +118,5 @@ public readonly record struct Segment
     return new Segment( SegmentKind.Macro, memory, argument, valueSlot );
   }
 
-  /// <summary>
-  ///   Deconstructs the <see cref="Segment" /> into its component properties.
-  /// </summary>
-  /// <param name="kind">The kind of text segment.</param>
-  /// <param name="memory">The memory containing the segment's text.</param>
-  /// <param name="argumentMemory">Optional memory containing a macro segment's argument.</param>
-  /// <param name="valueSlot">The slot index associated with the macro's value, or -1 if not applicable.</param>
-  public void Deconstruct(
-    out SegmentKind kind,
-    out ReadOnlyMemory<char> memory,
-    out ReadOnlyMemory<char> argumentMemory,
-    out int valueSlot )
-  {
-    kind = Kind;
-    memory = Memory;
-    argumentMemory = ArgumentMemory;
-    valueSlot = ValueSlot;
-  }
-
   #endregion
 }

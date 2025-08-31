@@ -26,21 +26,5 @@ public class TemplateTests
     act.Should().Throw<ArgumentNullException>().WithParameterName( "segments" );
   }
 
-  [Fact]
-  public void Deconstruct_ShouldReturnSegments_FromConstructor()
-  {
-    Segment[] segments =
-    [
-      Segment.CreateConstant( ReadOnlyMemory<char>.Empty ), Segment.CreateDelimiter(),
-      Segment.CreateMacro( ReadOnlyMemory<char>.Empty, 0 )
-    ];
-
-    var context = new MacroProcessorContext();
-    var template = new Template( context, segments );
-    template.Deconstruct( out var actualContext, out var actualSegments );
-    actualContext.Should().Be( context );
-    actualSegments.Should().BeSameAs( segments );
-  }
-
   #endregion
 }
