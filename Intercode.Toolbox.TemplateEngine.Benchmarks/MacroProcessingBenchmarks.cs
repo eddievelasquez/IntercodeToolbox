@@ -155,7 +155,7 @@ public partial class MacroProcessingBenchmarks
   [Benchmark]
   public void UsingMacroProcessorWithTextWriter()
   {
-    var writer = new StringWriter();
+    using var writer = new StringWriter();
     MacroProcessor.ProcessMacros( _template, writer );
   }
 
