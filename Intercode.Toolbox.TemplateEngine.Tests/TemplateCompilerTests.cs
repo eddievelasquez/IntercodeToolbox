@@ -87,6 +87,169 @@ public class TemplateCompilerTests
   }
 
   [Fact]
+  public void Compile_ShouldHandleIncludeWithNullContent()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "empty", null );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$empty$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "" );
+  }
+
+  [Fact]
+  public void Compile_ShouldHandleMacroWithArgument()
+  {
+    var context = new MacroProcessorContext();
+    var template = TemplateCompiler.Compile( context, "$macro:argument$" );
+
+    template.Should().NotBeNull();
+    template.Segments.Should().HaveCount( 1 );
+
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro &&
+                                  s.Text == "macro" &&
+                                  s.ArgumentMemory.ToString() == "argument"
+            );
+  }
+
+  [Fact]
+  public void Compile_ShouldHandleNullIncludesParameter()
+  {
+    const string Text = "$macro$";
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text, null );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( Text );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+  }
+
+  [Fact]
+  public void Compile_ShouldNotReplaceAnything_WhenIncludesProvidedButNotReferenced()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "unused", "UnusedContent" );
+
+    const string Text = "No macros here";
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text, includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( Text );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == Text );
+  }
+
+  [Fact]
+  public void Compile_ShouldProcessEscapedDelimitersInIncludeContent()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "section", "Start $$ End" );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$section$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "Start $$ End" );
+    template.Segments.Should().HaveCount( 3 );
+    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter );
+  }
+
+  [Fact]
+  public void Compile_ShouldProcessIncludeWithMacroArgument()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "section", "Start $macro:arg$ End" );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$section$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "Start $macro:arg$ End" );
+    template.Segments.Should().HaveCount( 3 );
+
+    template.Segments[1]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
+  }
+
+  [Fact]
+  public void Compile_ShouldProcessMacrosInIncludeContent()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "section", "Start $macro$ End" );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$section$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "Start $macro$ End" );
+    template.Segments.Should().HaveCount( 3 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "Start " );
+    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+    template.Segments[2].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == " End" );
+  }
+
+  [Fact]
+  public void Compile_ShouldProcessMacrosInMultipleIncludes()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "a", "A$macroA$" );
+    includes.AddInclude( "b", "B$macroB$" );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$a$-$b$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "A$macroA$-B$macroB$" );
+    template.Segments.Should().HaveCount( 4 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "A" );
+    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" );
+    template.Segments[2].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "-B" );
+    template.Segments[3].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" );
+  }
+
+  [Fact]
+  public void Compile_ShouldReplaceInclude_WhenIncludeIsReferencedInTemplate()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "header", "HeaderContent" );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$header$ body", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "HeaderContent body" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "HeaderContent body" );
+  }
+
+  [Fact]
+  public void Compile_ShouldReplaceMultipleIncludes_WhenMultipleAreReferenced()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "a", "A" );
+    includes.AddInclude( "b", "B" );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$a$-$b$", includes );
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "A-B" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "A-B" );
+  }
+
+  [Fact]
+  public void Compile_ShouldReplaceWithEmpty_WhenIncludeIsReferencedButDoesNotExist()
+  {
+    const string Text = "$missing$";
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text, new IncludesCollection() );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( Text );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "missing" );
+  }
+
+  [Fact]
   public void Compile_ShouldReturnConstantSegment_WhenTextIsOnlyDelimiter()
   {
     const string Text = "$";
@@ -115,6 +278,18 @@ public class TemplateCompilerTests
     template.Segments.Should().HaveCount( 2 );
     template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
     template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+  }
+
+  [Fact]
+  public void Compile_ShouldReturnMacroSegment_WhenIncludeCollectionIsEmptyAndIncludeReferenced()
+  {
+    var includes = new IncludesCollection();
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$missing$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "$missing$" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "missing" );
   }
 
   [Fact]
@@ -267,6 +442,21 @@ public class TemplateCompilerTests
     context.MacroCount.Should().Be( 2 );
     context.GetMacroSlot( "macroA" ).Should().Be( 0 );
     context.GetMacroSlot( "macroB" ).Should().Be( 1 );
+  }
+
+  [Fact]
+  public void Compile_ShouldSupportCustomDelimiterAndArgumentSeparator()
+  {
+    var options = new TemplateCompilerOptionsBuilder().SetMacroDelimiter( '#' ).SetArgumentSeparator( ':' ).Build();
+    var context = new MacroProcessorContext( options );
+    var template = TemplateCompiler.Compile( context, "#macro:arg#" );
+
+    template.Should().NotBeNull();
+    template.Segments.Should().HaveCount( 1 );
+
+    template.Segments[0]
+            .Should()
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
   }
 
   [Theory]

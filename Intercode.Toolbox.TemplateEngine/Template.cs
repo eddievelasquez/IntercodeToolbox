@@ -53,7 +53,14 @@ public record Template
   {
     get
     {
-      if( MemoryMarshal.TryGetString( Segments[0].Memory, out var text, out var start, out var length ) )
+      var textMemory = Segments[0].Memory;
+
+      if( textMemory.IsEmpty )
+      {
+        return string.Empty;
+      }
+
+      if( MemoryMarshal.TryGetString( textMemory, out var text, out var start, out var length ) )
       {
         return text;
       }
