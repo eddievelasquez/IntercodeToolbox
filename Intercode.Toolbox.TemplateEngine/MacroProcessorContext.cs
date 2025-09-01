@@ -128,7 +128,7 @@ public class MacroProcessorContext
     string macroName,
     MacroValueGenerator? generator = null )
   {
-    ValidateMacroName( macroName );
+    MacroExtensions.ValidateMacroName( macroName );
 
     // Use the existing slot if the macro was already added
     if( _generatorsSlots.TryGetValue( macroName, out var slot ) )
@@ -303,54 +303,6 @@ public class MacroProcessorContext
 
   #endregion
 
-  #region Implementation
-
-  private static void ValidateMacroName(
-    string macroName )
-  {
-    if( macroName == null )
-    {
-      throw new ArgumentNullException( nameof( macroName ) );
-    }
-
-    ValidateMacroName( macroName.AsSpan() );
-  }
-
-  private static void ValidateMacroName(
-    ReadOnlySpan<char> macroName )
-  {
-    if( macroName.IsEmpty )
-    {
-      throw new ArgumentException( "Macro name cannot be empty", nameof( macroName ) );
-    }
-
-    if( !IsAlphanumericOrUnderscoreOrDash( macroName ) )
-    {
-      throw new ArgumentException( "Macro name must be alphanumeric, underscore, or dash", nameof( macroName ) );
-    }
-
-    return;
-
-    static bool IsAlphanumericOrUnderscoreOrDash(
-      ReadOnlySpan<char> macroName )
-    {
-      // NOTE: Use loop instead of LINQ for performance
-      for( var index = 0; index < macroName.Length; index++ )
-      {
-        var c = macroName[index];
-
-        if( !c.IsMacroNameChar() )
-        {
-          return false;
-        }
-      }
-
-      return true;
-    }
-  }
-
-  #endregion
-
 #if NET9_0_OR_GREATER
   /// <summary>
   ///   Retrieves the slot index of a macro in the template context.
@@ -392,7 +344,7 @@ public class MacroProcessorContext
     ReadOnlySpan<char> macroName,
     MacroValueGenerator? generator = null )
   {
-    ValidateMacroName( macroName );
+    MacroExtensions.ValidateMacroName( macroName );
 
     // Use the existing slot if the macro was already added
     if( _alternate.TryGetValue( macroName, out var slot ) )
