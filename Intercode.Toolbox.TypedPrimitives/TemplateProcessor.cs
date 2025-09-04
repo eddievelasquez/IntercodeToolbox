@@ -1,6 +1,6 @@
 // Module Name: TemplateProcessor.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
@@ -23,6 +23,7 @@ internal class TemplateProcessor
   #region Fields
 
   private readonly ConcurrentDictionary<string, Template> _templateCache = new ();
+  private readonly MacroProcessorContext _processorContext = new ();
 
   #endregion
 
@@ -34,97 +35,107 @@ internal class TemplateProcessor
   {
     var context = new TemplateContext( model, typeInfo );
 
-    // Set the macros needed for the primitive type
-    var builder = new MacroProcessorBuilder();
-
     // Set the common macros for all templates
-    builder.AddMacro( MacroNames.PrimitiveName, typeInfo.Keyword );
-    builder.AddMacro( MacroNames.TypedPrimitiveNamespace, context.Model.Namespace );
-    builder.AddMacro( MacroNames.TypedPrimitiveName, context.Model.TypeName );
-    builder.AddMacro( MacroNames.TypedPrimitiveQualifiedName, $"{context.Model.Namespace}.{context.Model.TypeName}" );
+    _processorContext.AddMacro( MacroNames.PrimitiveName, typeInfo.Keyword );
+    _processorContext.AddMacro( MacroNames.TypedPrimitiveNamespace, context.Model.Namespace );
+    _processorContext.AddMacro( MacroNames.TypedPrimitiveName, context.Model.TypeName );
 
-    // If the template uses a non-default StringComparison, set the StringComparison macro
-    if( context.Model.StringComparison is not null )
-    {
-      builder.AddMacro( MacroNames.StringComparison, context.Model.StringComparison! );
-    }
+    _processorContext.AddMacro(
+      MacroNames.TypedPrimitiveQualifiedName,
+      $"{context.Model.Namespace}.{context.Model.TypeName}"
+    );
+    _processorContext.AddMacro( MacroNames.StringComparison, context.Model.StringComparison );
 
-    if( context.Model.HasTypeConverter )
-    {
-      builder.AddConverterMacros( TypedPrimitiveConverter.TypeConverter, typeInfo );
-    }
+    // Add/update conditional macros for the requested converters
+    _processorContext.AddConverterMacros(
+      context.Model.HasTypeConverter,
+      TypedPrimitiveConverter.TypeConverter,
+      typeInfo
+    );
 
-    if( context.Model.HasSystemTextJsonConverter )
-    {
-      builder.AddConverterMacros( TypedPrimitiveConverter.SystemTextJson, typeInfo );
-    }
+    _processorContext.AddConverterMacros(
+      context.Model.HasSystemTextJsonConverter,
+      TypedPrimitiveConverter.SystemTextJson,
+      typeInfo
+    );
 
-    if( context.Model.HasNewtonsoftJsonConverter )
-    {
-      builder.AddConverterMacros( TypedPrimitiveConverter.NewtonsoftJson, typeInfo );
-    }
+    _processorContext.AddConverterMacros(
+      context.Model.HasNewtonsoftJsonConverter,
+      TypedPrimitiveConverter.NewtonsoftJson,
+      typeInfo
+    );
 
-    var macroProcessor = builder.Build();
+    SourceText? sourceText;
 
     // Create the EFCore ValueConverter if requested
-    SourceText? sourceText;
     if( context.Model.HasEfCoreConverter )
     {
-      sourceText = GenerateContent( EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME );
+      sourceText = GenerateSourceText( EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME );
       yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}ValueConverter", sourceText );
     }
 
     // Create the TypeConverter if requested
     if( context.Model.HasTypeConverter )
     {
-      sourceText = GenerateContent( TYPE_CONVERTER_TEMPLATE_NAME );
+      sourceText = GenerateSourceText( TYPE_CONVERTER_TEMPLATE_NAME );
       yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}TypeConverter", sourceText );
     }
 
     // Create the System.Text.Json converter if requested
     if( context.Model.HasSystemTextJsonConverter )
     {
-      sourceText = GenerateContent( SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME );
+      sourceText = GenerateSourceText( SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME );
       yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}SystemTextJsonConverter", sourceText );
     }
 
     // Create the Newtonsoft.Json converter if requested
     if( context.Model.HasNewtonsoftJsonConverter )
     {
-      sourceText = GenerateContent( NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME );
+      sourceText = GenerateSourceText( NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME );
       yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}NewtonsoftJsonConverter", sourceText );
     }
 
-    // See if we have already composed the main template
-    var compiledTemplate = _templateCache.GetOrAdd(
+    // Create the main typed primitive struct
+    sourceText = GenerateSourceText(
       context.TemplateKey,
-      _ =>
+      includes =>
       {
-        // Nope! Compose the template and cache it
-        var mainTemplate = context.LoadTemplate( context.MainTemplateName );
-        return ComposeMainTemplate( mainTemplate, macroProcessor );
-      }
+        // Add includes for the requested converters
+        includes.AddIncludes( model.HasTypeConverter, TypedPrimitiveConverter.TypeConverter, typeInfo );
+        includes.AddIncludes( model.HasSystemTextJsonConverter, TypedPrimitiveConverter.SystemTextJson, typeInfo );
+        includes.AddIncludes( model.HasNewtonsoftJsonConverter, TypedPrimitiveConverter.NewtonsoftJson, typeInfo );
+      },
+      context.MainTemplateName
     );
 
-    // Apply the macro values to the context's content
-    var processed = GenerateSource( macroProcessor, compiledTemplate );
-    yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}", SourceText.From( processed, Encoding.UTF8 ) );
+    yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}", sourceText );
 
     yield break;
 
-    SourceText GenerateContent(
-      string templateKey )
+    SourceText GenerateSourceText(
+      string templateKey,
+      Action<IncludesCollection>? processIncludes = null,
+      string? templateResourceId = null )
     {
       var compiled = _templateCache.GetOrAdd(
         templateKey,
         key =>
         {
-          var template = context.LoadTemplate( key );
-          return new TemplateCompiler().Compile( template );
+          templateResourceId ??= key;
+          var template = context.LoadTemplate( templateResourceId );
+          IncludesCollection? includes = null;
+
+          if( processIncludes != null )
+          {
+            includes = new IncludesCollection();
+            processIncludes( includes );
+          }
+
+          return TemplateCompiler.Compile( _processorContext, template, includes );
         }
       );
 
-      var processedTemplate = GenerateSource( macroProcessor, compiled );
+      var processedTemplate = ProcessMacros( compiled );
       return SourceText.From( processedTemplate, Encoding.UTF8 );
     }
   }
@@ -136,27 +147,15 @@ internal class TemplateProcessor
   // NOTE: The main template is special and needs to be composed because it will
   // contain macros (e.g. attributes) that in turn, contain other macros that need
   // to be evaluated after the template is composed.
-  private static Template ComposeMainTemplate(
-    string mainTemplate,
-    MacroProcessor macroProcessor )
-  {
-    var compiler = new TemplateCompiler();
-    var compiledTemplate = compiler.Compile( mainTemplate );
-    var composedTemplate = GenerateSource( macroProcessor, compiledTemplate );
 
-    // Compile and return the composed template
-    return compiler.Compile( composedTemplate );
-  }
-
-  private static string GenerateSource(
-    MacroProcessor macroProcessor,
+  private static string ProcessMacros(
     Template template )
   {
     var sb = StringBuilderPool.Default.Get();
 
     try
     {
-      macroProcessor.ProcessMacros( template, sb );
+      MacroProcessor.ProcessMacros( template, sb );
       return sb.ToString();
     }
     finally

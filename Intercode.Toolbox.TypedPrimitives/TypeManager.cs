@@ -1,6 +1,6 @@
 // Module Name: TypeManager.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
@@ -139,31 +139,37 @@ internal static class TypeManager
       JsonParameters systemTextJson,
       JsonParameters newtonsoftJson )
     {
-      // @formatter:off
-      var typeInfo = new SupportedTypeInfoBuilder( typeof( T ) ).AddConverterCustomMacros( TypedPrimitiveConverter.SystemTextJson,
-                                                                  AddMacro( MacroNames.SystemTextJsonTokenType, systemTextJson.TokenType ),
-                                                                  AddMacro( MacroNames.SystemTextJsonReader, systemTextJson.Reader ),
-                                                                  AddMacro( MacroNames.SystemTextJsonWriter, systemTextJson.Writer ),
-                                                                  AddMacro(
-                                                                    MacroNames.SystemTextJsonConverterAttribute,
-                                                                    SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE
-                                                                  )
-                                                                )
-                                                                .AddConverterCustomMacros( TypedPrimitiveConverter.NewtonsoftJson,
-                                                                  AddMacro( MacroNames.NewtonsoftJsonTokenType, newtonsoftJson.TokenType ),
-                                                                  AddMacro( MacroNames.NewtonsoftJsonReader, newtonsoftJson.Reader ),
-                                                                  AddMacro( MacroNames.NewtonsoftJsonWriter, newtonsoftJson.Writer ),
-                                                                  AddMacro( MacroNames.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
-                                                                )
-                                                                .AddConverterCustomMacros( TypedPrimitiveConverter.TypeConverter,
-                                                                  AddMacro( MacroNames.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE )
-                                                                )
-                                                                .Build();
-      // @formatter:on
+      var typeInfo = new SupportedTypeInfoBuilder( typeof( T ) )
+                     .AddConverterCustomMacros(
+                       TypedPrimitiveConverter.SystemTextJson,
+                       AddPair( MacroNames.SystemTextJsonTokenType, systemTextJson.TokenType ),
+                       AddPair( MacroNames.SystemTextJsonReader, systemTextJson.Reader ),
+                       AddPair( MacroNames.SystemTextJsonWriter, systemTextJson.Writer )
+                     )
+                     .AddIncludes(
+                       TypedPrimitiveConverter.SystemTextJson,
+                       AddPair( MacroNames.SystemTextJsonConverterAttribute, SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
+                     )
+                     .AddConverterCustomMacros(
+                       TypedPrimitiveConverter.NewtonsoftJson,
+                       AddPair( MacroNames.NewtonsoftJsonTokenType, newtonsoftJson.TokenType ),
+                       AddPair( MacroNames.NewtonsoftJsonReader, newtonsoftJson.Reader ),
+                       AddPair( MacroNames.NewtonsoftJsonWriter, newtonsoftJson.Writer )
+                     )
+                     .AddIncludes(
+                       TypedPrimitiveConverter.NewtonsoftJson,
+                       AddPair( MacroNames.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
+                     )
+                     .AddIncludes(
+                       TypedPrimitiveConverter.TypeConverter,
+                       AddPair( MacroNames.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE )
+                     )
+                     .Build();
+
       s_supportedTypes.Add( typeof( T ).FullName, typeInfo );
       return;
 
-      static KeyValuePair<string, string> AddMacro(
+      static KeyValuePair<string, string> AddPair(
         string name,
         string value )
       {

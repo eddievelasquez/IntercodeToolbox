@@ -11,6 +11,7 @@ internal class SupportedTypeInfo
   #region Fields
 
   private readonly FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> _customConverterMacros;
+  private readonly FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> _includes;
 
   #endregion
 
@@ -18,9 +19,11 @@ internal class SupportedTypeInfo
 
   public SupportedTypeInfo(
     string keyword,
-    FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> customConverterMacros )
+    FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> customConverterMacros,
+    FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> includes )
   {
     _customConverterMacros = customConverterMacros;
+    _includes = includes;
     Keyword = keyword;
   }
 
@@ -38,6 +41,12 @@ internal class SupportedTypeInfo
     TypedPrimitiveConverter converter )
   {
     return _customConverterMacros.TryGetValue( converter, out var macros ) ? macros : [];
+  }
+
+  public IEnumerable<KeyValuePair<string, string>> GetIncludes(
+    TypedPrimitiveConverter converter )
+  {
+    return _includes.TryGetValue( converter, out var includes ) ? includes : [];
   }
 
   #endregion

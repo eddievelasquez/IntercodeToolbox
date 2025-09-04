@@ -1,4 +1,4 @@
-// Module Name: SupportedTypeBuilder.cs
+// Module Name: SupportedTypeInfoBuilder.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
@@ -12,6 +12,7 @@ internal class SupportedTypeInfoBuilder
 
   private readonly string _typeName;
   private readonly Dictionary<TypedPrimitiveConverter, Dictionary<string, string>> _converterMacros = new ();
+  private readonly Dictionary<TypedPrimitiveConverter, Dictionary<string, string>> _includes = new ();
   private string? _typeKeyword;
 
   #endregion
@@ -69,13 +70,34 @@ internal class SupportedTypeInfoBuilder
     return this;
   }
 
+  public SupportedTypeInfoBuilder AddIncludes(
+    TypedPrimitiveConverter converter,
+    params KeyValuePair<string, string>[] includes )
+  {
+    if( !_includes.TryGetValue( converter, out var converterIncludes ) )
+    {
+      converterIncludes = new Dictionary<string, string>();
+      _includes.Add( converter, converterIncludes );
+    }
+
+    foreach( var pair in includes )
+    {
+      converterIncludes.Add( pair.Key, pair.Value );
+    }
+
+    return this;
+  }
+
   public SupportedTypeInfo Build()
   {
     var keyword = _typeKeyword ?? GetKeyword( _typeName );
+
     var customMacros =
       _converterMacros.ToFrozenDictionary( pair => pair.Key, pair => pair.Value.ToFrozenDictionary() );
 
-    return new SupportedTypeInfo( keyword, customMacros );
+    var includes = _includes.ToFrozenDictionary( pair => pair.Key, pair => pair.Value.ToFrozenDictionary() );
+
+    return new SupportedTypeInfo( keyword, customMacros, includes );
   }
 
   #endregion
