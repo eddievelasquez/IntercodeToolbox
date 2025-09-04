@@ -87,10 +87,24 @@ public class TemplateCompilerTests
   }
 
   [Fact]
-  public void Compile_ShouldHandleIncludeWithNullContent()
+  public void Compile_ShouldHandleIncludeWithNullStringContent()
   {
     var includes = new IncludesCollection();
-    includes.AddInclude( "empty", null );
+    includes.AddInclude( "empty", ( string? ) null );
+
+    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$empty$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "" );
+  }
+
+  [Fact]
+  public void Compile_ShouldHandleIncludeWithNullGenerator()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "empty", ( MacroValueGenerator? ) null );
 
     var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$empty$", includes );
 

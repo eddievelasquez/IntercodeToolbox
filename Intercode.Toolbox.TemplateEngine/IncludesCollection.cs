@@ -8,10 +8,10 @@ public class IncludesCollection
 {
   #region Fields
 
-  private readonly Dictionary<string, string?> _includes = new ( StringComparer.OrdinalIgnoreCase );
+  private readonly Dictionary<string, MacroValueGenerator?> _includes = new ( StringComparer.OrdinalIgnoreCase );
 
 #if NET9_0_OR_GREATER
-  private readonly Dictionary<string, string?>.AlternateLookup<ReadOnlySpan<char>> _alternate;
+  private readonly Dictionary<string, MacroValueGenerator?>.AlternateLookup<ReadOnlySpan<char>> _alternate;
 #endif
 
   #endregion
@@ -44,8 +44,8 @@ public class IncludesCollection
   /// <summary>
   ///   Adds an include to the collection with the specified name and content.
   /// </summary>
-  /// <param name="name">The name of an include. Must be a valid macro name.</param>
-  /// <param name="content">The content associated with an include. Can be <c>null</c>.</param>
+  /// <param name="name">The name of the included content. Must be a valid macro name.</param>
+  /// <param name="content">The content to be included. Can be <c>null</c>.</param>
   /// <exception cref="ArgumentException">
   ///   Thrown if the <paramref name="name" /> is null, empty, or contains invalid characters.
   ///   Valid macro names must consist of letters, digits, underscores ('_'), or dashes ('-').
@@ -59,7 +59,38 @@ public class IncludesCollection
   {
     MacroExtensions.ValidateMacroName( name );
 
-    _includes[name] = content;
+    MacroValueGenerator? generator = null;
+
+    if( content != null )
+    {
+      generator = _ => content;
+    }
+
+    AddIncludeImpl( name, generator );
+  }
+
+  /// <summary>
+  ///   Adds a new include to the collection with the specified name and an optional generator.
+  /// </summary>
+  /// <param name="name">The name of the included content. Must be a valid macro name.</param>
+  /// <param name="generator">
+  ///   An optional <see cref="MacroValueGenerator" /> used to dynamically generate the included content.
+  ///   If <c>null</c>, the content will be empty.
+  /// </param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown if the <paramref name="name" /> is not a valid macro name.
+  /// </exception>
+  /// <remarks>
+  ///   This method allows adding dynamic macros to the collection, where the content can be generated
+  ///   at runtime using the provided generator.
+  /// </remarks>
+  public void AddInclude(
+    string name,
+    MacroValueGenerator? generator = null )
+  {
+    MacroExtensions.ValidateMacroName( name );
+
+    AddIncludeImpl( name, generator );
   }
 
   /// <summary>
@@ -88,7 +119,14 @@ public class IncludesCollection
       throw new ArgumentNullException( nameof( name ) );
     }
 
-    return _includes.TryGetValue( name, out content );
+    if( _includes.TryGetValue( name, out var generator ) )
+    {
+      content = generator?.Invoke( ReadOnlySpan<char>.Empty );
+      return true;
+    }
+
+    content = null;
+    return false;
   }
 
 #if NET9_0_OR_GREATER
@@ -114,10 +152,28 @@ public class IncludesCollection
     ReadOnlySpan<char> name,
     out string? content )
   {
-    return _alternate.TryGetValue( name, out content );
+    if( _alternate.TryGetValue( name, out var generator ) )
+    {
+      content = generator?.Invoke( name );
+      return true;
+    }
+
+    content = null;
+    return false;
   }
 
 #endif
+
+  #endregion
+
+  #region Implementation
+
+  private void AddIncludeImpl(
+    string name,
+    MacroValueGenerator? generator )
+  {
+    _includes[name] = generator;
+  }
 
   #endregion
 }
