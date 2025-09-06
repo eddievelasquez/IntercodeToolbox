@@ -32,7 +32,9 @@ internal class TemplateDescriptor
       MainTemplateName
     );
 
-    TemplateKey = useCommonTemplates ? Model.Converters.ToString() : $"{Model.PrimitiveTypeName}_{Model.Converters}";
+    TemplateKey = useCommonTemplates
+      ? $"{MainTemplateName}.{Model.Converters}"
+      : $"{MainTemplateName}.{Model.PrimitiveTypeName}.{Model.Converters}";
   }
 
   #endregion

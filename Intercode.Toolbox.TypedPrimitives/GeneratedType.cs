@@ -14,6 +14,13 @@ internal record struct GeneratedType(
 
   public GeneratedType(
     GeneratorModel model,
+    SourceText sourceText )
+    : this( $"{model.Namespace}.{model.TypeName}", sourceText )
+  {
+  }
+
+  public GeneratedType(
+    GeneratorModel model,
     ConverterModel converter,
     SourceText sourceText )
     : this( $"{model.Namespace}.{model.TypeName}{converter.Name}", sourceText )
