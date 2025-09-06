@@ -1,10 +1,12 @@
-// Module Name: TemplateContext.cs
+// Module Name: TemplateDescriptor.cs
 // Author:      Eduardo Velasquez
 // Copyright (c) 2024, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
-internal class TemplateContext
+using Intercode.Toolbox.TemplateEngine;
+
+internal class TemplateDescriptor
 {
   #region Constants
 
@@ -16,7 +18,7 @@ internal class TemplateContext
 
   #region Constructors
 
-  public TemplateContext(
+  public TemplateDescriptor(
     GeneratorModel model,
     SupportedTypeInfo typeInfo )
   {
@@ -58,6 +60,22 @@ internal class TemplateContext
     // Load common template
     template = EmbeddedResourceManager.LoadTemplate( COMMON_DIRECTORY, templateName );
     return template;
+  }
+
+  public void AddMacrosToContext(
+    MacroProcessorContext context )
+  {
+    // Set the common macros for all templates
+    context.AddMacro( MacroNames.PrimitiveName, TypeInfo.Keyword );
+    context.AddMacro( MacroNames.TypedPrimitiveNamespace, Model.Namespace );
+    context.AddMacro( MacroNames.TypedPrimitiveName, Model.TypeName );
+    context.AddMacro( MacroNames.TypedPrimitiveQualifiedName, $"{Model.Namespace}.{Model.TypeName}" );
+    context.AddMacro( MacroNames.StringComparison, Model.StringComparison );
+
+    // Add/update conditional macros for the requested converters
+    context.AddConverterMacros( Model.TypeConverter.IsEnabled, TypedPrimitiveConverter.TypeConverter, TypeInfo );
+    context.AddConverterMacros( Model.SystemTextJsonConverter.IsEnabled, TypedPrimitiveConverter.SystemTextJson, TypeInfo );
+    context.AddConverterMacros( Model.NewtonsoftJsonConverter.IsEnabled, TypedPrimitiveConverter.NewtonsoftJson, TypeInfo );
   }
 
   #endregion

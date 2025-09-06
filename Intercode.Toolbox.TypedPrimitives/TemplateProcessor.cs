@@ -9,120 +9,85 @@ using System.Text;
 using Intercode.Toolbox.TemplateEngine;
 using Microsoft.CodeAnalysis.Text;
 
+/// <summary>
+///   Processes templates for generating typed primitive source code, including converters and main struct definitions.
+/// </summary>
 internal class TemplateProcessor
 {
-  #region Constants
-
-  private const string TYPE_CONVERTER_TEMPLATE_NAME = "TypeConverter";
-  private const string SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME = "SystemTextJsonConverter";
-  private const string NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME = "NewtonsoftJsonConverter";
-  private const string EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME = "EFCoreValueConverter";
-
-  #endregion
-
   #region Fields
 
+  // Caches compiled templates by key for reuse and performance
   private readonly ConcurrentDictionary<string, Template> _templateCache = new ();
+
+  // Context for macro processing, shared across template processing
   private readonly MacroProcessorContext _processorContext = new ();
 
   #endregion
 
   #region Public Methods
 
+  /// <summary>
+  ///   Processes the template for a given model and type info, yielding generated types (converters and main struct).
+  /// </summary>
+  /// <param name="model">The generator model describing the primitive type and its converters.</param>
+  /// <param name="typeInfo">Supported type information for macros and includes.</param>
+  /// <returns>An IEnumerable of generated types (converters and main struct).</returns>
   public IEnumerable<GeneratedType> ProcessTemplate(
     GeneratorModel model,
     SupportedTypeInfo typeInfo )
   {
-    var context = new TemplateContext( model, typeInfo );
+    // Create a descriptor for the template, which manages macros and template keys
+    var descriptor = new TemplateDescriptor( model, typeInfo );
 
-    // Set the common macros for all templates
-    _processorContext.AddMacro( MacroNames.PrimitiveName, typeInfo.Keyword );
-    _processorContext.AddMacro( MacroNames.TypedPrimitiveNamespace, context.Model.Namespace );
-    _processorContext.AddMacro( MacroNames.TypedPrimitiveName, context.Model.TypeName );
+    // Add macros from the descriptor to the macro processor context
+    descriptor.AddMacrosToContext( _processorContext );
 
-    _processorContext.AddMacro(
-      MacroNames.TypedPrimitiveQualifiedName,
-      $"{context.Model.Namespace}.{context.Model.TypeName}"
-    );
-    _processorContext.AddMacro( MacroNames.StringComparison, context.Model.StringComparison );
-
-    // Add/update conditional macros for the requested converters
-    _processorContext.AddConverterMacros(
-      context.Model.HasTypeConverter,
-      TypedPrimitiveConverter.TypeConverter,
-      typeInfo
-    );
-
-    _processorContext.AddConverterMacros(
-      context.Model.HasSystemTextJsonConverter,
-      TypedPrimitiveConverter.SystemTextJson,
-      typeInfo
-    );
-
-    _processorContext.AddConverterMacros(
-      context.Model.HasNewtonsoftJsonConverter,
-      TypedPrimitiveConverter.NewtonsoftJson,
-      typeInfo
-    );
-
-    SourceText? sourceText;
-
-    // Create the EFCore ValueConverter if requested
-    if( context.Model.HasEfCoreConverter )
+    // Generate and yield all enabled converters for the model
+    foreach( var generatedType in GenerateConverters() )
     {
-      sourceText = GenerateSourceText( EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME );
-      yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}ValueConverter", sourceText );
+      yield return generatedType;
     }
 
-    // Create the TypeConverter if requested
-    if( context.Model.HasTypeConverter )
-    {
-      sourceText = GenerateSourceText( TYPE_CONVERTER_TEMPLATE_NAME );
-      yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}TypeConverter", sourceText );
-    }
-
-    // Create the System.Text.Json converter if requested
-    if( context.Model.HasSystemTextJsonConverter )
-    {
-      sourceText = GenerateSourceText( SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME );
-      yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}SystemTextJsonConverter", sourceText );
-    }
-
-    // Create the Newtonsoft.Json converter if requested
-    if( context.Model.HasNewtonsoftJsonConverter )
-    {
-      sourceText = GenerateSourceText( NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME );
-      yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}NewtonsoftJsonConverter", sourceText );
-    }
-
-    // Create the main typed primitive struct
-    sourceText = GenerateSourceText(
-      context.TemplateKey,
+    // Generate the main typed primitive struct source text, including requested converters
+    var sourceText = GenerateSourceText(
+      descriptor.TemplateKey,
       includes =>
       {
-        // Add includes for the requested converters
-        includes.AddIncludes( model.HasTypeConverter, TypedPrimitiveConverter.TypeConverter, typeInfo );
-        includes.AddIncludes( model.HasSystemTextJsonConverter, TypedPrimitiveConverter.SystemTextJson, typeInfo );
-        includes.AddIncludes( model.HasNewtonsoftJsonConverter, TypedPrimitiveConverter.NewtonsoftJson, typeInfo );
+        // Add includes for each enabled converter type
+        includes.AddIncludes( model.TypeConverter.IsEnabled, TypedPrimitiveConverter.TypeConverter, typeInfo );
+        includes.AddIncludes( model.SystemTextJsonConverter.IsEnabled, TypedPrimitiveConverter.SystemTextJson, typeInfo );
+        includes.AddIncludes( model.NewtonsoftJsonConverter.IsEnabled, TypedPrimitiveConverter.NewtonsoftJson, typeInfo );
       },
-      context.MainTemplateName
+      descriptor.MainTemplateName
     );
 
+    // Yield the main struct as a generated type
     yield return new GeneratedType( $"{model.Namespace}.{model.TypeName}", sourceText );
 
     yield break;
+
+    // Generate source text for each enabled converter
+    IEnumerable<GeneratedType> GenerateConverters()
+    {
+      foreach( var converter in model.GetEnabledConverters() )
+      {
+        sourceText = GenerateSourceText( converter.Name );
+        yield return new GeneratedType( model, converter, sourceText );
+      }
+    }
 
     SourceText GenerateSourceText(
       string templateKey,
       Action<IncludesCollection>? processIncludes = null,
       string? templateResourceId = null )
     {
-      var compiled = _templateCache.GetOrAdd(
+      // Retrieve or compile the template, adding includes if needed
+      var template = _templateCache.GetOrAdd(
         templateKey,
         key =>
         {
           templateResourceId ??= key;
-          var template = context.LoadTemplate( templateResourceId );
+          var templateText = descriptor.LoadTemplate( templateResourceId );
           IncludesCollection? includes = null;
 
           if( processIncludes != null )
@@ -131,11 +96,13 @@ internal class TemplateProcessor
             processIncludes( includes );
           }
 
-          return TemplateCompiler.Compile( _processorContext, template, includes );
+          // Compile the template with the macro context and includes
+          return TemplateCompiler.Compile( _processorContext, templateText, includes );
         }
       );
 
-      var processedTemplate = ProcessMacros( compiled );
+      // Process macros in the compiled template and return as SourceText
+      var processedTemplate = ProcessMacros( template );
       return SourceText.From( processedTemplate, Encoding.UTF8 );
     }
   }
@@ -144,13 +111,10 @@ internal class TemplateProcessor
 
   #region Implementation
 
-  // NOTE: The main template is special and needs to be composed because it will
-  // contain macros (e.g. attributes) that in turn, contain other macros that need
-  // to be evaluated after the template is composed.
-
   private static string ProcessMacros(
     Template template )
   {
+    // Use a pooled StringBuilder for efficiency
     var sb = StringBuilderPool.Default.Get();
 
     try
