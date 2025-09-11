@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path=".github/copilot-instructions.md" />
     <File Path="GitVersion.yml" />
     <File Path="LICENSE" />
     <File Path="README.md" />
@@ -29,7 +30,7 @@
   <Folder Name="/TypedPrimitives/Benchmarks/" Id="02ea681e-c7d8-13c7-8484-4ac65e1b71e8">
     <Project Path="Intercode.Toolbox.TemplateEngine.Benchmarks/Intercode.Toolbox.TemplateEngine.Benchmarks.csproj" />
   </Folder>
-  <Folder Name="/TypedPrimitives/Tests/" Id="2f02c1bb-f3eb-d4c3-5215-386545479d31">
+  <Folder Name="/TypedPrimitives/Tests/">
     <Project Path="Intercode.Toolbox.TemplateEngine.Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj" />
