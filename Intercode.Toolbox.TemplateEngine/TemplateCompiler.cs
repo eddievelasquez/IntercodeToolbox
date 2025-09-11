@@ -7,45 +7,56 @@ namespace Intercode.Toolbox.TemplateEngine;
 /// <summary>
 ///   Compiles a template text into a <see cref="Template" />.
 /// </summary>
-public static class TemplateCompiler
+public class TemplateCompiler
 {
   #region Public Methods
 
   /// <summary>
   ///   Compiles the specified template text into a <see cref="Template" />.
   /// </summary>
-  /// <param name="context">The <see cref="MacroProcessorContext" /> providing macros and options for compilation.</param>
-  /// <param name="text">The template text to compile.</param>
-  /// <param name="includes">
-  ///   An optional <see cref="IncludesCollection" /> that provides additional resources
-  ///   required during the compilation of the template. If not provided, it defaults to <c>null</c>.
+  /// <param name="macroTable">
+  ///   The <see cref="MacroTable" /> containing macro definitions used during compilation.
   /// </param>
-  /// <returns>The compiled <see cref="Template" />.</returns>
-  /// <exception cref="ArgumentNullException">Thrown when <paramref name="context" /> is <c>null</c>.</exception>
+  /// <param name="templateText">
+  ///   The text of the template to compile. Must not be <c>null</c>, empty, or consist only of whitespace.
+  /// </param>
+  /// <param name="includes">
+  ///   An optional <see cref="IncludesCollection" /> containing additional content to include in the template.
+  /// </param>
+  /// <param name="options"></param>
+  /// <returns>
+  ///   A <see cref="Template" /> instance representing the compiled template.
+  /// </returns>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown if <paramref name="macroTable" /> is <c>null</c>.
+  /// </exception>
   /// <exception cref="ArgumentException">
-  ///   Thrown when the template <paramref name="text" /> is <c>null</c>, empty, or consists only of whitespace.
+  ///   Thrown if <paramref name="templateText" /> is <c>null</c>, empty, or consists only of whitespace.
   /// </exception>
   public static Template Compile(
-    MacroProcessorContext context,
-    string text,
-    IncludesCollection? includes = null )
+    MacroTable macroTable,
+    string templateText,
+    IncludesCollection? includes = null,
+    TemplateCompilerOptions? options = null )
   {
-    if( context == null )
+    if( macroTable == null )
     {
-      throw new ArgumentNullException( nameof( context ) );
+      throw new ArgumentNullException( nameof( macroTable ) );
     }
 
-    if( string.IsNullOrWhiteSpace( text ) )
+    if( string.IsNullOrWhiteSpace( templateText ) )
     {
-      throw new ArgumentException( "The template's text cannot be null, empty, or whitespace.", nameof( text ) );
+      throw new ArgumentException( "The template's text cannot be null, empty, or whitespace.", nameof( templateText ) );
     }
+
+    options ??= TemplateCompilerOptions.Default;
 
     if( includes?.Count > 0 )
     {
-      text = ProcessIncludes( context, text.AsSpan(), includes );
+      templateText = ProcessIncludes( templateText.AsSpan(), includes, options );
     }
 
-    var segments = SplitIntoSegments( context, text.AsMemory() );
+    var segments = SplitIntoSegments( macroTable, templateText.AsMemory(), options );
 
     // Create an empty constant segment if we ended up with no segments
     if( segments.Length == 0 )
@@ -53,7 +64,7 @@ public static class TemplateCompiler
       segments = [Segment.CreateConstant( ReadOnlyMemory<char>.Empty )];
     }
 
-    return new Template( context, segments );
+    return new Template( macroTable, segments );
   }
 
   #endregion
@@ -61,11 +72,10 @@ public static class TemplateCompiler
   #region Implementation
 
   private static string ProcessIncludes(
-    MacroProcessorContext context,
     ReadOnlySpan<char> text,
-    IncludesCollection includes )
+    IncludesCollection includes,
+    TemplateCompilerOptions options )
   {
-    var delimiter = context.CompilerOptions.MacroDelimiter;
     var builder = StringBuilderPool.Default.Get();
 
     try
@@ -77,7 +87,7 @@ public static class TemplateCompiler
 
       while( currentIndex < text.Length )
       {
-        var macroStart = text.Slice( currentIndex ).IndexOf( delimiter );
+        var macroStart = text.Slice( currentIndex ).IndexOf( options.MacroDelimiter );
 
         if( macroStart == -1 )
         {
@@ -95,7 +105,7 @@ public static class TemplateCompiler
         }
 
         // Look for the closing macro delimiter
-        var macroEnd = text.Slice( macroStart + 1 ).IndexOf( delimiter );
+        var macroEnd = text.Slice( macroStart + 1 ).IndexOf( options.MacroDelimiter );
 
         if( macroEnd == -1 )
         {
@@ -110,8 +120,8 @@ public static class TemplateCompiler
         if( macroEnd == macroStart + 1 )
         {
           // An empty macro name means we found an escaped delimiter
-          builder.Append( delimiter );
-          builder.Append( delimiter );
+          builder.Append( options.MacroDelimiter );
+          builder.Append( options.MacroDelimiter );
         }
         else
         {
@@ -165,23 +175,22 @@ public static class TemplateCompiler
   }
 
   private static Segment[] SplitIntoSegments(
-    MacroProcessorContext context,
-    ReadOnlyMemory<char> text )
+    MacroTable macroTable,
+    ReadOnlyMemory<char> templateText,
+    TemplateCompilerOptions options )
   {
     var segments = new List<Segment>();
-    var delimiter = context.CompilerOptions.MacroDelimiter;
-    var separator = context.CompilerOptions.ArgumentSeparator;
-    var span = text.Span;
+    var span = templateText.Span;
     var currentIndex = 0;
 
-    while( currentIndex < text.Length )
+    while( currentIndex < templateText.Length )
     {
-      var macroStart = span.Slice( currentIndex ).IndexOf( delimiter );
+      var macroStart = span.Slice( currentIndex ).IndexOf( options.MacroDelimiter );
 
       if( macroStart == -1 )
       {
         // No more macros found, add the remaining text as a constant segment
-        segments.Add( Segment.CreateConstant( text.Slice( currentIndex ) ) );
+        segments.Add( Segment.CreateConstant( templateText.Slice( currentIndex ) ) );
         break;
       }
 
@@ -190,16 +199,16 @@ public static class TemplateCompiler
       // Add the text before the macro delimiter (if any) as a constant segment
       if( macroStart > currentIndex )
       {
-        segments.Add( Segment.CreateConstant( text.Slice( currentIndex, macroStart - currentIndex ) ) );
+        segments.Add( Segment.CreateConstant( templateText.Slice( currentIndex, macroStart - currentIndex ) ) );
       }
 
       // Look for the closing macro delimiter
-      var macroEnd = span.Slice( macroStart + 1 ).IndexOf( delimiter );
+      var macroEnd = span.Slice( macroStart + 1 ).IndexOf( options.MacroDelimiter );
 
       if( macroEnd == -1 )
       {
         // No closing delimiter found, treat the rest of the text as a constant segment
-        segments.Add( Segment.CreateConstant( text.Slice( macroStart ) ) );
+        segments.Add( Segment.CreateConstant( templateText.Slice( macroStart ) ) );
         break;
       }
 
@@ -209,13 +218,14 @@ public static class TemplateCompiler
       if( macroEnd == macroStart + 1 )
       {
         // An empty macro means we found an escaped delimiter
-        segments.Add( Segment.CreateDelimiter() );
+        var delimiter = templateText.Slice( macroStart + 1, 1 );
+        segments.Add( Segment.CreateDelimiter( delimiter ) );
       }
       else
       {
-        var name = text.Slice( macroStart + 1, macroEnd - macroStart - 1 );
+        var name = templateText.Slice( macroStart + 1, macroEnd - macroStart - 1 );
         var argument = ReadOnlyMemory<char>.Empty;
-        var argStart = name.Span.IndexOf( separator );
+        var argStart = name.Span.IndexOf( options.ArgumentSeparator );
 
         if( argStart != -1 )
         {
@@ -224,9 +234,9 @@ public static class TemplateCompiler
         }
 
 #if NET9_0_OR_GREATER
-        var slotNumber = context.AddMacro( name.Span );
+        var slotNumber = macroTable.GetSlot( name.Span );
 #else
-        var slotNumber = context.AddMacro( name.ToString() );
+        var slotNumber = macroTable.GetSlot( name.ToString() );
 #endif
 
         segments.Add( Segment.CreateMacro( name, argument, slotNumber ) );

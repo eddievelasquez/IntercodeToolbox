@@ -14,26 +14,31 @@ public record Template
   #region Constructors
 
   /// <summary>
-  ///   Represents a template with text and segments within the text.
+  ///   Initializes a new instance of the <see cref="Template" /> class with the specified macro table and segments.
   /// </summary>
-  /// <param name="context"></param>
-  /// <param name="segments">The text segments that have been identified by the <see cref="TemplateCompiler" />.</param>
+  /// <param name="macroTable">
+  ///   The <see cref="MacroTable" /> containing macro definitions used by the template.
+  /// </param>
+  /// <param name="segments">
+  ///   An array of <see cref="Segment" /> objects representing the segments of the template.
+  /// </param>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown when <paramref name="macroTable" /> or <paramref name="segments" /> is <c>null</c>.
+  /// </exception>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when <paramref name="segments" /> is empty.
+  /// </exception>
   internal Template(
-    MacroProcessorContext context,
+    MacroTable macroTable,
     Segment[] segments )
   {
-    if( segments == null )
-    {
-      throw new ArgumentNullException( nameof( segments ) );
-    }
+    Segments = segments ?? throw new ArgumentNullException( nameof( segments ) );
+    MacroTable = macroTable ?? throw new ArgumentNullException( nameof( macroTable ) );
 
-    if( segments.Length == 0 )
+    if( Segments.Length == 0 )
     {
       throw new ArgumentException( "The template must have at least one segment.", nameof( segments ) );
     }
-
-    Context = context ?? throw new ArgumentNullException( nameof( context ) );
-    Segments = segments;
   }
 
   #endregion
@@ -41,10 +46,9 @@ public record Template
   #region Properties
 
   /// <summary>
-  ///   Gets the context associated with the template, which provides configuration
-  ///   and macro definitions for processing the template.
+  ///   Gets the <see cref="MacroTable" /> associated with this template.
   /// </summary>
-  public MacroProcessorContext Context { get; }
+  public MacroTable MacroTable { get; }
 
   /// <summary>
   ///   The template's text

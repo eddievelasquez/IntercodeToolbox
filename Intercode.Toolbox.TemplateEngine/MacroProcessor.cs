@@ -14,21 +14,33 @@ public static class MacroProcessor
   #region Public Methods
 
   /// <summary>
-  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
+  ///   Processes macros in the specified <see cref="Template" /> and writes the result to the provided
+  ///   <see cref="TextWriter" />.
   /// </summary>
   /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
-  /// <param name="writer">The <see cref="TextWriter" /> to write the processed template to.</param>
-  /// <exception cref="InvalidOperationException">Thrown when an unknown segment kind is encountered.</exception>
+  /// <param name="macroValues">The <see cref="MacroValues" /> providing values for the macros in the template.</param>
+  /// <param name="writer">The <see cref="TextWriter" /> to which the processed template will be written.</param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="macroValues" /> is not associated with the same <see cref="MacroTable" /> as the
+  ///   <paramref name="template" />.
+  /// </exception>
+  /// <exception cref="InvalidOperationException">Thrown when an unknown segment kind is encountered during processing.</exception>
   /// <remarks>
-  ///   This method iterates through the segments of the provided template, processes macros, and writes the result to the
-  ///   specified <see cref="TextWriter" />.
+  ///   This method iterates through the segments of the provided <see cref="Template" />, processes macros, and writes the
+  ///   result to the specified <see cref="TextWriter" />.
   /// </remarks>
   public static void ProcessMacros(
     Template template,
+    MacroValues macroValues,
     TextWriter writer )
   {
-    var context = template.Context;
-    var macroDelimiter = context.CompilerOptions.MacroDelimiter;
+    if( template.MacroTable != macroValues.MacroTable )
+    {
+      throw new ArgumentException(
+        "The MacroValues instance must be associated with the same MacroTable as the Template.",
+        nameof( macroValues )
+      );
+    }
 
     foreach( var segment in template.Segments )
     {
@@ -40,7 +52,7 @@ public static class MacroProcessor
 
           try
           {
-            value = context.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? segment.Text;
+            value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? segment.Text;
           }
           catch( Exception exception )
           {
@@ -52,8 +64,8 @@ public static class MacroProcessor
         }
 
         case SegmentKind.Delimiter:
-          writer.Write( macroDelimiter );
-          break;
+        //writer.Write( macroDelimiter );
+        //break;
 
         case SegmentKind.Constant:
 #if NET6_0_OR_GREATER
@@ -75,14 +87,27 @@ public static class MacroProcessor
   ///   Processes macros in a template and writes the result to a <see cref="StringBuilder" />.
   /// </summary>
   /// <param name="template">The template containing the macros to process.</param>
+  /// <param name="macroValues">The macro values to use for processing the template.</param>
   /// <param name="builder">The <see cref="StringBuilder" /> to write the processed template to.</param>
-  /// <exception cref="InvalidOperationException">Thrown when an unknown segment kind is encountered.</exception>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="macroValues" /> instance is not associated with the same
+  ///   <see cref="MacroTable" /> as the <paramref name="template" />.
+  /// </exception>
+  /// <exception cref="InvalidOperationException">
+  ///   Thrown when an unknown segment kind is encountered during processing.
+  /// </exception>
   public static void ProcessMacros(
     Template template,
+    MacroValues macroValues,
     StringBuilder builder )
   {
-    var context = template.Context;
-    var macroDelimiter = context.CompilerOptions.MacroDelimiter;
+    if( template.MacroTable != macroValues.MacroTable )
+    {
+      throw new ArgumentException(
+        "The MacroValues instance must be associated with the same MacroTable as the Template.",
+        nameof( macroValues )
+      );
+    }
 
     foreach( var segment in template.Segments )
     {
@@ -94,7 +119,7 @@ public static class MacroProcessor
 
           try
           {
-            value = context.GetMacroValue( segment.ValueSlot, segment.ArgumentMemory.Span ) ?? string.Empty;
+            value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
           }
           catch( Exception exception )
           {
@@ -107,8 +132,8 @@ public static class MacroProcessor
         }
 
         case SegmentKind.Delimiter:
-          builder.Append( macroDelimiter );
-          break;
+        //builder.Append( segment.Memory.Span );
+        //break;
 
         case SegmentKind.Constant:
 #if NET6_0_OR_GREATER

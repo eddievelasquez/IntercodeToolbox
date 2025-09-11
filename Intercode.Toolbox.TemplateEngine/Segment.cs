@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 /// <summary>
 ///   Represents a text segment in a <see cref="Template" />.
 /// </summary>
-[DebuggerDisplay( "Kind = {Kind}, Text = {Memory}, Slot = {ValueSlot}" )]
+[DebuggerDisplay( "Kind = {Kind}, Text = {Memory}, Slot = {Slot}" )]
 public readonly record struct Segment
 {
   #region Constructors
@@ -21,19 +21,19 @@ public readonly record struct Segment
   /// <param name="kind">The kind of text segment.</param>
   /// <param name="memory">The <see cref="Memory" /> that contains the segment's text.</param>
   /// <param name="argumentMemory">Optional <see cref="Memory" /> that contains a macro segment's argument.</param>
-  /// <param name="valueSlot"></param>
+  /// <param name="slot"></param>
   private Segment(
     SegmentKind kind,
     ReadOnlyMemory<char> memory,
     ReadOnlyMemory<char> argumentMemory,
-    int valueSlot )
+    int slot )
   {
-    Debug.Assert( valueSlot >= -1 );
+    Debug.Assert( slot >= -1 );
 
     Kind = kind;
     Memory = memory;
     ArgumentMemory = argumentMemory;
-    ValueSlot = valueSlot;
+    Slot = slot;
   }
 
   #endregion
@@ -60,7 +60,7 @@ public readonly record struct Segment
   /// <remarks>
   ///   A value of <c>-1</c> indicates that the segment is not associated with a macro.
   /// </remarks>
-  public int ValueSlot { get; init; }
+  internal int Slot { get; init; }
 
   #endregion
 
@@ -81,11 +81,13 @@ public readonly record struct Segment
   /// <summary>
   ///   Creates a delimiter segment.
   /// </summary>
+  /// <param name="delimiter">The memory that contains the delimiter segment's text.</param>
   /// <returns>A new <see cref="Segment" /> representing a delimiter segment.</returns>
   [MethodImpl( MethodImplOptions.AggressiveInlining )]
-  public static Segment CreateDelimiter()
+  public static Segment CreateDelimiter(
+    ReadOnlyMemory<char> delimiter )
   {
-    return new Segment( SegmentKind.Delimiter, ReadOnlyMemory<char>.Empty, ReadOnlyMemory<char>.Empty, -1 );
+    return new Segment( SegmentKind.Delimiter, delimiter, ReadOnlyMemory<char>.Empty, -1 );
   }
 
   /// <summary>

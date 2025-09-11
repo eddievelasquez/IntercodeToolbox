@@ -14,8 +14,8 @@ public class TemplateCompilerTests
   public void Compile_ShouldHandleEscapedDelimiter_WhenStringEndsWithEscapedDelimiter()
   {
     const string Text = "template $$";
-
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -29,7 +29,7 @@ public class TemplateCompilerTests
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
   }
 
   [Fact]
@@ -37,7 +37,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$$ template.";
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -47,7 +48,7 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
 
     template.Segments[1]
             .Should()
@@ -59,7 +60,8 @@ public class TemplateCompilerTests
   {
     const string Text = "012345$$$$012345";
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -75,29 +77,15 @@ public class TemplateCompilerTests
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
 
     template.Segments[3]
             .Should()
             .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "012345" );
-  }
-
-  [Fact]
-  public void Compile_ShouldHandleIncludeWithNullStringContent()
-  {
-    var includes = new IncludesCollection();
-    includes.AddInclude( "empty", ( string? ) null );
-
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$empty$", includes );
-
-    template.Should().NotBeNull();
-    template.Text.Should().Be( "" );
-    template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "" );
   }
 
   [Fact]
@@ -106,7 +94,23 @@ public class TemplateCompilerTests
     var includes = new IncludesCollection();
     includes.AddInclude( "empty", ( MacroValueGenerator? ) null );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$empty$", includes );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, "$empty$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "" );
+  }
+
+  [Fact]
+  public void Compile_ShouldHandleIncludeWithNullStringContent()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "empty", ( string? ) null );
+
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, "$empty$", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "" );
@@ -117,8 +121,8 @@ public class TemplateCompilerTests
   [Fact]
   public void Compile_ShouldHandleMacroWithArgument()
   {
-    var context = new MacroProcessorContext();
-    var template = TemplateCompiler.Compile( context, "$macro:argument$" );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, "$macro:argument$" );
 
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 1 );
@@ -135,7 +139,8 @@ public class TemplateCompilerTests
   public void Compile_ShouldHandleNullIncludesParameter()
   {
     const string Text = "$macro$";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text, null );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, Text, null );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( Text );
@@ -150,7 +155,8 @@ public class TemplateCompilerTests
     includes.AddInclude( "unused", "UnusedContent" );
 
     const string Text = "No macros here";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text, includes );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text, includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( Text );
@@ -164,7 +170,8 @@ public class TemplateCompilerTests
     var includes = new IncludesCollection();
     includes.AddInclude( "section", "Start $$ End" );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$section$", includes );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, "$section$", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "Start $$ End" );
@@ -178,7 +185,8 @@ public class TemplateCompilerTests
     var includes = new IncludesCollection();
     includes.AddInclude( "section", "Start $macro:arg$ End" );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$section$", includes );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, "$section$", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "Start $macro:arg$ End" );
@@ -195,7 +203,8 @@ public class TemplateCompilerTests
     var includes = new IncludesCollection();
     includes.AddInclude( "section", "Start $macro$ End" );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$section$", includes );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, "$section$", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "Start $macro$ End" );
@@ -212,7 +221,8 @@ public class TemplateCompilerTests
     includes.AddInclude( "a", "A$macroA$" );
     includes.AddInclude( "b", "B$macroB$" );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$a$-$b$", includes );
+    var macroTable = DefineMacros( "macroA", "macroB" );
+    var template = TemplateCompiler.Compile( macroTable, "$a$-$b$", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "A$macroA$-B$macroB$" );
@@ -229,7 +239,8 @@ public class TemplateCompilerTests
     var includes = new IncludesCollection();
     includes.AddInclude( "header", "HeaderContent" );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$header$ body", includes );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, "$header$ body", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "HeaderContent body" );
@@ -244,7 +255,8 @@ public class TemplateCompilerTests
     includes.AddInclude( "a", "A" );
     includes.AddInclude( "b", "B" );
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$a$-$b$", includes );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, "$a$-$b$", includes );
     template.Should().NotBeNull();
     template.Text.Should().Be( "A-B" );
     template.Segments.Should().HaveCount( 1 );
@@ -255,7 +267,8 @@ public class TemplateCompilerTests
   public void Compile_ShouldReplaceWithEmpty_WhenIncludeIsReferencedButDoesNotExist()
   {
     const string Text = "$missing$";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text, new IncludesCollection() );
+    var macroTable = DefineMacros( "missing" );
+    var template = TemplateCompiler.Compile( macroTable, Text, new IncludesCollection() );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( Text );
@@ -267,7 +280,8 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnConstantSegment_WhenTextIsOnlyDelimiter()
   {
     const string Text = "$";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 1 );
     template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$" );
@@ -277,7 +291,8 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnConstantSegment_WhenTextIsUnclosedMacro()
   {
     const string Text = "$macro";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 1 );
     template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$macro" );
@@ -287,18 +302,20 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnDelimiterSegments_WhenTextIsMultipleEscapedDelimitersOnly()
   {
     const string Text = "$$$$";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 2 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
-    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
   }
 
   [Fact]
   public void Compile_ShouldReturnMacroSegment_WhenIncludeCollectionIsEmptyAndIncludeReferenced()
   {
     var includes = new IncludesCollection();
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), "$missing$", includes );
+    var macroTable = DefineMacros( "missing" );
+    var template = TemplateCompiler.Compile( macroTable, "$missing$", includes );
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "$missing$" );
@@ -311,7 +328,8 @@ public class TemplateCompilerTests
   {
     const string Text = "I have no macros";
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -329,7 +347,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro$";
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -347,8 +366,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$macroA$$macroB$$macroC$";
 
-    var context = new MacroProcessorContext();
-    var template = TemplateCompiler.Compile( context, Text );
+    var macroTable = DefineMacros( "macroA", "macroB", "macroC" );
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -358,21 +377,15 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.Slot == 0 );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.ValueSlot == 1 );
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.Slot == 1 );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroC" && s.ValueSlot == 2 );
-
-    context.MacroCount.Should().Be( 3 );
-
-    context.GetMacroSlot( "macroA" ).Should().Be( 0 );
-    context.GetMacroSlot( "macroB" ).Should().Be( 1 );
-    context.GetMacroSlot( "macroC" ).Should().Be( 2 );
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroC" && s.Slot == 2 );
   }
 
   [Fact]
@@ -380,7 +393,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro$$$$macro$";
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -394,7 +408,7 @@ public class TemplateCompilerTests
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Memory.IsEmpty );
+            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
 
     template.Segments[2]
             .Should()
@@ -406,7 +420,8 @@ public class TemplateCompilerTests
   {
     const string Text = "This is a $macro$ template.";
 
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var macroTable = DefineMacros( "macro" );
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -432,8 +447,8 @@ public class TemplateCompilerTests
   {
     const string Text = "$macroA$$macroB$$macroA$";
 
-    var context = new MacroProcessorContext();
-    var template = TemplateCompiler.Compile( context, Text );
+    var macroTable = DefineMacros( "macroA", "macroB" );
+    var template = TemplateCompiler.Compile( macroTable, Text );
 
     template.Should()
             .NotBeNull();
@@ -443,27 +458,23 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.Slot == 0 );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.ValueSlot == 1 );
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.Slot == 1 );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.ValueSlot == 0 );
-
-    context.MacroCount.Should().Be( 2 );
-    context.GetMacroSlot( "macroA" ).Should().Be( 0 );
-    context.GetMacroSlot( "macroB" ).Should().Be( 1 );
+            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.Slot == 0 );
   }
 
   [Fact]
   public void Compile_ShouldSupportCustomDelimiterAndArgumentSeparator()
   {
     var options = new TemplateCompilerOptionsBuilder().SetMacroDelimiter( '#' ).SetArgumentSeparator( ':' ).Build();
-    var context = new MacroProcessorContext( options );
-    var template = TemplateCompiler.Compile( context, "#macro:arg#" );
+    var macroTable = new MacroTableBuilder().Declare( "macro" ).Build();
+    var template = TemplateCompiler.Compile( macroTable, "#macro:arg#", options: options );
 
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 1 );
@@ -480,22 +491,46 @@ public class TemplateCompilerTests
   public void Compile_ShouldThrowArgumentException_WhenTextIsNullOrWhitespace(
     string? text )
   {
-    Action act = () => TemplateCompiler.Compile( new MacroProcessorContext(), text! );
+    var macroTable = DefineMacros();
+    Action act = () => TemplateCompiler.Compile( macroTable, text! );
 
     act.Should()
        .Throw<ArgumentException>()
-       .WithParameterName( "text" )
+       .WithParameterName( "templateText" )
        .WithMessage( "*cannot be null, empty, or whitespace*" );
   }
 
   [Fact]
-  public void Compile_ShouldThrowArgumentNullException_WhenContextIsNull()
+  public void Compile_ShouldThrowArgumentNullException_WhenMacroTableIsNull()
   {
     Action act = () => TemplateCompiler.Compile( null!, "text" );
 
     act.Should()
        .Throw<ArgumentNullException>()
-       .WithParameterName( "context" );
+       .WithParameterName( "macroTable" );
+  }
+
+  #endregion
+
+  #region Implementation
+
+  private static MacroTable DefineMacros(
+    params string[] macroNames )
+  {
+    var builder = new MacroTableBuilder();
+
+    foreach( var name in macroNames )
+    {
+      builder.Declare( name );
+    }
+
+    if( macroNames.Length == 0 )
+    {
+      // Ensure at least one macro is declared to avoid InvalidOperationException
+      builder.Declare( "defaultMacro" );
+    }
+
+    return builder.Build();
   }
 
   #endregion

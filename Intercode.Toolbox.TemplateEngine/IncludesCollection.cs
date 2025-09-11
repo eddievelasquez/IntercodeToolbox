@@ -4,6 +4,14 @@
 
 namespace Intercode.Toolbox.TemplateEngine;
 
+/// <summary>
+///   Represents a collection of includes that can be used in a template engine.
+/// </summary>
+/// <remarks>
+///   This class provides functionality to manage includes by their names, allowing for the addition,
+///   retrieval, and validation of includes. Names of includes must adhere to specific
+///   validation rules to ensure they are valid macro names.
+/// </remarks>
 public class IncludesCollection
 {
   #region Fields
@@ -18,6 +26,9 @@ public class IncludesCollection
 
   #region Constructors
 
+  /// <summary>
+  ///   Initializes a new instance of the <see cref="IncludesCollection" /> class.
+  /// </summary>
   public IncludesCollection()
   {
 #if NET9_0_OR_GREATER

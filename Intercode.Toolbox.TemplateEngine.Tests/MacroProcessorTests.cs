@@ -30,358 +30,277 @@ public class MacroProcessorTests
 
   #region Tests
 
+  // Edge case: Macro not defined in MacroTable
   [Fact]
-  public void ProcessMacros_WithStringBuilder_ShouldReplaceEscapedDelimiters()
+  public void ProcessMacros_ShouldIgnoreUndefinedMacros()
   {
-    const string Text = "Give me the $$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
+    var values = CreateStaticMacroValues( ( "unused", "unused value" ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $undefined$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
+    MacroProcessor.ProcessMacros( template, values, builder );
 
-    builder.ToString().Should().Be( "Give me the $!" );
+    // Should treat as empty since slot is -1
+    builder.ToString().Should().Be( "Hello, !" );
   }
 
+  // Edge case: Macro with argument but no generator
   [Fact]
-  public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValues()
+  public void ProcessMacros_ShouldTreatMacroWithArgumentButNoGeneratorAsEmpty()
   {
-    const string Text = "Timestamp: $now$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
+    var values = CreateStaticMacroValues( ( "who", null ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who:arg$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Hello, !" );
   }
 
+  // Edge case: Macro defined but value explicitly set to null
   [Fact]
-  public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValuesAndArgument()
+  public void ProcessMacros_ShouldTreatNullMacroValueAsEmpty()
   {
-    const string Text = "Timestamp: $now:yyyyMMdd$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
+    var values = CreateStaticMacroValues( ( "who", null ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Timestamp: 20241020" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithStaticValues()
-  {
-    const string Text = "Hello, $who$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Hello, World!" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringBuilder_WithTemplateMacroValues_ShouldReplaceEscapedDelimiters()
-  {
-    const string Text = "Give me the $$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Give me the $!" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringBuilder_WithTemplateMacroValues_ShouldReplaceMacrosWithDynamicValues()
-  {
-    const string Text = "Timestamp: $now$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringBuilder_WithTemplateMacroValues_ShouldReplaceMacrosWithDynamicValuesAndArgument()
-  {
-    const string Text = "Timestamp: $now:yyyyMMdd$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Timestamp: 20241020" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringBuilder_WithTemplateMacroValues_ShouldReplaceMacrosWithStaticValues()
-  {
-    const string Text = "Hello, $who$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-
-    builder.ToString().Should().Be( "Hello, World!" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_ShouldReplaceEscapedDelimiters()
-  {
-    const string Text = "Give me the $$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Give me the $!" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValues()
-  {
-    const string Text = "Timestamp: $now$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValuesAndArgument()
-  {
-    const string Text = "Timestamp: $now:yyyyMMdd$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Timestamp: 20241020" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithStaticValues()
-  {
-    const string Text = "Hello, $who$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Hello, World!" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_WithTemplateMacroValues_ShouldReplaceEscapedDelimiters()
-  {
-    const string Text = "Give me the $$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Give me the $!" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_WithTemplateMacroValues_ShouldReplaceMacrosWithDynamicValues()
-  {
-    const string Text = "Timestamp: $now$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", _ => _timeProvider.GetLocalNow().ToString() );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_WithTemplateMacroValues_ShouldReplaceMacrosWithDynamicValuesAndArgument()
-  {
-    const string Text = "Timestamp: $now:yyyyMMdd$";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) );
-
-    var template = TemplateCompiler.Compile( context, Text );
-
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Timestamp: 20241020" );
-  }
-
-  [Fact]
-  public void ProcessMacros_WithStringWriter_WithTemplateMacroValues_ShouldReplaceMacrosWithStaticValues()
-  {
-    const string Text = "Hello, $who$!";
-
-    var context = new MacroProcessorContext();
-    context.AddMacro( "who", "World" );
-
-    var template = TemplateCompiler.Compile( context, Text );
-    var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-
-    writer.ToString().Should().Be( "Hello, World!" );
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Hello, !" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldProcessConstantOnlyTemplate()
   {
-    const string Text = "Just text.";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "Just text." );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-    builder.ToString().Should().Be( Text );
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Just text." );
   }
 
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldProcessDelimiterOnlyTemplate()
   {
-    const string Text = "$$";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "$$" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
+    MacroProcessor.ProcessMacros( template, values, builder );
     builder.ToString().Should().Be( "$" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldProcessUnclosedMacroAsConstant()
   {
-    const string Text = "$macro";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "$macro" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-    builder.ToString().Should().Be( Text );
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "$macro" );
   }
 
   [Fact]
-  public void ProcessMacros_WithStringBuilder_ShouldWriteMacroTextIfValueIsNull()
+  public void ProcessMacros_WithStringBuilder_ShouldReplaceEscapedDelimiters()
   {
-    const string Text = "Hello, $who$!";
-    var context = new MacroProcessorContext(); // No macro value set
-    var template = TemplateCompiler.Compile( context, Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "Give me the $$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
-    builder.ToString().Should().Be( "Hello, !" );
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Give me the $!" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValues()
+  {
+    var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now$" );
+    var builder = new StringBuilder();
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValuesAndArgument()
+  {
+    var values = CreateDynamicMacroValues( ( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now:yyyyMMdd$" );
+    var builder = new StringBuilder();
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Timestamp: 20241020" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithStaticValues()
+  {
+    var values = CreateStaticMacroValues( ( "who", "World" ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var builder = new StringBuilder();
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Hello, World!" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldWriteExceptionMessageIfMacroThrows()
   {
-    const string Text = "Hello, $fail$!";
-    var context = new MacroProcessorContext();
-    context.AddMacro( "fail", _ => throw new InvalidOperationException( "fail macro error" ) );
-    var template = TemplateCompiler.Compile( context, Text );
+    var values = CreateDynamicMacroValues( ( "fail", _ => throw new InvalidOperationException( "fail macro error" ) ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $fail$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, builder );
+    MacroProcessor.ProcessMacros( template, values, builder );
     builder.ToString().Should().Contain( "fail macro error" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringBuilder_ShouldWriteMacroTextIfValueIsNull()
+  {
+    var values = CreateStaticMacroValues( ( "who", null ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var builder = new StringBuilder();
+    MacroProcessor.ProcessMacros( template, values, builder );
+    builder.ToString().Should().Be( "Hello, !" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldProcessConstantOnlyTemplate()
   {
-    const string Text = "Just text.";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "Just text." );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-    writer.ToString().Should().Be( Text );
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "Just text." );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldProcessDelimiterOnlyTemplate()
   {
-    const string Text = "$$";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "$$" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
+    MacroProcessor.ProcessMacros( template, values, writer );
     writer.ToString().Should().Be( "$" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldProcessUnclosedMacroAsConstant()
   {
-    const string Text = "$macro";
-    var template = TemplateCompiler.Compile( new MacroProcessorContext(), Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "$macro" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-    writer.ToString().Should().Be( Text );
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "$macro" );
   }
 
   [Fact]
-  public void ProcessMacros_WithStringWriter_ShouldWriteMacroTextIfValueIsNull()
+  public void ProcessMacros_WithStringWriter_ShouldReplaceEscapedDelimiters()
   {
-    const string Text = "Hello, $who$!";
-    var context = new MacroProcessorContext(); // No macro value set
-    var template = TemplateCompiler.Compile( context, Text );
+    var values = CreateStaticMacroValues();
+    var template = TemplateCompiler.Compile( values.MacroTable, "Give me the $$!" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
-    writer.ToString().Should().Be( "Hello, who!" );
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "Give me the $!" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValues()
+  {
+    var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now$" );
+    var writer = new StringWriter();
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValuesAndArgument()
+  {
+    var values = CreateDynamicMacroValues( ( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now:yyyyMMdd$" );
+    var writer = new StringWriter();
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "Timestamp: 20241020" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithStaticValues()
+  {
+    var values = CreateStaticMacroValues( ( "who", "World" ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var writer = new StringWriter();
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "Hello, World!" );
   }
 
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldWriteExceptionMessageIfMacroThrows()
   {
-    const string Text = "Hello, $fail$!";
-    var context = new MacroProcessorContext();
-    context.AddMacro( "fail", _ => throw new InvalidOperationException( "fail macro error" ) );
-    var template = TemplateCompiler.Compile( context, Text );
+    var values = CreateDynamicMacroValues( ( "fail", _ => throw new InvalidOperationException( "fail macro error" ) ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $fail$!" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, writer );
+    MacroProcessor.ProcessMacros( template, values, writer );
     writer.ToString().Should().Contain( "fail macro error" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithStringWriter_ShouldWriteMacroTextIfValueIsNull()
+  {
+    var values = CreateStaticMacroValues( ( "who", null ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var writer = new StringWriter();
+    MacroProcessor.ProcessMacros( template, values, writer );
+    writer.ToString().Should().Be( "Hello, who!" );
+  }
+
+  #endregion
+
+  #region Implementation
+
+  private static MacroValues CreateDynamicMacroValues(
+    params (string name, MacroValueGenerator? generator)[] macros )
+  {
+    var builder = new MacroTableBuilder();
+
+    foreach( var (name, _) in macros )
+    {
+      builder.Declare( name );
+    }
+
+    if( macros.Length == 0 )
+    {
+      // Ensure at least one macro is declared to avoid empty MacroTable
+      builder.Declare( "dummy" );
+    }
+
+    var macroTable = builder.Build();
+    var values = macroTable.CreateValues();
+
+    foreach( var (name, generator) in macros )
+    {
+      values.SetValue( name, generator );
+    }
+
+    return values;
+  }
+
+  private static MacroValues CreateStaticMacroValues(
+    params (string name, string? value)[] macros )
+  {
+    var builder = new MacroTableBuilder();
+
+    foreach( var (name, _) in macros )
+    {
+      builder.Declare( name );
+    }
+
+    if( macros.Length == 0 )
+    {
+      // Ensure at least one macro is declared to avoid empty MacroTable
+      builder.Declare( "dummy" );
+    }
+
+    var macroTable = builder.Build();
+    var values = macroTable.CreateValues();
+
+    foreach( var (name, value) in macros )
+    {
+      values.SetValue( name, value );
+    }
+
+    return values;
   }
 
   #endregion
