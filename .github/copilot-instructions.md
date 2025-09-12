@@ -106,3 +106,62 @@ This repository targets modern .NET (currently .NET 9.0) and C# 13.0. Use the mo
 
 ## Rationale
 These rules minimize ambiguity, ensure deterministic and performant source generation, improve review signal-to-noise, and maintain a stable public API surface.
+
+To guide GitHub Copilot toward generating **reference documentation in the style of Microsoft SDKs**, you can extend your `copilot-instructions.md` file with a dedicated section that mimics the structure and tone of Microsoft’s official SDK documentation—like those found in the [.NET](https://learn.microsoft.com/en-us/dotnet/api/overview?view=net-8.0), [Visual Studio](https://learn.microsoft.com/en-us/visualstudio/extensibility/visual-studio-sdk-reference?view=vs-2022), or [Azure PowerShell](https://learn.microsoft.com/en-us/powershell/azure/azps-docs-style-guide?view=azps-14.4.0) SDKs.
+
+Here’s a tailored addition you can drop into your `copilot-instructions.md` file:
+
+---
+
+### 📘 Reference Documentation Style Guide
+
+Use this section to guide GitHub Copilot when generating API or SDK reference documentation.
+
+#### 🧭 Tone and Purpose
+- Objective, technical, and precise
+- Avoid narrative or conversational language
+- Focus on clarity, completeness, and discoverability
+
+#### 🧱 Structure
+
+Each API or SDK component should follow this format:
+
+```markdown
+## ClassName / InterfaceName
+
+### 📄 Summary
+A concise description of what this type represents or does.
+
+### 🧩 Namespace
+`Namespace.Name`
+
+### 🛠️ Assembly
+`Assembly.Name.dll`
+
+### 🧪 Syntax
+```csharp
+public class ClassName : BaseType
+```
+
+### 📥 Constructors
+- `ClassName()` – Initializes a new instance.
+- `ClassName(string name)` – Initializes with a name.
+
+### ⚙️ Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| `Name`   | `string` | Gets or sets the name. |
+| `IsEnabled` | `bool` | Indicates whether the feature is enabled. |
+
+### 🧮 Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `Initialize()` | `void` | Prepares the component for use. |
+| `ToString()` | `string` | Returns a string representation. |
+
+### 📚 Remarks
+Include usage notes, edge cases, and performance considerations.
+
+### 🔗 See Also
+- [RelatedClass](https://learn.microsoft.com/en-us/dotnet/api/system.relatedclass)
+- [Microsoft Learn: SDK Reference Guide](https://learn.microsoft.com/en-us/visualstudio/extensibility/visual-studio-sdk-reference?view=vs-2022)
