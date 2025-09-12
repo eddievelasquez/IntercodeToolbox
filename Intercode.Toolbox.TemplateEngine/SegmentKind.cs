@@ -7,7 +7,7 @@ namespace Intercode.Toolbox.TemplateEngine;
 /// <summary>
 ///   Represents the kind of text segment in a template.
 /// </summary>
-public enum SegmentKind
+internal enum SegmentKind
 {
   /// <summary>
   ///   Represents a constant text segment.

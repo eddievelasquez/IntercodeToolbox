@@ -121,7 +121,7 @@ public class IncludesCollection
   /// <remarks>
   ///   This method performs a case-insensitive lookup for the specified include name.
   /// </remarks>
-  public bool TryGetIncludeContent(
+  internal bool TryGetIncludeContent(
     string name,
     out string? content )
   {

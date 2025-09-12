@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 ///   Represents a text segment in a <see cref="Template" />.
 /// </summary>
 [DebuggerDisplay( "Kind = {Kind}, Text = {Memory}, Slot = {Slot}" )]
-public readonly record struct Segment
+internal readonly record struct Segment
 {
   #region Constructors
 

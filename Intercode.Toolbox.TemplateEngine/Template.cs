@@ -74,7 +74,7 @@ public record Template
   }
 
   /// <summary>The text segments that have been identified by the <see cref="TemplateCompiler" />.</summary>
-  public Segment[] Segments { get; init; }
+  internal Segment[] Segments { get; init; }
 
   #endregion
 }
