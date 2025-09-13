@@ -7,7 +7,7 @@ namespace Intercode.Toolbox.TemplateEngine;
 /// <summary>
 ///   Provides a builder for constructing a <see cref="MacroTable" /> with declared macro names.
 /// </summary>
-public class MacroTableBuilder
+public sealed class MacroTableBuilder
 {
   #region Fields
 

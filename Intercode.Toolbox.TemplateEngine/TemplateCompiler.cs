@@ -7,7 +7,7 @@ namespace Intercode.Toolbox.TemplateEngine;
 /// <summary>
 ///   Compiles a template text into a <see cref="Template" />.
 /// </summary>
-public class TemplateCompiler
+public static class TemplateCompiler
 {
   #region Public Methods
 
@@ -64,7 +64,7 @@ public class TemplateCompiler
       segments = [Segment.CreateConstant( ReadOnlyMemory<char>.Empty )];
     }
 
-    return new Template( macroTable, segments );
+    return new Template( macroTable, segments, templateText.Length );
   }
 
   #endregion

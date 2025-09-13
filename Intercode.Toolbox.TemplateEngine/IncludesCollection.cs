@@ -12,7 +12,7 @@ namespace Intercode.Toolbox.TemplateEngine;
 ///   retrieval, and validation of includes. Names of includes must adhere to specific
 ///   validation rules to ensure they are valid macro names.
 /// </remarks>
-public class IncludesCollection
+public sealed class IncludesCollection
 {
   #region Fields
 

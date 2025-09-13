@@ -42,8 +42,10 @@ public static class MacroProcessor
       );
     }
 
-    foreach( var segment in template.Segments )
+    for( var index = 0; index < template.Segments.Length; index++ )
     {
+      var segment = template.Segments[index];
+
       switch( segment.Kind )
       {
         case SegmentKind.Macro:
@@ -64,14 +66,10 @@ public static class MacroProcessor
         }
 
         case SegmentKind.Delimiter:
-        //writer.Write( macroDelimiter );
-        //break;
-
         case SegmentKind.Constant:
 #if NET6_0_OR_GREATER
           writer.Write( segment.Memory.Span );
 #else
-
           // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
           writer.Write( segment.Memory.ToString() );
 #endif
@@ -109,8 +107,13 @@ public static class MacroProcessor
       );
     }
 
-    foreach( var segment in template.Segments )
+    // Pre-allocate the StringBuilder capacity to avoid multiple allocations during appends
+    builder.EnsureCapacity( template.TemplateTextLength );
+
+    for( var index = 0; index < template.Segments.Length; index++ )
     {
+      var segment = template.Segments[index];
+
       switch( segment.Kind )
       {
         case SegmentKind.Macro:
@@ -132,15 +135,11 @@ public static class MacroProcessor
         }
 
         case SegmentKind.Delimiter:
-        //builder.Append( segment.Memory.Span );
-        //break;
-
         case SegmentKind.Constant:
 #if NET6_0_OR_GREATER
           builder.Append( segment.Memory.Span );
 #else
-
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+          // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
           builder.Append( segment.Memory.ToString() );
 #endif
           break;

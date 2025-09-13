@@ -12,11 +12,11 @@ namespace Intercode.Toolbox.TemplateEngine;
 ///   defined in the associated <see cref="MacroTable" />. It supports both static values and dynamic
 ///   value generators, allowing for flexible macro value management.
 /// </remarks>
-public class MacroValues
+public sealed class MacroValues
 {
   #region Fields
 
-  private readonly object?[] _values;
+  private readonly MacroValueGenerator?[] _generators;
 
   #endregion
 
@@ -27,8 +27,7 @@ public class MacroValues
     bool hasStandardMacros )
   {
     MacroTable = macroTable;
-    _values = new object?[macroTable.Count];
-
+    _generators = new MacroValueGenerator?[macroTable.Count];
     var slot = 0;
 
     // If the macro table includes standard macros, initialize their generators first.
@@ -37,7 +36,7 @@ public class MacroValues
     {
       foreach( var generator in StandardMacros.GetStandardMacroGenerators() )
       {
-        _values[slot++] = generator;
+        _generators[slot++] = generator;
       }
     }
   }
@@ -81,7 +80,7 @@ public class MacroValues
       throw new ArgumentException( $"Macro '{macroName}' does not exist in the macro table.", nameof( macroName ) );
     }
 
-    _values[slot] = generator;
+    _generators[slot] = generator;
     return this;
   }
 
@@ -109,7 +108,14 @@ public class MacroValues
       throw new ArgumentException( $"Macro '{macroName}' does not exist in the macro table.", nameof( macroName ) );
     }
 
-    _values[slot] = value;
+    MacroValueGenerator? generator = null;
+
+    if( value != null )
+    {
+      generator = _ => value;
+    }
+
+    _generators[slot] = generator;
     return this;
   }
 
@@ -152,19 +158,13 @@ public class MacroValues
     int slot,
     ReadOnlySpan<char> argument )
   {
-    if( slot == -1 )
+    if( slot < 0 || slot >= _generators.Length )
     {
       return null;
     }
 
-    var obj = _values[slot];
-
-    return obj switch
-    {
-      null               => null,
-      string staticValue => staticValue,
-      _                  => ( ( MacroValueGenerator ) obj ).Invoke( argument )
-    };
+    var generator = _generators[slot];
+    return generator?.Invoke( argument );
   }
 
   #endregion
@@ -188,7 +188,7 @@ public class MacroValues
       throw new ArgumentException( $"Macro '{macroName}' does not exist in the macro table.", nameof( macroName ) );
     }
 
-    _values[slot] = generator;
+    _generators[slot] = generator;
   }
 
   /// <summary>
@@ -233,14 +233,8 @@ public class MacroValues
       return null;
     }
 
-    var obj = _values[slot];
-
-    return obj switch
-    {
-      null               => null,
-      string staticValue => staticValue,
-      _                  => ( ( MacroValueGenerator ) obj ).Invoke( argument )
-    };
+    var generator = _generators[slot];
+    return generator?.Invoke( argument );
   }
 
 #endif

@@ -7,7 +7,7 @@ namespace Intercode.Toolbox.TemplateEngine;
 /// <summary>
 ///   Represents the options for the <see cref="TemplateCompiler" />.
 /// </summary>
-public class TemplateCompilerOptions
+public sealed class TemplateCompilerOptions
 {
   #region Constants
 

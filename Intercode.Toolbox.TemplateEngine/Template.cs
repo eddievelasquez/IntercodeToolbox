@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 /// <summary>
 ///   Represents a template with text and segments within the text.
 /// </summary>
-public record Template
+public readonly record struct Template
 {
   #region Constructors
 
@@ -22,6 +22,7 @@ public record Template
   /// <param name="segments">
   ///   An array of <see cref="Segment" /> objects representing the segments of the template.
   /// </param>
+  /// <param name="templateTextLength"></param>
   /// <exception cref="ArgumentNullException">
   ///   Thrown when <paramref name="macroTable" /> or <paramref name="segments" /> is <c>null</c>.
   /// </exception>
@@ -30,8 +31,10 @@ public record Template
   /// </exception>
   internal Template(
     MacroTable macroTable,
-    Segment[] segments )
+    Segment[] segments,
+    int templateTextLength )
   {
+    TemplateTextLength = templateTextLength;
     Segments = segments ?? throw new ArgumentNullException( nameof( segments ) );
     MacroTable = macroTable ?? throw new ArgumentNullException( nameof( macroTable ) );
 
@@ -75,6 +78,14 @@ public record Template
 
   /// <summary>The text segments that have been identified by the <see cref="TemplateCompiler" />.</summary>
   internal Segment[] Segments { get; init; }
+
+  /// <summary>
+  ///   Gets the total length of the template text represented by this instance.
+  /// </summary>
+  /// <value>
+  ///   An <see cref="int" /> representing the total number of characters in the template text.
+  /// </value>
+  internal int TemplateTextLength { get; }
 
   #endregion
 }

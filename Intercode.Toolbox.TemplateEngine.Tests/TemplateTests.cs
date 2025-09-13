@@ -13,7 +13,7 @@ public class TemplateTests
   [Fact]
   public void Constructor_ShouldThrow_WhenSegmentsIsEmpty()
   {
-    Action act = () => new Template( new MacroTableBuilder().Build(), [] );
+    Action act = () => new Template( new MacroTableBuilder().Build(), [], 0 );
 
     act.Should().Throw<ArgumentException>().WithParameterName( "segments" );
   }
@@ -21,7 +21,7 @@ public class TemplateTests
   [Fact]
   public void Constructor_ShouldThrow_WhenSegmentsIsNull()
   {
-    Action act = () => new Template( new MacroTableBuilder().Build(), null! );
+    Action act = () => new Template( new MacroTableBuilder().Build(), null!, 0 );
 
     act.Should().Throw<ArgumentNullException>().WithParameterName( "segments" );
   }

@@ -9,7 +9,7 @@ using System.Collections.Frozen;
 /// <summary>
 ///   Represents an immutable table of macro names and their associated slot indices.
 /// </summary>
-public class MacroTable
+public sealed class MacroTable
 {
   #region Constants
 
