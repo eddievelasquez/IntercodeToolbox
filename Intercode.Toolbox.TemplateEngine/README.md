@@ -173,9 +173,15 @@ When you call `DeclareStandardMacros()`, the engine registers a small set of bui
 
 ## Reference
 
-### `TemplateCompilerOptions`
+### TemplateCompilerOptions
 
-Immutable configuration applied by the compiler. Options instances can be cached and shared across threads.
+#### Summary
+Immutable configuration applied by the template compiler. Options instances can be cached and shared across threads.
+
+#### Syntax
+```csharp
+public sealed class TemplateCompilerOptions
+```
 
 #### Constructors
 - `TemplateCompilerOptions()` – Initializes with default settings (macro delimiter: `$`, argument separator: `:`).
@@ -186,6 +192,7 @@ Immutable configuration applied by the compiler. Options instances can be cached
 |----------|------|-------------|
 | `MacroDelimiter` | `char` | Gets the character used as the macro delimiter in the template engine. |
 | `ArgumentSeparator` | `char` | Gets the character used to separate arguments within a macro. |
+| `Default` | `TemplateCompilerOptions` | Gets the default options instance. |
 
 #### Usage Example
 ```csharp
@@ -204,131 +211,214 @@ var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: op
 #### Remarks
 - The delimiter and separator must not be alphanumeric, underscore, dash, or whitespace.
 - The delimiter and separator must be different characters.
-- Use the static `TemplateCompilerOptions.Default` for a shared default instance.
 
-### `MacroTableBuilder`
-Declares the list of macro names permitted in a template set.
+#### See Also
+- [String](https://learn.microsoft.com/en-us/dotnet/api/system.string)
 
+---
+
+### MacroTableBuilder
+
+#### Summary
+Declares the list of macro names permitted in a template set. Provides deterministic macro slot ordering.
+
+#### Syntax
 ```csharp
-MacroTableBuilder Declare(string macroName)
+public sealed class MacroTableBuilder
 ```
-Registers a macro identifier. Macro names are case-insensitive and can only contain alphanumeric, underscore, or dash characters.
 
+#### Constructors
+- `MacroTableBuilder()` – Initializes a new instance.
+
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `Declare(string macroName)` | `MacroTableBuilder` | Registers a macro identifier. |
+| `DeclareStandardMacros()` | `MacroTableBuilder` | Declares a set of built-in macro names. |
+| `Build()` | `MacroTable` | Materializes an immutable macro name mapping table. |
+
+#### Remarks
+- Macro names are case-insensitive and can only contain alphanumeric, underscore, or dash characters.
+- Macro names must be unique but can be declared multiple times, extra declarations are ignored.
+
+---
+
+### MacroTable
+
+#### Summary
+Immutable mapping from macro name (case-insensitive) to a slot index.
+
+#### Syntax
 ```csharp
-MacroTableBuilder DeclareStandardMacros()
+public sealed class MacroTable
 ```
-Declares a set of built-in macro names.
 
+#### Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| `Count` | `int` | Gets the number of declared macro entries. |
+
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `CreateValues()` | `MacroValues` | Creates a `MacroValues` instance for the macro table. |
+| `GetSlot(string macroName)` | `int` | Resolves the zero-based slot for a name, or -1 if the name was not declared. |
+
+#### Remarks
+- Use `CreateValues()` to bind macro values for expansion.
+
+---
+
+### MacroValues
+
+#### Summary
+Mutable container binding slot indices to static strings or generator delegates. Designed for rapid reassignment with no allocations.
+
+#### Syntax
 ```csharp
-MacroTable Build()
+public sealed class MacroValues
 ```
-Materializes an immutable macro name mapping table.
 
-### `MacroTable`
-Immutable mapping from macro name to a slot.
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `SetValue(string macroName, string? value)` | `MacroValues` | Associates a static string with a macro slot. Passing `null` clears the slot. |
+| `SetValue(string macroName, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro slot. Passing `null` clears the slot. |
+| `GetValue(string macroName)` | `string?` | Fetches the effective value by name, invoking a dynamic generator if present. Returns `null` when no value/generator is assigned or the name is undeclared. |
+| `GetValue(string macroName, ReadOnlySpan<char> argument)` | `string?` | Same as above but supplies the raw argument span to the generator. |
 
-```csharp
-int Count { get; }
-```
-Number of declared macro entries.
+#### See Also
+- [ReadOnlySpan<T>](https://learn.microsoft.com/en-us/dotnet/api/system.readonlyspan-1)
 
-```csharp
-MacroValues CreateValues()
-```
-Creates a `MacroValues` instance which is a container for the macro values. If the macro table was declared with standard macros, these are automatically added.
-Custom macros have no value or generator assigned until explicitly set.
+---
 
-```csharp
-int GetSlot(string macroName)
-```
-Resolves the zero-based slot for a name, or -1 if the name was not declared. Not necessary for typical usage since `MacroValues` methods accept names directly.
+### MacroValueGenerator Delegate
 
-### `MacroValues`
-Mutable container binding slots to static strings or generator delegates. Designed for rapid reassignment with no allocations.
+#### Summary
+User-provided callback that generates a dynamic value for a macro.
 
-```csharp
-MacroValues SetValue(string macroName, string? value)
-```
-Associates a static string value with a macro name (replaces any existing value or generator). Passing `null` clears the slot.
-
-```csharp
-MacroValues SetValue(string macroName, MacroValueGenerator? generator)
-```
-Associates a dynamic generator with a macro name (replaces any existing generator or static value). Passing `null` clears the slot.
-
-```csharp
-string? GetValue(string macroName)
-```
-Fetches the effective value by name, invoking a dynamic generator if present. Returns `null` when no value/generator is assigned or the name is undeclared.
-
-```csharp
-string? GetValue(string macroName, ReadOnlySpan<char> argument)
-```
-Same as above but supplies the raw argument span to the generator to avoid intermediate string allocations.
-
-### `MacroValueGenerator` delegate
+#### Syntax
 ```csharp
 delegate string MacroValueGenerator(ReadOnlySpan<char> argument);
 ```
-User-provided callback that generates a dynamic value for a macro. `argument` contains the optional macro argument from the template text; if no value was provided, it contains an empty span.
 
-### `TemplateCompiler`
+#### Parameters
+| Name | Type | Description |
+|------|------|-------------|
+| `argument` | `ReadOnlySpan<char>` | The macro argument from the template text; if no value was provided, it contains an empty span. |
+
+#### Returns
+- `string` – The generated macro value.
+
+#### Remarks
+- Used for dynamic macro expansion.
+
+#### See Also
+- [Delegate](https://learn.microsoft.com/en-us/dotnet/api/system.delegate)
+
+---
+
+### TemplateCompiler
+
+#### Summary
 Converts the raw template text plus optional include expansions into a `Template` structure.
 
+#### Syntax
 ```csharp
-static Template Compile(
-  MacroTable macroTable,
-  string templateText,
-  IncludesCollection? includes = null,
-  TemplateCompilerOptions? options = null )
+public static class TemplateCompiler
 ```
-Validates input, performs include substitution (if provided), then scans the resulting text in a single pass to build a collection of segments.
 
-### `MacroProcessor`
-Executes expansion by processing a compiled `Template` instances.
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `Compile(MacroTable macroTable, string templateText, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Validates input, performs include substitution (if provided), then scans the resulting text in a single pass to build a collection of segments. |
 
+#### Remarks
+- Use the returned `Template` for macro expansion.
+
+#### See Also
+- [StringBuilder](https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder)
+
+---
+
+### MacroProcessor
+
+#### Summary
+Executes expansion by processing a compiled `Template` instance.
+
+#### Syntax
 ```csharp
-static void ProcessMacros(Template template, MacroValues macroValues, TextWriter writer)
+public static class MacroProcessor
 ```
-Streams expanded output to a `TextWriter`.
 
-```csharp
-static void ProcessMacros(Template template, MacroValues macroValues, StringBuilder builder)
-```
-Appends expanded output into an existing `StringBuilder`.
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `ProcessMacros(Template template, MacroValues macroValues, TextWriter writer)` | `void` | Streams expanded output to a `TextWriter`. |
+| `ProcessMacros(Template template, MacroValues macroValues, StringBuilder builder)` | `void` | Appends expanded output into an existing `StringBuilder`. |
 
-> **NOTE**: Any exceptions thrown by generators are caught and their messages used as the macro substitution text.
+#### Remarks
+- Any exceptions thrown by generators are caught and their messages used as the macro substitution text.
 
-### `IncludesCollection`
+#### See Also
+- [TextWriter](https://learn.microsoft.com/en-us/dotnet/api/system.io.textwriter)
+- [StringBuilder](https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder)
+
+---
+
+### IncludesCollection
+
+#### Summary
 Container for compile-time macro expansion. Supports static text or dynamic generators.
 
+#### Syntax
 ```csharp
-int Count { get; }
+public sealed class IncludesCollection
 ```
-Current number of include entries tracked.
 
+#### Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| `Count` | `int` | Gets the current number of include entries tracked. |
+
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `AddInclude(string name, string? content)` | `void` | Adds or replaces a static include. A `null` content becomes an empty string at expansion. |
+| `AddInclude(string name, MacroValueGenerator? generator = null)` | `void` | Adds or replaces a dynamic include whose content is generated at compile-time. A `null` generator produces an empty string. |
+
+#### Remarks
+- Use includes for static blocks or compile-time expansion.
+
+---
+
+### Template
+
+#### Summary
+Represents a compiled template with its associated macro table and text. Provides access to the original template text and allows creation of macro value containers for expansion.
+
+#### Syntax
 ```csharp
-void AddInclude(string name, string? content)
+public readonly record struct Template
 ```
-Adds or replaces a static include. A `null` content becomes an empty string at expansion.
 
-```csharp
-void AddInclude(string name, MacroValueGenerator? generator = null)
-```
-Adds or replaces a dynamic include whose content is generated at compile-time. A `null` generator produces an empty string.
+#### Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| `MacroTable` | `MacroTable` | Gets the macro table associated with this template. |
+| `Text` | `string` | Gets the original template text. |
 
-### `Template`
-Immutable, thread-safe, aggregate containing the compiled representation of a template. The same instance can be reused across multiple expansions that use different `MacroValues`.
+#### Methods
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `CreateValues()` | `MacroValues` | Creates a new `MacroValues` instance associated with the template's macro table. |
 
-```csharp
-MacroTable MacroTable { get; }
-```
-Reference to the macro declaration table used during compilation; must match the one used to create `MacroValues`.
+#### Remarks
+- The `Text` property returns the original template string as provided to the compiler (after include expansion, if any).
+- Use `CreateValues()` to obtain a container for macro values to be used during template expansion.
 
-```csharp
-string Text { get; }
-```
-Original (post-include) template text.
+#### See Also
+- [String](https://learn.microsoft.com/en-us/dotnet/api/system.string)
 
 ## Advanced Usage
 - Custom delimiters and separators:

@@ -88,4 +88,16 @@ public readonly record struct Template
   internal int TemplateTextLength { get; }
 
   #endregion
+
+  #region Public Methods
+
+  /// <summary>
+  ///   Creates a new instance of <see cref="MacroValues" /> associated with the <see cref="MacroTable" /> of this template.
+  /// </summary>
+  public MacroValues CreateValues()
+  {
+    return MacroTable.CreateValues();
+  }
+
+  #endregion
 }
