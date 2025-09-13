@@ -472,7 +472,7 @@ public class TemplateCompilerTests
   [Fact]
   public void Compile_ShouldSupportCustomDelimiterAndArgumentSeparator()
   {
-    var options = new TemplateCompilerOptionsBuilder().SetMacroDelimiter( '#' ).SetArgumentSeparator( ':' ).Build();
+    var options = new TemplateCompilerOptions( '#', ':' );
     var macroTable = new MacroTableBuilder().Declare( "macro" ).Build();
     var template = TemplateCompiler.Compile( macroTable, "#macro:arg#", options: options );
 

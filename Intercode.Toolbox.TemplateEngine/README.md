@@ -6,7 +6,6 @@ A fast, allocation-conscious text templating engine for .NET.
 - Simplified, static API and new object model.
 - Compile-time includes for pre-expanding static blocks before macro processing.
 - Major performance gains.
-- Stricter validation and clearer errors.
 
 ## Table of Contents
 <!--TOC-->
@@ -26,14 +25,13 @@ A fast, allocation-conscious text templating engine for .NET.
     - [4. Process the Template](#4.-process-the-template)
   - [Standard Macros (Built-in)](#standard-macros-built-in)
   - [Reference](#reference)
-    - [`TemplateCompilerOptionsBuilder`](#templatecompileroptionsbuilder)
     - [`TemplateCompilerOptions`](#templatecompileroptions)
     - [`MacroTableBuilder`](#macrotablebuilder)
     - [`MacroTable`](#macrotable)
     - [`MacroValues`](#macrovalues)
     - [`MacroValueGenerator` delegate](#macrovaluegenerator-delegate)
     - [`TemplateCompiler`](#templatecompiler)
-    - [`MacroProcessor` (static)](#macroprocessor-static)
+    - [`MacroProcessor`](#macroprocessor-static)
     - [`IncludesCollection`](#includescollection)
     - [`Template`](#template)
   - [Advanced Usage](#advanced-usage)
@@ -42,6 +40,7 @@ A fast, allocation-conscious text templating engine for .NET.
   - [Migrating from 2.x to 3.0](#migrating-from-2.x-to-3.0)
   - [License](#license)
 <!--/TOC-->
+
 ## Overview
 A template is a string containing macros (placeholders) that are replaced at runtime with values. Example:
 
@@ -56,11 +55,11 @@ Hello, $Name$! Today is $NOW:yyyyMMdd$.
 ## Quick Start
 
 ```csharp
-// 1. Declare macros (optionally adding standard macros)
+// 1. Declare macros (adding optional standard macros)
 var macroTable = new MacroTableBuilder()
   .Declare("Name")
   .Declare("Age")
-  .DeclareStandardMacros()   // Adds NOW, UTC_NOW, GUID, etc.
+  .DeclareStandardMacros() // Adds NOW, UTC_NOW, GUID, etc.
   .Build();
 
 // 2. Compile template
@@ -103,7 +102,7 @@ Arguments are opaque to the engine —no parsing or validation is performed— s
 ### Delimiters, Arguments and Escaping
 - Macros are surrounded by the `TemplateCompilerOptions.MacroDelimiter` (default: `$`).
 - Arguments are optional values that are separated from the macro name using the `TemplateCompilerOptions.ArgumentSeparator` (default `:`).
-- Doubling the delimiter produces a literal instance, preventing accidental macro detection when the delimiter is present in the template text..
+- Doubling the delimiter produces a literal instance, preventing accidental macro detection when the delimiter is present in the template text.
 
 ## Step-by-Step
 
@@ -170,42 +169,45 @@ When you call `DeclareStandardMacros()`, the engine registers a small set of bui
 
 > **NOTE**: Arguments are not parsed by the engine; they are passed to the macro generator as-is.
 
+---
+
 ## Reference
-Each member is followed by a brief description of purpose and behavior.
-
-### `TemplateCompilerOptionsBuilder`
-Configures parsing characters (macro delimiter, argument separator) before creating an immutable `TemplateCompilerOptions` instance.
-
-```csharp
-TemplateCompilerOptionsBuilder SetMacroDelimiter(char value)
-```
-Specifies the character used to bracket macro names. Must be punctuation (not alphanumeric, underscore, dash, or whitespace) for unambiguous scanning.
-
-```csharp
-TemplateCompilerOptionsBuilder SetArgumentSeparator(char value)
-```
-Sets the single character that separates a macro's name from its optional argument segment.
-
-```csharp
-TemplateCompilerOptions Build()
-```
-Validates that delimiter and separator are distinct and syntactically acceptable, then produces an immutable options snapshot safe for concurrent reuse.
 
 ### `TemplateCompilerOptions`
+
 Immutable configuration applied by the compiler. Options instances can be cached and shared across threads.
 
-```csharp
-char MacroDelimiter { get; }
-```
-Delimiter character the compiler uses to mark start/end of macro tokens.
+#### Constructors
+- `TemplateCompilerOptions()` – Initializes with default settings (macro delimiter: `$`, argument separator: `:`).
+- `TemplateCompilerOptions(char macroDelimiter, char argumentSeparator)` – Initializes with custom delimiter and separator. Throws if values are invalid or equal.
 
+#### Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| `MacroDelimiter` | `char` | Gets the character used as the macro delimiter in the template engine. |
+| `ArgumentSeparator` | `char` | Gets the character used to separate arguments within a macro. |
+
+#### Usage Example
 ```csharp
-char ArgumentSeparator { get; }
+// Default options
+var options = new TemplateCompilerOptions();
+
+// or use the shared instance
+var options = TemplateCompilerOptions.Default;
+
+// Custom delimiter and separator
+var options = new TemplateCompilerOptions('#', '|');
+
+var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: options);
 ```
-Character partitioning a macro name from its optional argument payload (e.g., `Name:Arg`).
+
+#### Remarks
+- The delimiter and separator must not be alphanumeric, underscore, dash, or whitespace.
+- The delimiter and separator must be different characters.
+- Use the static `TemplateCompilerOptions.Default` for a shared default instance.
 
 ### `MacroTableBuilder`
-Declares the list of macro names permitted in a template set. Provides deterministic macro slot ordering.
+Declares the list of macro names permitted in a template set.
 
 ```csharp
 MacroTableBuilder Declare(string macroName)
@@ -220,10 +222,10 @@ Declares a set of built-in macro names.
 ```csharp
 MacroTable Build()
 ```
-Materializes an immutable table mapping macro names to slot indices.
+Materializes an immutable macro name mapping table.
 
 ### `MacroTable`
-Immutable mapping from macro name (case-insensitive) to a slot index.
+Immutable mapping from macro name to a slot.
 
 ```csharp
 int Count { get; }
@@ -242,17 +244,17 @@ int GetSlot(string macroName)
 Resolves the zero-based slot for a name, or -1 if the name was not declared. Not necessary for typical usage since `MacroValues` methods accept names directly.
 
 ### `MacroValues`
-Mutable container binding slot indices to static strings or generator delegates. Designed for rapid reassignment with no allocations.
+Mutable container binding slots to static strings or generator delegates. Designed for rapid reassignment with no allocations.
 
 ```csharp
 MacroValues SetValue(string macroName, string? value)
 ```
-Associates a static string with a macro slot (replaces any existing value or generator). Passing `null` clears the slot.
+Associates a static string value with a macro name (replaces any existing value or generator). Passing `null` clears the slot.
 
 ```csharp
 MacroValues SetValue(string macroName, MacroValueGenerator? generator)
 ```
-Associates a dynamic generator with a macro slot (replaces any existing generator or static value). Passing `null` clears the slot.
+Associates a dynamic generator with a macro name (replaces any existing generator or static value). Passing `null` clears the slot.
 
 ```csharp
 string? GetValue(string macroName)
@@ -268,7 +270,7 @@ Same as above but supplies the raw argument span to the generator to avoid inter
 ```csharp
 delegate string MacroValueGenerator(ReadOnlySpan<char> argument);
 ```
-User-provided callback that generates a dynamic value for a macro. `argument` contains the macro argument from the template text; if no value was provided, it contains an empty span.
+User-provided callback that generates a dynamic value for a macro. `argument` contains the optional macro argument from the template text; if no value was provided, it contains an empty span.
 
 ### `TemplateCompiler`
 Converts the raw template text plus optional include expansions into a `Template` structure.
@@ -282,23 +284,23 @@ static Template Compile(
 ```
 Validates input, performs include substitution (if provided), then scans the resulting text in a single pass to build a collection of segments.
 
-### `MacroProcessor` (static)
-Executes expansion by iterating a compiled `Template` instances.
+### `MacroProcessor`
+Executes expansion by processing a compiled `Template` instances.
 
 ```csharp
 static void ProcessMacros(Template template, MacroValues macroValues, TextWriter writer)
 ```
-Streams expanded output to a `TextWriter`, minimizing intermediate string creation.
+Streams expanded output to a `TextWriter`.
 
 ```csharp
 static void ProcessMacros(Template template, MacroValues macroValues, StringBuilder builder)
 ```
 Appends expanded output into an existing `StringBuilder`.
 
-> **NOTE**: Exception thrown by a generator are caught and their messages used as the macro substitution.
+> **NOTE**: Any exceptions thrown by generators are caught and their messages used as the macro substitution text.
 
 ### `IncludesCollection`
-Container for compile time macro expansion. Supports static text or dynamic generators.
+Container for compile-time macro expansion. Supports static text or dynamic generators.
 
 ```csharp
 int Count { get; }
@@ -313,10 +315,10 @@ Adds or replaces a static include. A `null` content becomes an empty string at e
 ```csharp
 void AddInclude(string name, MacroValueGenerator? generator = null)
 ```
-Adds or replaces a dynamic include whose content is generated at compile time. A `null` generator produces an empty string.
+Adds or replaces a dynamic include whose content is generated at compile-time. A `null` generator produces an empty string.
 
 ### `Template`
-Immutable, threa-safe, aggregate containing the compiled representation of a template. The same instance can be reused across multiple expansions with different `MacroValues`.
+Immutable, thread-safe, aggregate containing the compiled representation of a template. The same instance can be reused across multiple expansions that use different `MacroValues`.
 
 ```csharp
 MacroTable MacroTable { get; }
@@ -331,12 +333,9 @@ Original (post-include) template text.
 ## Advanced Usage
 - Custom delimiters and separators:
   ```csharp
-  var options = new TemplateCompilerOptionsBuilder()
-    .SetMacroDelimiter('$')
-    .SetArgumentSeparator(':')
-    .Build();
-
-  var template = TemplateCompiler.Compile(macroTable, "$Name:formal$", options: options);
+  // Use custom macro delimiter and argument separator
+  var options = new TemplateCompilerOptions('#', '|');
+  var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: options);
   ```
 
 - Dynamic macros with arguments:
@@ -362,7 +361,7 @@ Representative scenarios: pooled `StringBuilder`, fresh `StringBuilder`, `TextWr
 
 | 2.x Concept / API | 3.0 Replacement | Notes |
 |-------------------|-----------------|-------|
-| `TemplateEngineOptions` | `TemplateCompilerOptionsBuilder` / `TemplateCompilerOptions` | Builder replaces constructor params. |
+| `TemplateEngineOptions` | `TemplateCompilerOptions` | Use constructor overloads for configuration. |
 | `TemplateCompiler compiler = new(); compiler.Compile(text)` | `TemplateCompiler.Compile(macroTable, text, includes, options)` | Static; must pass table. |
 | `MacroProcessorBuilder` | `MacroTableBuilder` + `MacroTable.CreateValues()` | Separation of declaration and values. |
 | `builder.AddStandardMacros()` | `DeclareStandardMacros()` | Same semantics. |
@@ -375,7 +374,7 @@ Representative scenarios: pooled `StringBuilder`, fresh `StringBuilder`, `TextWr
 
 Migration steps:
 1. Declare all macro names with `MacroTableBuilder` (add standard macros if needed).
-2. Replace old options with `TemplateCompilerOptionsBuilder` if customizing.
+2. Replace old options with `TemplateCompilerOptions` constructor if customizing.
 3. Build `MacroTable`; create `MacroValues`; map old `AddMacro` calls to `SetValue`.
 4. Recompile templates using static `TemplateCompiler`.
 5. Process via `MacroProcessor.ProcessMacros` with the `MacroValues` instance.
