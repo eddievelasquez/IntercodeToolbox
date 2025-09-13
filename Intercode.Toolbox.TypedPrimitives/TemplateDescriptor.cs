@@ -4,11 +4,14 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using System.Collections.Concurrent;
 using Intercode.Toolbox.TemplateEngine;
 
 internal class TemplateDescriptor
 {
   #region Constants
+
+  private static readonly ConcurrentDictionary<string, string> s_templatePathCache = new ();
 
   private const string MAIN_TEMPLATE_NAME_VALUE_TYPE = "PrimitiveType.ValueType";
   private const string MAIN_TEMPLATE_NAME_REFERENCE_TYPE = "PrimitiveType.ReferenceType";
@@ -32,9 +35,11 @@ internal class TemplateDescriptor
       MainTemplateName
     );
 
+    var converterFlags = ( byte ) Model.Converters;
+
     TemplateKey = useCommonTemplates
-      ? $"{MainTemplateName}.{Model.Converters}"
-      : $"{MainTemplateName}.{Model.PrimitiveTypeName}.{Model.Converters}";
+      ? $"{MainTemplateName}.{converterFlags:X2}"
+      : $"{MainTemplateName}.{Model.PrimitiveTypeName}.{converterFlags:X2}";
   }
 
   #endregion
@@ -50,6 +55,34 @@ internal class TemplateDescriptor
 
   #region Public Methods
 
+  public string GetTemplateResourcePath(
+    ConverterModel converter )
+  {
+    var key = $"{converter.Name}.{Model.PrimitiveTypeName}";
+
+    return s_templatePathCache.GetOrAdd(
+      key,
+      _ =>
+      {
+        // Use the common main template if no specialization exists
+        var usesCommonTemplate = !EmbeddedResourceManager.DoesTemplateExist(
+          Model.PrimitiveTypeName,
+          converter.Name
+        );
+
+        var directory = usesCommonTemplate ? COMMON_DIRECTORY : Model.PrimitiveTypeName;
+        var resourcePath = EmbeddedResourceManager.GetTemplateResourcePath( directory, converter.Name );
+        return resourcePath;
+      }
+    );
+  }
+
+  public string LoadTemplateByPath(
+    string resourcePath )
+  {
+    return EmbeddedResourceManager.LoadTemplate( resourcePath );
+  }
+
   public string LoadTemplate(
     string templateName )
   {
@@ -64,20 +97,22 @@ internal class TemplateDescriptor
     return template;
   }
 
-  public void AddMacrosToContext(
-    MacroProcessorContext context )
+  public MacroValues CreateMacroValues(
+    MacroTable macroTable )
   {
-    // Set the common macros for all templates
-    context.AddMacro( MacroNames.PrimitiveName, TypeInfo.Keyword );
-    context.AddMacro( MacroNames.TypedPrimitiveNamespace, Model.Namespace );
-    context.AddMacro( MacroNames.TypedPrimitiveName, Model.TypeName );
-    context.AddMacro( MacroNames.TypedPrimitiveQualifiedName, $"{Model.Namespace}.{Model.TypeName}" );
-    context.AddMacro( MacroNames.StringComparison, Model.StringComparison );
+    var macroValues = macroTable.CreateValues();
 
-    // Add/update conditional macros for the requested converters
-    context.AddConverterMacros( Model.TypeConverter.IsEnabled, TypedPrimitiveConverter.TypeConverter, TypeInfo );
-    context.AddConverterMacros( Model.SystemTextJsonConverter.IsEnabled, TypedPrimitiveConverter.SystemTextJson, TypeInfo );
-    context.AddConverterMacros( Model.NewtonsoftJsonConverter.IsEnabled, TypedPrimitiveConverter.NewtonsoftJson, TypeInfo );
+    // Set the common macros for all templates
+    macroValues.SetValue( MacroNames.PrimitiveName, TypeInfo.Keyword )
+               .SetValue( MacroNames.TypedPrimitiveNamespace, Model.Namespace )
+               .SetValue( MacroNames.TypedPrimitiveName, Model.TypeName )
+               .SetValue( MacroNames.TypedPrimitiveQualifiedName, $"{Model.Namespace}.{Model.TypeName}" )
+               .SetValue( MacroNames.StringComparison, Model.StringComparison )
+               .AddConverterMacros( Model.TypeConverter, TypeInfo )
+               .AddConverterMacros( Model.SystemTextJsonConverter, TypeInfo )
+               .AddConverterMacros( Model.NewtonsoftJsonConverter, TypeInfo );
+
+    return macroValues;
   }
 
   #endregion

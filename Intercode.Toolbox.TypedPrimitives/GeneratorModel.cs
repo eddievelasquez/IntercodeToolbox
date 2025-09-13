@@ -34,21 +34,25 @@ internal readonly record struct GeneratorModel
 
     TypeConverter = new ConverterModel(
       TYPE_CONVERTER_TEMPLATE_NAME,
+      TypedPrimitiveConverter.TypeConverter,
       converters.HasFlag( TypedPrimitiveConverter.TypeConverter )
     );
 
     SystemTextJsonConverter = new ConverterModel(
       SYSTEM_TEXT_JSON_CONVERTER_TEMPLATE_NAME,
+      TypedPrimitiveConverter.SystemTextJson,
       converters.HasFlag( TypedPrimitiveConverter.SystemTextJson )
     );
 
     NewtonsoftJsonConverter = new ConverterModel(
       NEWTONSOFT_JSON_CONVERTER_TEMPLATE_NAME,
+      TypedPrimitiveConverter.NewtonsoftJson,
       converters.HasFlag( TypedPrimitiveConverter.NewtonsoftJson )
     );
 
     EfCoreValueConverter = new ConverterModel(
       EF_CORE_VALUE_CONVERTER_TEMPLATE_NAME,
+      TypedPrimitiveConverter.EfCoreValueConverter,
       converters.HasFlag( TypedPrimitiveConverter.EfCoreValueConverter )
     );
   }
@@ -100,4 +104,5 @@ internal readonly record struct GeneratorModel
 
 internal record struct ConverterModel(
   string Name,
+  TypedPrimitiveConverter Type,
   bool IsEnabled );

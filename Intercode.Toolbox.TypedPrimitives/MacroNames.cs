@@ -1,8 +1,10 @@
-// Module Name: Macros.cs
+// Module Name: MacroNames.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TypedPrimitives;
+
+using Intercode.Toolbox.TemplateEngine;
 
 internal static class MacroNames
 {
@@ -77,6 +79,31 @@ internal static class MacroNames
   ///   The attribute name for the Newtonsoft.Json converter.
   /// </summary>
   public const string NewtonsoftJsonConverterAttribute = nameof( NewtonsoftJsonConverterAttribute );
+
+  #endregion
+
+  #region Public Methods
+
+  public static MacroTableBuilder DeclareTemplateProcessorMacros(
+    this MacroTableBuilder builder )
+  {
+    builder.Declare( TypedPrimitiveNamespace )
+           .Declare( PrimitiveName )
+           .Declare( TypedPrimitiveName )
+           .Declare( TypedPrimitiveQualifiedName )
+           .Declare( StringComparison )
+           .Declare( SystemTextJsonTokenType )
+           .Declare( SystemTextJsonReader )
+           .Declare( SystemTextJsonWriter )
+           .Declare( NewtonsoftJsonTokenType )
+           .Declare( NewtonsoftJsonReader )
+           .Declare( NewtonsoftJsonWriter )
+           .Declare( TypeConverterAttribute )
+           .Declare( SystemTextJsonConverterAttribute )
+           .Declare( NewtonsoftJsonConverterAttribute );
+
+    return builder;
+  }
 
   #endregion
 }
