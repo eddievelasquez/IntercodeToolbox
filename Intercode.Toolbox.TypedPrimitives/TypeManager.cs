@@ -4,30 +4,36 @@
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 
+/// <summary>
+///   Provides metadata and macro/include configuration for supported primitive types and their converters.
+/// </summary>
+/// <remarks>
+///   This static class initializes and exposes a registry of supported primitive types, including their JSON and type
+///   converter macro templates.
+/// </remarks>
 internal static class TypeManager
 {
   #region Nested Types
 
-  private readonly struct JsonParameters(
-    string tokenType,
-    string reader,
-    string writer )
-  {
-    #region Properties
-
-    public string TokenType { get; } = tokenType;
-    public string Reader { get; } = reader;
-    public string Writer { get; } = writer;
-
-    #endregion
-  }
+  /// <summary>
+  ///   Encapsulates JSON serialization parameters for a primitive type and converter.
+  /// </summary>
+  /// <param name="TokenType">The JSON token type (e.g., "Number", "String").</param>
+  /// <param name="Reader">The code snippet to read the value from a JSON reader.</param>
+  /// <param name="Writer">The code snippet to write the value to a JSON writer.</param>
+  private readonly record struct JsonParameters(
+    string TokenType,
+    string Reader,
+    string Writer );
 
   #endregion
 
   #region Constants
 
+  // Attribute macro templates for each converter type
   private const string TYPE_CONVERTER_ATTRIBUTE_TEMPLATE =
     $"[global::System.ComponentModel.TypeConverter( typeof( ${MacroNames.TypedPrimitiveQualifiedName}$TypeConverter ) )]\n";
 
@@ -37,14 +43,20 @@ internal static class TypeManager
   private const string NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE =
     $"[global::Newtonsoft.Json.JsonConverter( typeof( ${MacroNames.TypedPrimitiveQualifiedName}$NewtonsoftJsonConverter ) )]\n";
 
-  private static readonly Dictionary<string, SupportedTypeInfo> s_supportedTypes = new ( StringComparer.Ordinal );
+  // Registry of supported types
+  private static readonly FrozenDictionary<Type, SupportedTypeInfo> s_supportedTypes;
 
   #endregion
 
   #region Constructors
 
+  /// <summary>
+  ///   Static constructor. Initializes the supported types registry with macro and include data for each primitive type.
+  /// </summary>
   static TypeManager()
   {
+    var supportedTypes = new Dictionary<Type, SupportedTypeInfo>();
+
     // @formatter:off
     Add<byte>(
       new JsonParameters( "Number", "reader.GetByte()", "writer.WriteNumberValue( value.Value )" ),
@@ -133,48 +145,42 @@ internal static class TypeManager
 
     // @formatter:on
 
+    s_supportedTypes = supportedTypes.ToFrozenDictionary();
+
     return;
 
-    static void Add<T>(
-      JsonParameters systemTextJson,
-      JsonParameters newtonsoftJson )
+    void Add<T>(
+      JsonParameters stj,
+      JsonParameters nsj )
     {
       var typeInfo = new SupportedTypeInfoBuilder( typeof( T ) )
                      .AddConverterCustomMacros(
                        TypedPrimitiveConverter.SystemTextJson,
-                       AddPair( MacroNames.SystemTextJsonTokenType, systemTextJson.TokenType ),
-                       AddPair( MacroNames.SystemTextJsonReader, systemTextJson.Reader ),
-                       AddPair( MacroNames.SystemTextJsonWriter, systemTextJson.Writer )
+                       ( MacroNames.SystemTextJsonTokenType, stj.TokenType ),
+                       ( MacroNames.SystemTextJsonReader, stj.Reader ),
+                       ( MacroNames.SystemTextJsonWriter, stj.Writer )
                      )
                      .AddIncludes(
                        TypedPrimitiveConverter.SystemTextJson,
-                       AddPair( MacroNames.SystemTextJsonConverterAttribute, SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
+                       ( MacroNames.SystemTextJsonConverterAttribute, SYSTEM_TEXT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
                      )
                      .AddConverterCustomMacros(
                        TypedPrimitiveConverter.NewtonsoftJson,
-                       AddPair( MacroNames.NewtonsoftJsonTokenType, newtonsoftJson.TokenType ),
-                       AddPair( MacroNames.NewtonsoftJsonReader, newtonsoftJson.Reader ),
-                       AddPair( MacroNames.NewtonsoftJsonWriter, newtonsoftJson.Writer )
+                       ( MacroNames.NewtonsoftJsonTokenType, nsj.TokenType ),
+                       ( MacroNames.NewtonsoftJsonReader, nsj.Reader ),
+                       ( MacroNames.NewtonsoftJsonWriter, nsj.Writer )
                      )
                      .AddIncludes(
                        TypedPrimitiveConverter.NewtonsoftJson,
-                       AddPair( MacroNames.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
+                       ( MacroNames.NewtonsoftJsonConverterAttribute, NEWTONSOFT_JSON_CONVERTER_ATTRIBUTE_TEMPLATE )
                      )
                      .AddIncludes(
                        TypedPrimitiveConverter.TypeConverter,
-                       AddPair( MacroNames.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE )
+                       ( MacroNames.TypeConverterAttribute, TYPE_CONVERTER_ATTRIBUTE_TEMPLATE )
                      )
                      .Build();
 
-      s_supportedTypes.Add( typeof( T ).FullName, typeInfo );
-      return;
-
-      static KeyValuePair<string, string> AddPair(
-        string name,
-        string value )
-      {
-        return new KeyValuePair<string, string>( name, value );
-      }
+      supportedTypes.Add( typeof( T ), typeInfo );
     }
   }
 
@@ -182,11 +188,37 @@ internal static class TypeManager
 
   #region Public Methods
 
+  /// <summary>
+  ///   Attempts to retrieve the <see cref="SupportedTypeInfo" /> associated with the specified type.
+  /// </summary>
+  /// <param name="type">The type for which to retrieve the supported type information.</param>
+  /// <param name="info">
+  ///   When this method returns, contains the <see cref="SupportedTypeInfo" /> associated with the specified type if it is
+  ///   supported;
+  ///   otherwise, <c>null</c>.
+  /// </param>
+  /// <returns>
+  ///   <c>true</c> if the specified type is supported and <paramref name="info" /> contains the associated
+  ///   <see cref="SupportedTypeInfo" />; otherwise, <c>false</c>.
+  /// </returns>
   public static bool TryGetSupportedTypeInfo(
-    string typeName,
+    Type type,
     [NotNullWhen( true )] out SupportedTypeInfo? info )
   {
-    return s_supportedTypes.TryGetValue( typeName, out info );
+    return s_supportedTypes.TryGetValue( type, out info );
+  }
+
+  /// <summary>
+  ///   Determines whether the specified type is supported by the <see cref="TypeManager" />.
+  /// </summary>
+  /// <param name="type">The type to check for support.</param>
+  /// <returns>
+  ///   <c>true</c> if the specified type is supported; otherwise, <c>false</c>.
+  /// </returns>
+  public static bool IsSupported(
+    Type type )
+  {
+    return s_supportedTypes.ContainsKey( type );
   }
 
   #endregion

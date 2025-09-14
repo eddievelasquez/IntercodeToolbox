@@ -34,7 +34,7 @@ internal static class MacroProcessorBuilderExtensions
     ConverterModel converter,
     SupportedTypeInfo typeInfo )
   {
-    foreach( var pair in typeInfo.GetConverterMacros( converter.Type ) )
+    foreach( var pair in typeInfo.GetConverterMacros( converter.ConverterType ) )
     {
       macroValues.SetValue( pair.Key, converter.IsEnabled ? pair.Value : null );
     }
@@ -66,7 +66,7 @@ internal static class MacroProcessorBuilderExtensions
     ConverterModel converter,
     SupportedTypeInfo typeInfo )
   {
-    foreach( var pair in typeInfo.GetIncludes( converter.Type ) )
+    foreach( var pair in typeInfo.GetIncludes( converter.ConverterType ) )
     {
       includes.AddInclude( pair.Key, converter.IsEnabled ? pair.Value : null );
     }

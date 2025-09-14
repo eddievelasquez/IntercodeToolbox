@@ -1,6 +1,6 @@
 // Module Name: TemplateDescriptor.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TypedPrimitives;
 
@@ -11,108 +11,164 @@ internal class TemplateDescriptor
 {
   #region Constants
 
-  private static readonly ConcurrentDictionary<string, string> s_templatePathCache = new ();
-
-  private const string MAIN_TEMPLATE_NAME_VALUE_TYPE = "PrimitiveType.ValueType";
-  private const string MAIN_TEMPLATE_NAME_REFERENCE_TYPE = "PrimitiveType.ReferenceType";
-  private const string COMMON_DIRECTORY = "Common";
+  private static readonly ConcurrentDictionary<int, TemplateDescriptor> s_cache = new ();
 
   #endregion
 
   #region Constructors
 
-  public TemplateDescriptor(
-    GeneratorModel model,
-    SupportedTypeInfo typeInfo )
+  private TemplateDescriptor(
+    TemplateType templateType,
+    Type primitiveType,
+    object? specializationDiscriminator = null )
   {
-    Model = model;
-    TypeInfo = typeInfo;
-    MainTemplateName = model.IsValueType ? MAIN_TEMPLATE_NAME_VALUE_TYPE : MAIN_TEMPLATE_NAME_REFERENCE_TYPE;
+    PrimitiveType = primitiveType;
+    SpecializationDiscriminator = specializationDiscriminator;
+    TemplateType = templateType;
+    PrimitiveTypeName = primitiveType.FullName!;
+    TemplateName = GetTemplateName();
 
-    // Use the common main template if no specialization exists
-    var useCommonTemplates = !EmbeddedResourceManager.DoesTemplateExist(
-      Model.PrimitiveTypeName,
-      MainTemplateName
+    var isSpecialized = EmbeddedResourceManager.TemplateExists( PrimitiveTypeName, TemplateName );
+
+    TemplateKey = GenerateTemplateKey( isSpecialized, SpecializationDiscriminator );
+
+    ResourcePath = EmbeddedResourceManager.GetTemplateResourcePath(
+      isSpecialized ? PrimitiveTypeName : ResourceNames.CommonDirectory,
+      TemplateName
     );
-
-    var converterFlags = ( byte ) Model.Converters;
-
-    TemplateKey = useCommonTemplates
-      ? $"{MainTemplateName}.{converterFlags:X2}"
-      : $"{MainTemplateName}.{Model.PrimitiveTypeName}.{converterFlags:X2}";
   }
 
   #endregion
 
   #region Properties
 
+  public Type PrimitiveType { get; }
+  public TemplateType TemplateType { get; }
+  public object? SpecializationDiscriminator { get; }
+  public string PrimitiveTypeName { get; }
+  public string TemplateName { get; }
   public string TemplateKey { get; }
-  public string MainTemplateName { get; }
-  public GeneratorModel Model { get; }
-  public SupportedTypeInfo TypeInfo { get; }
+  public string ResourcePath { get; }
 
   #endregion
 
   #region Public Methods
 
-  public string GetTemplateResourcePath(
-    ConverterModel converter )
+  public static TemplateDescriptor Create(
+    TemplateType templateType,
+    Type primitiveType,
+    object? specializationDiscriminator = null )
   {
-    var key = $"{converter.Name}.{Model.PrimitiveTypeName}";
+    var key = GenerateKey( primitiveType, templateType, specializationDiscriminator );
 
-    return s_templatePathCache.GetOrAdd(
+    return s_cache.GetOrAdd(
       key,
-      _ =>
-      {
-        // Use the common main template if no specialization exists
-        var usesCommonTemplate = !EmbeddedResourceManager.DoesTemplateExist(
-          Model.PrimitiveTypeName,
-          converter.Name
-        );
-
-        var directory = usesCommonTemplate ? COMMON_DIRECTORY : Model.PrimitiveTypeName;
-        var resourcePath = EmbeddedResourceManager.GetTemplateResourcePath( directory, converter.Name );
-        return resourcePath;
-      }
+      _ => new TemplateDescriptor( templateType, primitiveType, specializationDiscriminator )
     );
   }
 
-  public string LoadTemplateByPath(
-    string resourcePath )
+  public string LoadTemplateText()
   {
-    return EmbeddedResourceManager.LoadTemplate( resourcePath );
+    return EmbeddedResourceManager.LoadTemplateResource( ResourcePath );
   }
 
-  public string LoadTemplate(
-    string templateName )
+  public override bool Equals(
+    object? obj )
   {
-    // Try to load specialized type template
-    if( EmbeddedResourceManager.TryLoadTemplate( Model.PrimitiveTypeName, templateName, out var template ) )
+    if( obj is null )
     {
-      return template;
+      return false;
     }
 
-    // Load common template
-    template = EmbeddedResourceManager.LoadTemplate( COMMON_DIRECTORY, templateName );
-    return template;
+    if( ReferenceEquals( this, obj ) )
+    {
+      return true;
+    }
+
+    return obj.GetType() == GetType() && Equals( ( TemplateDescriptor ) obj );
   }
 
-  public MacroValues CreateMacroValues(
-    MacroTable macroTable )
+  public override int GetHashCode()
   {
-    var macroValues = macroTable.CreateValues();
+    return GenerateKey( PrimitiveType, TemplateType, SpecializationDiscriminator );
+  }
 
-    // Set the common macros for all templates
-    macroValues.SetValue( MacroNames.PrimitiveName, TypeInfo.Keyword )
-               .SetValue( MacroNames.TypedPrimitiveNamespace, Model.Namespace )
-               .SetValue( MacroNames.TypedPrimitiveName, Model.TypeName )
-               .SetValue( MacroNames.TypedPrimitiveQualifiedName, $"{Model.Namespace}.{Model.TypeName}" )
-               .SetValue( MacroNames.StringComparison, Model.StringComparison )
-               .AddConverterMacros( Model.TypeConverter, TypeInfo )
-               .AddConverterMacros( Model.SystemTextJsonConverter, TypeInfo )
-               .AddConverterMacros( Model.NewtonsoftJsonConverter, TypeInfo );
+  #endregion
 
-    return macroValues;
+  #region Implementation
+
+  private static int GenerateKey(
+    Type primitiveType,
+    TemplateType templateType,
+    object? discriminator )
+  {
+    // NOTE: netstandard 2.0 doesn't support HashCode.Combine
+    unchecked
+    {
+      var hash = 17;
+      hash = hash * 31 + primitiveType.GetHashCode();
+      hash = hash * 31 + ( int ) templateType;
+      hash = hash * 31 + ( discriminator?.GetHashCode() ?? 0 );
+      return hash;
+    }
+  }
+
+  protected bool Equals(
+    TemplateDescriptor other )
+  {
+    return PrimitiveType == other.PrimitiveType &&
+           TemplateType == other.TemplateType &&
+           Equals( SpecializationDiscriminator, other.SpecializationDiscriminator );
+  }
+
+  private string GetTemplateName()
+  {
+    return TemplateType switch
+    {
+      TemplateType.Main => PrimitiveType.IsValueType
+        ? ResourceNames.MainValueTypeTemplate
+        : ResourceNames.MainReferenceTypeTemplate,
+      TemplateType.TypeConverter           => ResourceNames.TypeConverterTemplate,
+      TemplateType.SystemTextJsonConverter => ResourceNames.SystemTextJsonConverterTemplate,
+      TemplateType.NewtonsoftJsonConverter => ResourceNames.NewtonsoftJsonConverterTemplate,
+      TemplateType.EfCoreValueConverter    => ResourceNames.EfCoreValueConverterTemplate,
+      _                                    => throw new ArgumentOutOfRangeException()
+    };
+  }
+
+  private string GenerateTemplateKey(
+    bool isSpecialized,
+    object? specializationDiscriminator )
+  {
+    var builder = StringBuilderPool.Default.Get();
+
+    try
+    {
+      builder.Append( TemplateName );
+
+      if( isSpecialized )
+      {
+        Append( PrimitiveTypeName );
+      }
+
+      if( specializationDiscriminator != null )
+      {
+        Append( specializationDiscriminator.ToString() );
+      }
+
+      return builder.ToString();
+    }
+    finally
+    {
+      StringBuilderPool.Default.Return( builder );
+    }
+
+    void Append(
+      string value )
+    {
+      builder.Append( '.' );
+      builder.Append( value );
+    }
   }
 
   #endregion
