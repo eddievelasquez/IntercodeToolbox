@@ -2,18 +2,22 @@
 
 ## Class Diagrams
 
-
 ```mermaid
 classDiagram
   direction LR
 
+  %% Types
   class Template {
+    <<readonly record struct>>
     +MacroTable MacroTable
     +string Text
     ~Segment[] Segments
+    ~int TemplateTextLength
+    +MacroValues CreateValues()
   }
 
   class Segment {
+    <<internal readonly record struct>>
     +SegmentKind Kind
     +ReadOnlyMemory<char> Memory
     +ReadOnlyMemory<char> ArgumentMemory
@@ -33,12 +37,12 @@ classDiagram
   }
 
   class TemplateCompiler {
+    <<static>>
     +Compile(MacroTable, string, IncludesCollection?, TemplateCompilerOptions?) Template
-    -ProcessIncludes(ReadOnlySpan<char>, IncludesCollection, TemplateCompilerOptions) string
-    -SplitIntoSegments(MacroTable, ReadOnlyMemory<char>, TemplateCompilerOptions) Segment[]
   }
 
   class MacroTable {
+    <<sealed>>
     +int Count
     +CreateValues() MacroValues
     +GetSlot(string) int
@@ -46,6 +50,7 @@ classDiagram
   }
 
   class MacroTableBuilder {
+    <<sealed>>
     +Declare(string) MacroTableBuilder
     +DeclareStandardMacros() MacroTableBuilder
     +Declare(ReadOnlySpan<char>) MacroTableBuilder
@@ -53,6 +58,7 @@ classDiagram
   }
 
   class MacroValues {
+    <<sealed>>
     +MacroTable MacroTable
     +SetValue(string, MacroValueGenerator?) MacroValues
     +SetValue(string, string?) MacroValues
@@ -66,11 +72,13 @@ classDiagram
   }
 
   class MacroProcessor {
+    <<static>>
     +ProcessMacros(Template, MacroValues, TextWriter) void
     +ProcessMacros(Template, MacroValues, StringBuilder) void
   }
 
   class IncludesCollection {
+    <<sealed>>
     +int Count
     +AddInclude(string, string?) void
     +AddInclude(string, MacroValueGenerator?) void
@@ -79,19 +87,14 @@ classDiagram
   }
 
   class TemplateCompilerOptions {
+    <<sealed>>
     +char MacroDelimiter
     +char ArgumentSeparator
     +static TemplateCompilerOptions Default
   }
 
-  class TemplateCompilerOptionsBuilder {
-    +SetMacroDelimiter(char) TemplateCompilerOptionsBuilder
-    +SetArgumentSeparator(char) TemplateCompilerOptionsBuilder
-    +Build() TemplateCompilerOptions
-  }
-
   class MacroExtensions {
-    <<static>>
+    <<internal static>>
     +IsMacroNameChar(char) bool
     +IsDelimiterChar(char) bool
     +IsValidMacroName(string) bool
@@ -101,7 +104,7 @@ classDiagram
   }
 
   class StandardMacros {
-    <<static>>
+    <<internal static>>
     +NowMacroName : string
     +UtcNowMacroName : string
     +GuidMacroName : string
@@ -150,7 +153,7 @@ classDiagram
 
   IncludesCollection ..> MacroValueGenerator : stores
 
-  TemplateCompilerOptionsBuilder ..> TemplateCompilerOptions : builds
+  TemplateCompilerOptions ..> TemplateCompilerOptions : Default
 
   StandardMacros ..> MacroValueGenerator : returns
 ```
@@ -183,7 +186,7 @@ sequenceDiagram
     TB->>MT: GetSlot(name[/arg])
     TB->>SEG: CreateConstant/CreateMacro/CreateDelimiter(...)
   end
-  TB->>T: new Template(macroTable, segments)
+  TB->>T: new Template(macroTable, segments, templateTextLength)
   TB-->>Client: Template
 ```
 
@@ -236,4 +239,3 @@ sequenceDiagram
   Client->>MTB: Build()
   MTB->>MT: new MacroTable(macroSlots, hasStandard)
   MTB-->>Client: MacroTable
-```
