@@ -25,7 +25,7 @@ A fast, allocation-conscious text templating engine for .NET.
     - [Template](#template)
   - [Advanced Usage](#advanced-usage)
   - [Benchmarks](#benchmarks)
-  - [Migrating from 2.x to 3.0](#migrating-from-2.x-to-3.0)
+  - [Migrating from 2.x to 3.0](#migrating-from-2x-to-30)
   - [License](#license)
 
 ## Overview
@@ -271,8 +271,19 @@ public sealed class MacroValues
 |--------|-------------|-------------|
 | `SetValue(string macroName, string? value)` | `MacroValues` | Associates a static string with a macro slot. Passing `null` clears the slot. |
 | `SetValue(string macroName, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro slot. Passing `null` clears the slot. |
+| `SetValue(int slot, string? value)` | `MacroValues` | Associates a static string with a macro slot by index. Passing `null` clears the slot. |
+| `SetValue(int slot, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro slot by index. Passing `null` clears the slot. |
 | `GetValue(string macroName)` | `string?` | Fetches the effective value by name, invoking a dynamic generator if present. Returns `null` when no value/generator is assigned or the name is undeclared. |
 | `GetValue(string macroName, ReadOnlySpan<char> argument)` | `string?` | Same as above but supplies the raw argument span to the generator. |
+| `GetValue(int slot)` | `string?` | Fetches the effective value by slot, invoking a dynamic generator if present. Returns `null` when no value/generator is assigned or the slot is invalid. |
+
+#### .NET 9 or later additional overloads
+When targeting .NET 9 or later (`#if NET9_0_OR_GREATER`), span-based overloads are available to avoid intermediate string allocations for macro names:
+
+- `void SetValue(ReadOnlySpan<char> macroName, MacroValueGenerator? generator)`
+- `void SetValue(ReadOnlySpan<char> macroName, string? value)`
+- `string? GetValue(ReadOnlySpan<char> macroName)`
+- `string? GetValue(ReadOnlySpan<char> macroName, ReadOnlySpan<char> argument)`
 
 #### See Also
 - [ReadOnlySpan<T>](https://learn.microsoft.com/en-us/dotnet/api/system.readonlyspan-1)
@@ -341,8 +352,9 @@ public static class MacroProcessor
 #### Methods
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `ProcessMacros(Template template, MacroValues macroValues, TextWriter writer)` | `void` | Streams expanded output to a `TextWriter`. |
-| `ProcessMacros(Template template, MacroValues macroValues, StringBuilder builder)` | `void` | Appends expanded output into an existing `StringBuilder`. |
+| `ProcessMacros(Template template, MacroValues macroValues, TextWriter writer)` | `void` | Streams expanded output to a `TextWriter`. When a macro has no value/generator, the original macro text is preserved. |
+| `ProcessMacros(Template template, MacroValues macroValues, StringBuilder builder)` | `void` | Appends expanded output into an existing `StringBuilder`. Pre-allocates capacity to the template's original length. When a macro has no value/generator, an empty string is appended. |
+| `ProcessMacros(Template template, MacroValues macroValues)` | `string` | Expands the template and returns the resulting string using a pooled `StringBuilder` for minimal allocations. |
 
 #### Remarks
 - Any exceptions thrown by generators are caught and their messages used as the macro substitution text.
@@ -422,6 +434,22 @@ public readonly record struct Template
   ```
 
 - Escaping delimiters: `$$` yields a literal `$` in output when `$` is the delimiter.
+
+- High-throughput assignment using slots:
+  ```csharp
+  // Resolve once, then reuse slot-based setters in hot paths
+  var slot = macroTable.GetSlot("Name");
+  values.SetValue(slot, "John");
+  values.SetValue(slot, arg => expensiveComputation(arg));
+  ```
+
+- .NET 9+ span-based APIs to avoid intermediate strings:
+  ```csharp
+  // #if NET9_0_OR_GREATER
+  values.SetValue("Name".AsSpan(), "John");
+  var value = values.GetValue("Name".AsSpan());
+  // #endif
+  ```
 
 ---
 ## Benchmarks
@@ -696,7 +724,7 @@ Migration steps:
 2. Replace old options with `TemplateCompilerOptions` constructor if customizing.
 3. Build `MacroTable`; create `MacroValues`; map old `AddMacro` calls to `SetValue`.
 4. Recompile templates using static `TemplateCompiler`.
-5. Process via `MacroProcessor.ProcessMacros` with the `MacroValues` instance.
+5. Process via `MacroProcessor.ProcessMacros` with the `MacroValues` instance (choose the overload that best fits your scenario).
 6. Replace any direct value retrieval with `MacroValues.GetValue`.
 7. Use includes for large static blocks previously handled as macros.
 

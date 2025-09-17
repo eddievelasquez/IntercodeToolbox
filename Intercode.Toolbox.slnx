@@ -31,6 +31,7 @@
     <Project Path="Intercode.Toolbox.TemplateEngine.Benchmarks/Intercode.Toolbox.TemplateEngine.Benchmarks.csproj" />
   </Folder>
   <Folder Name="/TypedPrimitives/Tests/">
+    <Project Path="Intercode.Toolbox.TemplateEngine.Sample/Intercode.Toolbox.TemplateEngine.Sample.csproj" Id="d32b281a-0fc5-4731-b02c-e938ab7a02ba" />
     <Project Path="Intercode.Toolbox.TemplateEngine.Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj" />

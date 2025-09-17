@@ -120,6 +120,78 @@ public sealed class MacroValues
   }
 
   /// <summary>
+  ///   Sets the value generator for the specified macro slot.
+  /// </summary>
+  /// <param name="slot">
+  ///   The slot index of the macro for which the value generator is being set.
+  /// </param>
+  /// <param name="generator">
+  ///   The value generator delegate to associate with the macro, or <c>null</c> to clear the value.
+  /// </param>
+  /// <returns>
+  ///   The current <see cref="MacroValues" /> instance, allowing for method chaining.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  ///   Thrown if the specified <paramref name="slot" /> is outside the valid range of slots.
+  /// </exception>
+  public MacroValues SetValue(
+    int slot,
+    MacroValueGenerator? generator )
+  {
+    if( slot < 0 || slot >= _generators.Length )
+    {
+      throw new ArgumentOutOfRangeException(
+        nameof( slot ),
+        slot,
+        $"The slot must be between 0 and {_generators.Length - 1}"
+      );
+    }
+
+    _generators[slot] = generator;
+    return this;
+  }
+
+  /// <summary>
+  ///   Sets the value of a macro at the specified slot.
+  /// </summary>
+  /// <param name="slot">
+  ///   The zero-based index of the slot where the macro value should be set.
+  ///   Must be between 0 and the total number of slots minus 1.
+  /// </param>
+  /// <param name="value">
+  ///   The value to assign to the macro. If <c>null</c>, the macro value will be cleared.
+  /// </param>
+  /// <returns>
+  ///   The current <see cref="MacroValues" /> instance, allowing for method chaining.
+  /// </returns>
+  /// <exception cref="ArgumentOutOfRangeException">
+  ///   Thrown when the <paramref name="slot" /> is less than 0 or greater than or equal to the number of available slots.
+  /// </exception>
+  public MacroValues SetValue(
+    int slot,
+    string? value )
+  {
+    if( slot < 0 || slot >= _generators.Length )
+    {
+      throw new ArgumentOutOfRangeException(
+        nameof( slot ),
+        slot,
+        $"The slot must be between 0 and {_generators.Length - 1}"
+      );
+    }
+
+    MacroValueGenerator? generator = null;
+
+    if( value != null )
+    {
+      generator = _ => value;
+    }
+
+    _generators[slot] = generator;
+    return this;
+  }
+
+  /// <summary>
   ///   Gets the value for the specified macro name.
   /// </summary>
   /// <param name="macroName">The name of the macro to retrieve the value for.</param>
@@ -154,7 +226,7 @@ public sealed class MacroValues
   /// <param name="slot">The slot index of the macro to retrieve the value for.</param>
   /// <param name="argument">An argument to pass to the value generator.</param>
   /// <returns>The value of the macro if set; otherwise, <c>null</c>.</returns>
-  internal string? GetValue(
+  public string? GetValue(
     int slot,
     ReadOnlySpan<char> argument )
   {

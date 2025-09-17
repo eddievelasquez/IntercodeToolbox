@@ -54,7 +54,7 @@ public static class MacroProcessor
 
           try
           {
-            value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? segment.Text;
+            value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
           }
           catch( Exception exception )
           {
@@ -70,6 +70,7 @@ public static class MacroProcessor
 #if NET6_0_OR_GREATER
           writer.Write( segment.Memory.Span );
 #else
+
           // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
           writer.Write( segment.Memory.ToString() );
 #endif
@@ -139,6 +140,7 @@ public static class MacroProcessor
 #if NET6_0_OR_GREATER
           builder.Append( segment.Memory.Span );
 #else
+
           // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
           builder.Append( segment.Memory.ToString() );
 #endif
@@ -148,6 +150,37 @@ public static class MacroProcessor
           throw new InvalidOperationException( "Unknown segment kind" );
       }
     }
+  }
+
+  /// <summary>
+  ///   Processes macros in the specified <see cref="Template" /> and returns the resulting string.
+  /// </summary>
+  /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
+  /// <param name="macroValues">The <see cref="MacroValues" /> providing values for the macros in the template.</param>
+  /// <returns>A string with the macros in the template replaced by their corresponding values.</returns>
+  /// <remarks>
+  ///   This method processes the macros in the provided template using the specified macro values.
+  ///   It utilizes a pooled <see cref="StringBuilder" /> for efficient string manipulation.
+  /// </remarks>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown if <paramref name="template" /> or <paramref name="macroValues" /> is <c>null</c>.
+  /// </exception>
+  public static string ProcessMacros(
+    Template template,
+    MacroValues macroValues )
+  {
+    var builder = StringBuilderPool.Default.Get();
+
+    try
+    {
+      ProcessMacros( template, macroValues, builder );
+    }
+    finally
+    {
+      StringBuilderPool.Default.Return( builder );
+    }
+
+    return builder.ToString();
   }
 
   #endregion
