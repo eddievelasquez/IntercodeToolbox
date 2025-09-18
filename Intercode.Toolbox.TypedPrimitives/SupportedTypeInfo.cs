@@ -37,8 +37,13 @@ internal class SupportedTypeInfo
     FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> customConverterMacros,
     FrozenDictionary<TypedPrimitiveConverter, FrozenDictionary<string, string>> includes )
   {
-    _customConverterMacros = customConverterMacros;
-    _includes = includes;
+    if( string.IsNullOrWhiteSpace( keyword ) )
+    {
+      throw new ArgumentException( "Cannot be null, empty or blank", nameof( keyword ) );
+    }
+
+    _customConverterMacros = customConverterMacros ?? throw new ArgumentNullException( nameof( customConverterMacros ) );
+    _includes = includes ?? throw new ArgumentNullException( nameof( includes ) );
     Keyword = keyword;
   }
 

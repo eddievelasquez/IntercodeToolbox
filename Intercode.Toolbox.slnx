@@ -35,5 +35,6 @@
     <Project Path="Intercode.Toolbox.TemplateEngine.Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj" />
+    <Project Path="Intercode.Toolbox.TypedPrimitives.Tests/Intercode.Toolbox.TypedPrimitives.Tests.csproj" />
   </Folder>
 </Solution>

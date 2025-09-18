@@ -61,20 +61,25 @@ internal readonly struct EquatableArray<T>
     return obj is EquatableArray<T> other && Equals( other );
   }
 
+  /// <inheritdoc />
   public override int GetHashCode()
   {
-    if( _array is not { } array )
+    if( _array == null || _array.Length == 0 )
     {
       return 0;
     }
 
-    HashCode hashCode = default;
-    foreach( var item in array )
+    unchecked
     {
-      hashCode.Add( item );
-    }
+      var hash = 17;
 
-    return hashCode.ToHashCode();
+      foreach( var item in _array )
+      {
+        hash = hash * 31 + ( item?.GetHashCode() ?? 0 );
+      }
+
+      return hash;
+    }
   }
 
   public IEnumerator<T> GetEnumerator()

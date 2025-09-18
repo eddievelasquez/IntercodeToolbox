@@ -52,6 +52,7 @@ This repository targets modern .NET (currently .NET 9.0) and C# 13.0. Use the mo
 
 ## Unit Tests
 - Test projects named `{ProjectName}.Tests` (already enforced) and mirror the namespace of the code under test with `.Tests` suffix.
+- If the test project does not exist, create it alongside the production project, respecting the naming convention stated above. Add the project to the solution as well.
 - One test class per production class. Name: `{ClassName}Test`.
 - Use xUnit 3: `[Fact]` for non-parameterized tests; `[Theory]` + `[MemberData]` for parameterized. Only use `[InlineData]` for trivial cases (e.g., single int input).
 - Theory data properties: `public static TheoryData<...> {MethodName}{Scenario}Data { get; }` placed immediately above the theory using it.
@@ -60,9 +61,14 @@ This repository targets modern .NET (currently .NET 9.0) and C# 13.0. Use the mo
   - Returning: `MethodName_ShouldReturnExpectedValue_WhenConditionOccurs`.
   - Overloads: include parameter type descriptors before `_Should`, e.g., `Parse_WithString_ShouldReturnExpectedValue_WhenInputValid`.
 - All public methods must have at least one behavioral test; branch-heavy logic should use theories for coverage.
-- Use `FluentAssertions` for assertions; no direct `Assert.*` unless unavailable in FA.
+- Tests must cover all edge cases (null, empty, whitespace, min/max values, etc.) unless explicitly documented otherwise.
+- Use `FluentAssertions` for assertions; no direct `Assert.*` unless unavailable in FluentAssertions.
 - Source generator tests must assert generated output (snapshot or baseline comparison). Whitespace is significant.
-- Treat warnings as errors in test projects to catch API drift.
+- If an internal method needs to be tested, use `[assembly: InternalsVisibleTo("ProjectName.Tests")]`.
+- Do not emit arranged/act/assert comments; structure tests clearly instead.
+- Should not attempt to change the code under test to make the unit tests pass unless given permission to do so.
+- When testing builder classes, the tests should verify the build object, not the builder's internal state. 
+- Should not rely on implementation details of the class under test; only observable behavior is verified.
 
 ## Diagnostics & Logging
 - Prefer structured (property-based) logging over string concatenation where logging exists.
