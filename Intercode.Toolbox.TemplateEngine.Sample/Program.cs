@@ -4,10 +4,6 @@
 
 #define USE_SLOTS
 
-// Module Name: Program.cs
-// Author:      Eduardo Velasquez
-// Copyright (c) 2025, Intercode Consulting, Inc.
-
 using System.Diagnostics;
 using Intercode.Toolbox.TemplateEngine;
 

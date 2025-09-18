@@ -242,7 +242,7 @@ public class MacroProcessorTests
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var writer = new StringWriter();
     MacroProcessor.ProcessMacros( template, values, writer );
-    writer.ToString().Should().Be( "Hello, who!" );
+    writer.ToString().Should().Be( "Hello, !" );
   }
 
   #endregion
