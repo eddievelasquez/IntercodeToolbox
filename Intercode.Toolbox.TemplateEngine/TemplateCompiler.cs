@@ -218,8 +218,7 @@ public static class TemplateCompiler
       if( macroEnd == macroStart + 1 )
       {
         // An empty macro means we found an escaped delimiter
-        var delimiter = templateText.Slice( macroStart + 1, 1 );
-        segments.Add( Segment.CreateDelimiter( delimiter ) );
+        segments.Add( Segment.CreateConstant( templateText.Slice( macroStart + 1, 1 ) ) );
       }
       else
       {

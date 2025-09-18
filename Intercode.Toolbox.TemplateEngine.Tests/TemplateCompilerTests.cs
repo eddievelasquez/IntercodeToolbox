@@ -25,11 +25,11 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "template " );
+            .Match<Segment>( s => s.IsConstant && s.Text == "template " );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
   }
 
   [Fact]
@@ -48,11 +48,11 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == " template." );
+            .Match<Segment>( s => s.IsConstant && s.Text == " template." );
   }
 
   [Fact]
@@ -73,19 +73,19 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "012345" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "012345" );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
 
     template.Segments[3]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "012345" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "012345" );
   }
 
   [Fact]
@@ -100,7 +100,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "" );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "" );
   }
 
   [Fact]
@@ -115,7 +115,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "" );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "" );
   }
 
   [Fact]
@@ -129,7 +129,7 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro &&
+            .Match<Segment>( s => s.IsMacro &&
                                   s.Text == "macro" &&
                                   s.ArgumentMemory.ToString() == "argument"
             );
@@ -145,7 +145,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( Text );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "macro" );
   }
 
   [Fact]
@@ -161,7 +161,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( Text );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == Text );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == Text );
   }
 
   [Fact]
@@ -176,7 +176,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "Start $$ End" );
     template.Segments.Should().HaveCount( 3 );
-    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter );
+    template.Segments[1].Should().Match<Segment>( s => s.IsConstant );
   }
 
   [Fact]
@@ -194,7 +194,7 @@ public class TemplateCompilerTests
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
   }
 
   [Fact]
@@ -209,9 +209,9 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "Start $macro$ End" );
     template.Segments.Should().HaveCount( 3 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "Start " );
-    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
-    template.Segments[2].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == " End" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "Start " );
+    template.Segments[1].Should().Match<Segment>( s => s.IsMacro && s.Text == "macro" );
+    template.Segments[2].Should().Match<Segment>( s => s.IsConstant && s.Text == " End" );
   }
 
   [Fact]
@@ -227,10 +227,10 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "A$macroA$-B$macroB$" );
     template.Segments.Should().HaveCount( 4 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "A" );
-    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" );
-    template.Segments[2].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "-B" );
-    template.Segments[3].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "A" );
+    template.Segments[1].Should().Match<Segment>( s => s.IsMacro && s.Text == "macroA" );
+    template.Segments[2].Should().Match<Segment>( s => s.IsConstant && s.Text == "-B" );
+    template.Segments[3].Should().Match<Segment>( s => s.IsMacro && s.Text == "macroB" );
   }
 
   [Fact]
@@ -245,7 +245,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "HeaderContent body" );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "HeaderContent body" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "HeaderContent body" );
   }
 
   [Fact]
@@ -260,7 +260,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "A-B" );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "A-B" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "A-B" );
   }
 
   [Fact]
@@ -273,7 +273,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( Text );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "missing" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "missing" );
   }
 
   [Fact]
@@ -284,7 +284,7 @@ public class TemplateCompilerTests
     var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "$" );
   }
 
   [Fact]
@@ -295,7 +295,7 @@ public class TemplateCompilerTests
     var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == "$macro" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "$macro" );
   }
 
   [Fact]
@@ -306,8 +306,8 @@ public class TemplateCompilerTests
     var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
     template.Segments.Should().HaveCount( 2 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
-    template.Segments[1].Should().Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "$" );
+    template.Segments[1].Should().Match<Segment>( s => s.IsConstant && s.Text == "$" );
   }
 
   [Fact]
@@ -320,7 +320,7 @@ public class TemplateCompilerTests
     template.Should().NotBeNull();
     template.Text.Should().Be( "$missing$" );
     template.Segments.Should().HaveCount( 1 );
-    template.Segments[0].Should().Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "missing" );
+    template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "missing" );
   }
 
   [Fact]
@@ -339,7 +339,7 @@ public class TemplateCompilerTests
 
     template.Segments.Single()
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Constant && s.Text == Text );
+            .Match<Segment>( s => s.IsConstant && s.Text == Text );
   }
 
   [Fact]
@@ -358,7 +358,7 @@ public class TemplateCompilerTests
 
     template.Segments.Single()
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macro" );
   }
 
   [Fact]
@@ -377,15 +377,15 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.Slot == 0 );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macroA" && s.Slot == 0 );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.Slot == 1 );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macroB" && s.Slot == 1 );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroC" && s.Slot == 2 );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macroC" && s.Slot == 2 );
   }
 
   [Fact]
@@ -404,15 +404,15 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macro" );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Delimiter && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macro" );
   }
 
   [Fact]
@@ -431,15 +431,15 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == "This is a " );
+            .Match<Segment>( static s => s.IsConstant && s.Text == "This is a " );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( static s => s.Kind == SegmentKind.Macro && s.Text == "macro" );
+            .Match<Segment>( static s => s.IsMacro && s.Text == "macro" );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( static s => s.Kind == SegmentKind.Constant && s.Text == " template." );
+            .Match<Segment>( static s => s.IsConstant && s.Text == " template." );
   }
 
   [Fact]
@@ -458,15 +458,15 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.Slot == 0 );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macroA" && s.Slot == 0 );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroB" && s.Slot == 1 );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macroB" && s.Slot == 1 );
 
     template.Segments[2]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macroA" && s.Slot == 0 );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macroA" && s.Slot == 0 );
   }
 
   [Fact]
@@ -481,7 +481,7 @@ public class TemplateCompilerTests
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.Kind == SegmentKind.Macro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
+            .Match<Segment>( s => s.IsMacro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
   }
 
   [Theory]

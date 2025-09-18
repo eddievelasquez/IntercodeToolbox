@@ -46,39 +46,30 @@ public static class MacroProcessor
     {
       var segment = template.Segments[index];
 
-      switch( segment.Kind )
+      if( segment.IsMacro )
       {
-        case SegmentKind.Macro:
+        string value;
+
+        try
         {
-          string value;
-
-          try
-          {
-            value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
-          }
-          catch( Exception exception )
-          {
-            value = exception.Message;
-          }
-
-          writer.Write( value );
-          break;
+          value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
+        }
+        catch( Exception exception )
+        {
+          value = exception.Message;
         }
 
-        case SegmentKind.Delimiter:
-        case SegmentKind.Constant:
+        writer.Write( value );
+        continue;
+      }
+
 #if NET6_0_OR_GREATER
-          writer.Write( segment.Memory.Span );
+      writer.Write( segment.Memory.Span );
 #else
 
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-          writer.Write( segment.Memory.ToString() );
+      // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+      writer.Write( segment.Memory.ToString() );
 #endif
-          break;
-
-        default:
-          throw new InvalidOperationException( "Unknown segment kind" );
-      }
     }
   }
 
@@ -115,40 +106,30 @@ public static class MacroProcessor
     {
       var segment = template.Segments[index];
 
-      switch( segment.Kind )
+      if( segment.IsMacro )
       {
-        case SegmentKind.Macro:
+        string value;
+
+        try
         {
-          string value;
-
-          try
-          {
-            value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
-          }
-          catch( Exception exception )
-          {
-            value = exception.Message;
-          }
-
-          builder.Append( value );
-
-          break;
+          value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
+        }
+        catch( Exception exception )
+        {
+          value = exception.Message;
         }
 
-        case SegmentKind.Delimiter:
-        case SegmentKind.Constant:
+        builder.Append( value );
+        continue;
+      }
+
 #if NET6_0_OR_GREATER
-          builder.Append( segment.Memory.Span );
+      builder.Append( segment.Memory.Span );
 #else
 
-          // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
-          builder.Append( segment.Memory.ToString() );
+      // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
+      builder.Append( segment.Memory.ToString() );
 #endif
-          break;
-
-        default:
-          throw new InvalidOperationException( "Unknown segment kind" );
-      }
     }
   }
 
