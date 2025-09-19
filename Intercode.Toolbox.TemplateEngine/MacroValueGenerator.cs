@@ -5,8 +5,13 @@
 namespace Intercode.Toolbox.TemplateEngine;
 
 /// <summary>
-///   Callback for dynamic macros.
+///   Represents a delegate that generates a string value for a macro dynamically.
 /// </summary>
-/// <param name="argument">Optional data passed to the callback for generating a value.</param>
-public delegate string MacroValueGenerator(
+/// <param name="argument">
+///   Optional data passed to the delegate to assist in generating the macro value.
+/// </param>
+/// <returns>
+///   A string representing the generated value for the macro, or <c>null</c> if no value is generated.
+/// </returns>
+public delegate string? MacroValueGenerator(
   ReadOnlySpan<char> argument );
