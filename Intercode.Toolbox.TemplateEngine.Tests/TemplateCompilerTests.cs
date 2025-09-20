@@ -11,6 +11,17 @@ public class TemplateCompilerTests
   #region Tests
 
   [Fact]
+  public void Compile_ShouldCreateMacroWithNegativeSlot_WhenMacroNotDeclared()
+  {
+    var macroTable = DefineMacros(); // declares defaultMacro only
+    var template = TemplateCompiler.Compile( macroTable, "$unknown$" );
+
+    template.Should().NotBeNull();
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "unknown" && s.Slot == -1 );
+  }
+
+  [Fact]
   public void Compile_ShouldHandleEscapedDelimiter_WhenStringEndsWithEscapedDelimiter()
   {
     const string Text = "template $$";
@@ -21,15 +32,11 @@ public class TemplateCompilerTests
             .NotBeNull();
 
     template.Segments.Should()
-            .HaveCount( 2 );
+            .HaveCount( 1 );
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "template " );
-
-    template.Segments[1]
-            .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "template $" );
   }
 
   [Fact]
@@ -44,15 +51,11 @@ public class TemplateCompilerTests
             .NotBeNull();
 
     template.Segments.Should()
-            .HaveCount( 2 );
+            .HaveCount( 1 );
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
-
-    template.Segments[1]
-            .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == " template." );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$ template." );
   }
 
   [Fact]
@@ -67,25 +70,32 @@ public class TemplateCompilerTests
             .NotBeNull();
 
     template.Segments.Should()
-            .HaveCount( 4 );
+            .HaveCount( 2 );
 
     template.Text.Should().Be( Text );
 
     template.Segments[0]
             .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "012345" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "012345$" );
 
     template.Segments[1]
             .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
+            .Match<Segment>( s => s.IsConstant && s.Text == "$012345" );
+  }
 
-    template.Segments[2]
-            .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "$" );
+  [Fact]
+  public void Compile_ShouldHandleIncludeWithEmptyStringContent()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "empty", string.Empty );
 
-    template.Segments[3]
-            .Should()
-            .Match<Segment>( s => s.IsConstant && s.Text == "012345" );
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, "$empty$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( string.Empty );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == string.Empty );
   }
 
   [Fact]
@@ -148,6 +158,39 @@ public class TemplateCompilerTests
     template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "macro" );
   }
 
+  // New edge-case tests
+
+  [Fact]
+  public void Compile_ShouldLeaveUnknownIncludeAsMacro_WhenIncludesProvidedButNameMissing()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "present", "X" );
+
+    var macroTable = DefineMacros( "missing" );
+    var template = TemplateCompiler.Compile( macroTable, "$missing$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "$missing$" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "missing" );
+  }
+
+  [Fact]
+  public void Compile_ShouldNotRecursivelyExpandIncludes_WhenIncludeContentReferencesAnotherInclude()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "a", "$b$" );
+    includes.AddInclude( "b", "B" );
+
+    var macroTable = DefineMacros( "b" );
+    var template = TemplateCompiler.Compile( macroTable, "$a$", includes );
+
+    template.Should().NotBeNull();
+    template.Text.Should().Be( "$b$" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.IsMacro && s.Text == "b" );
+  }
+
   [Fact]
   public void Compile_ShouldNotReplaceAnything_WhenIncludesProvidedButNotReferenced()
   {
@@ -175,8 +218,10 @@ public class TemplateCompilerTests
 
     template.Should().NotBeNull();
     template.Text.Should().Be( "Start $$ End" );
-    template.Segments.Should().HaveCount( 3 );
-    template.Segments[1].Should().Match<Segment>( s => s.IsConstant );
+    template.Segments.Should().HaveCount( 2 );
+
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "Start $" );
+    template.Segments[1].Should().Match<Segment>( s => s.IsConstant && s.Text == " End" );
   }
 
   [Fact]
@@ -305,9 +350,8 @@ public class TemplateCompilerTests
     var macroTable = DefineMacros();
     var template = TemplateCompiler.Compile( macroTable, Text );
     template.Should().NotBeNull();
-    template.Segments.Should().HaveCount( 2 );
-    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "$" );
-    template.Segments[1].Should().Match<Segment>( s => s.IsConstant && s.Text == "$" );
+    template.Segments.Should().HaveCount( 1 );
+    template.Segments[0].Should().Match<Segment>( s => s.IsConstant && s.Text == "$$" );
   }
 
   [Fact]
@@ -482,6 +526,15 @@ public class TemplateCompilerTests
     template.Segments[0]
             .Should()
             .Match<Segment>( s => s.IsMacro && s.Text == "macro" && s.ArgumentMemory.ToString() == "arg" );
+  }
+
+  [Fact]
+  public void Compile_ShouldThrowArgumentException_WhenMacroNameIsEmptyButHasArgument()
+  {
+    var macroTable = DefineMacros( "x" );
+
+    Action act = () => TemplateCompiler.Compile( macroTable, "$:arg$" );
+    act.Should().Throw<InvalidOperationException>().WithMessage( "The macro name cannot be empty" );
   }
 
   [Theory]

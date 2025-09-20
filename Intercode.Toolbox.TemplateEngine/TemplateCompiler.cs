@@ -61,7 +61,7 @@ public static class TemplateCompiler
     // Create an empty constant segment if we ended up with no segments
     if( segments.Length == 0 )
     {
-      segments = [Segment.CreateConstant( ReadOnlyMemory<char>.Empty )];
+      segments = [Segment.CreateConstant( 0, ReadOnlyMemory<char>.Empty )];
     }
 
     return new Template( macroTable, segments, templateText.Length );
@@ -82,16 +82,16 @@ public static class TemplateCompiler
     {
       // Ensure the builder has at least enough capacity to hold the pre-processed text
       builder.Capacity = Math.Max( builder.Capacity, text.Length );
-
       var currentIndex = 0;
 
       while( currentIndex < text.Length )
       {
+        // Look for the position of the next macro opening delimiter
         var macroStart = text.Slice( currentIndex ).IndexOf( options.MacroDelimiter );
 
+        // No more macros found, add the remaining text as a constant segment
         if( macroStart == -1 )
         {
-          // No more macros found, add the remaining text as a constant segment
           Append( text.Slice( currentIndex ) );
           break;
         }
@@ -104,7 +104,7 @@ public static class TemplateCompiler
           Append( text.Slice( currentIndex, macroStart - currentIndex ) );
         }
 
-        // Look for the closing macro delimiter
+        // Look for the position of closing macro delimiter
         var macroEnd = text.Slice( macroStart + 1 ).IndexOf( options.MacroDelimiter );
 
         if( macroEnd == -1 )
@@ -181,71 +181,148 @@ public static class TemplateCompiler
   {
     var segments = new List<Segment>();
     var span = templateText.Span;
-    var currentIndex = 0;
+    var currentPos = 0;
 
-    while( currentIndex < templateText.Length )
+    // TODO: Consider a streaming approach to constants to avoid having to merge segments
+    //       i.e. keeping a running constant span that gets flushed only when determining
+    //       that the segment won't start or end with a delimiter
+    while( currentPos < templateText.Length )
     {
-      var macroStart = span.Slice( currentIndex ).IndexOf( options.MacroDelimiter );
+      // Look for the position of the opening macro delimiter
+      var macroStartPos = span.Slice( currentPos ).IndexOf( options.MacroDelimiter );
 
-      if( macroStart == -1 )
+      // We're done, no more macros were found, add the
+      // remaining text as a constant segment
+      if( macroStartPos == -1 )
       {
-        // No more macros found, add the remaining text as a constant segment
-        segments.Add( Segment.CreateConstant( templateText.Slice( currentIndex ) ) );
+        AddConstantSegment( currentPos, templateText.Length - currentPos );
         break;
       }
 
-      macroStart += currentIndex;
+      macroStartPos += currentPos;
 
       // Add the text before the macro delimiter (if any) as a constant segment
-      if( macroStart > currentIndex )
+      if( macroStartPos > currentPos )
       {
-        segments.Add( Segment.CreateConstant( templateText.Slice( currentIndex, macroStart - currentIndex ) ) );
+        AddConstantSegment( currentPos, macroStartPos - currentPos );
       }
 
       // Look for the closing macro delimiter
-      var macroEnd = span.Slice( macroStart + 1 ).IndexOf( options.MacroDelimiter );
+      var macroEndPos = span.Slice( macroStartPos + 1 ).IndexOf( options.MacroDelimiter );
 
-      if( macroEnd == -1 )
+      // We're done, no closing macro delimiter was found, treat the
+      // rest of the text as a constant segment
+      if( macroEndPos == -1 )
       {
-        // No closing delimiter found, treat the rest of the text as a constant segment
-        segments.Add( Segment.CreateConstant( templateText.Slice( macroStart ) ) );
+        AddConstantSegment( macroStartPos, templateText.Length - macroStartPos );
         break;
       }
 
-      macroEnd += macroStart + 1;
+      macroEndPos += macroStartPos + 1;
 
-      // Add the macro segment (The delimiters will be excluded)
-      if( macroEnd == macroStart + 1 )
-      {
-        // An empty macro means we found an escaped delimiter
-        segments.Add( Segment.CreateConstant( templateText.Slice( macroStart + 1, 1 ) ) );
-      }
-      else
-      {
-        var name = templateText.Slice( macroStart + 1, macroEnd - macroStart - 1 );
-        var argument = ReadOnlyMemory<char>.Empty;
-        var argStart = name.Span.IndexOf( options.ArgumentSeparator );
+      AddMacroSegment( macroStartPos, macroEndPos );
 
-        if( argStart != -1 )
-        {
-          argument = name.Slice( argStart + 1 );
-          name = name.Slice( 0, argStart );
-        }
-
-#if NET9_0_OR_GREATER
-        var slotNumber = macroTable.GetSlot( name.Span );
-#else
-        var slotNumber = macroTable.GetSlot( name.ToString() );
-#endif
-
-        segments.Add( Segment.CreateMacro( name, argument, slotNumber ) );
-      }
-
-      // Move the current index after the closing delimiter index
-      currentIndex = macroEnd + 1;
+      // Move past the macro we just processed
+      currentPos = macroEndPos + 1;
     }
 
     return segments.ToArray();
+
+    void AddMacroSegment(
+      int startPos,
+      int endPos )
+    {
+      // An empty macro means we found an escaped delimiter
+      if( endPos == startPos + 1 )
+      {
+        AddConstantSegment( startPos, 1 );
+        return;
+      }
+
+      // Must be a macro
+      var name = templateText.Slice( startPos + 1, endPos - startPos - 1 );
+      var argument = ReadOnlyMemory<char>.Empty;
+      var argStart = name.Span.IndexOf( options.ArgumentSeparator );
+
+      // Does the macro have an argument?
+      if( argStart != -1 )
+      {
+        argument = name.Slice( argStart + 1 );
+        name = name.Slice( 0, argStart );
+
+        if( name.IsEmpty )
+        {
+          throw new InvalidOperationException( "The macro name cannot be empty" );
+        }
+      }
+
+#if NET9_0_OR_GREATER
+      var slotNumber = macroTable.GetSlot( name.Span );
+#else
+      var slotNumber = macroTable.GetSlot( name.ToString() );
+#endif
+      segments.Add( Segment.CreateMacro( startPos + 1, name, argument, slotNumber ) );
+    }
+
+    void AddConstantSegment(
+      int newSegmentStart,
+      int newSegmentLength )
+    {
+      //   Merging rules:
+      //   1. If the previous segment is an escaped delimiter (single delimiter constant) and the new
+      //      segment is adjacent text, the merged segment starts at the second delimiter position so
+      //      that the resulting text contains a single delimiter followed by the adjacent text.
+      //   2. If the previous segment is a constant and is directly adjacent to the new segment,
+      //      the segments are merged into a single constant segment covering both ranges.
+
+      // If there's a previous segment, check if we can merge with it
+      if( segments.Count > 0 )
+      {
+        var preSegmentIndex = segments.Count - 1;
+        var prevSegment = segments[preSegmentIndex];
+
+        // Only constant segments can be merged
+        if( prevSegment.IsConstant )
+        {
+          var prevSegmentLength = prevSegment.Memory.Length;
+          var prevSegmentStart = prevSegment.Start;
+
+          // Case 1: Previous segment is an escaped delimiter and the new one
+          // is adjacent to the second delimiter character.
+          if( prevSegmentLength == 1 &&
+              prevSegment.Memory.Span[0] == options.MacroDelimiter &&
+              prevSegmentStart + 1 == newSegmentStart - 1 )
+          {
+            // Merge the segments, starting at the second delimiter position
+            var newSegment = Segment.CreateConstant(
+              prevSegmentStart + 1,
+              templateText.Slice( prevSegmentStart + 1, newSegmentLength + 1 )
+            );
+
+            // Replace the existing segment with the merged one
+            segments[preSegmentIndex] = newSegment;
+            return;
+          }
+
+          // Case 2: New segment is adjacent to the previous one.
+          if( prevSegmentStart + prevSegmentLength == newSegmentStart )
+          {
+            // Merge the segments
+            var newSegment = Segment.CreateConstant(
+              prevSegmentStart,
+              templateText.Slice( prevSegmentStart, prevSegmentLength + newSegmentLength )
+            );
+
+            // Replace the existing segment with the merged one
+            segments[preSegmentIndex] = newSegment;
+            return;
+          }
+        }
+      }
+
+      // Add a new segment
+      segments.Add( Segment.CreateConstant( newSegmentStart, templateText.Slice( newSegmentStart, newSegmentLength ) ) );
+    }
   }
 
   #endregion
