@@ -5,6 +5,7 @@ A fast, allocation-conscious text templating engine for .NET.
 ## What’s New in 3.0 (Breaking)
 - Simplified, static API and new object model.
 - Compile-time includes for pre-expanding static blocks before macro processing.
+- Standard macros are always available; no explicit declaration required.
 - Major performance gains.
 
 ## Table of Contents
@@ -13,19 +14,21 @@ A fast, allocation-conscious text templating engine for .NET.
   - [Concepts](#concepts)
   - [Step-by-Step](#step-by-step)
   - [Standard Macros (Built-in)](#standard-macros-built-in)
+  - [Providing Values](#providing-values)
   - [Reference](#reference)
     - [TemplateCompilerOptions](#templatecompileroptions)
     - [MacroTableBuilder](#macrotablebuilder)
     - [MacroTable](#macrotable)
-    - [MacroValues](#macrovalues)
     - [MacroValueGenerator Delegate](#macrovaluegenerator-delegate)
+    - [MacroValues](#macrovalues)
     - [TemplateCompiler](#templatecompiler)
     - [MacroProcessor](#macroprocessor)
     - [IncludesCollection](#includescollection)
     - [Template](#template)
+    - [StringBuilderPool](#stringbuilderpool)
   - [Advanced Usage](#advanced-usage)
   - [Benchmarks](#benchmarks)
-  - [Migrating from 2.x to 3.0](#migrating-from-2x-to-30)
+  - [Migrating from 2.x to 3.0](#migrating-from-2.x-to-3.0)
   - [License](#license)
 
 ## Overview
@@ -37,16 +40,17 @@ Hello, $Name$! Today is $NOW:yyyyMMdd$.
 
 - Macro names are case-insensitive.
 - Arguments (after a separator like `:`) are passed to dynamic macro generators.
-- Expansion is streaming and single-pass over pre-tokenized segments.
+- Standard macros (e.g., `NOW`, `GUID`) are always available and do not need to be declared.
 
 ## Quick Start
 
+Dynamic + standard macro scenario:
+
 ```csharp
-// 1. Declare macros (adding optional standard macros)
+// 1. Declare user macros
 var macroTable = new MacroTableBuilder()
   .Declare("Name")
   .Declare("Age")
-  .DeclareStandardMacros() // Adds NOW, UTC_NOW, GUID, etc.
   .Build();
 
 // 2. Compile template
@@ -62,29 +66,48 @@ var values = macroTable.CreateValues()
 
 // 4. Process the template and generate text
 var sb = new StringBuilder();
-MacroProcessor.ProcessMacros(template, values, sb);
+template.ProcessMacros(sb, values);
 var result = sb.ToString();
+
+// Or get a string directly using an internally pooled StringBuilder
+var text = template.ProcessMacros(values);
+```
+
+Static-only scenario (no dynamic generators), using `MacroValues` with static strings:
+```csharp
+var table = new MacroTableBuilder()
+  .Declare("Name")
+  .Build();
+
+var template = TemplateCompiler.Compile(table, "Hello, $Name$!");
+
+var values = table.CreateValues()
+  .SetValue("Name", "World");
+
+var text = template.ProcessMacros(values);
+
+// Or use positional overloads for high-throughput scenarios
+var text2 = template.ProcessMacros("World");
+
 ```
 
 ## Concepts
 
 ### Macro Declaration vs. Definition
-- Declare macro names once; assign or change values many times without recompiling the template.
-- Enables reuse and reduces per-run parsing overhead.
+- Declare macro names once; assign or change values as necessary without recompiling the template.
+- Built-in standard macros are implicitly defined (no declaration required).
 
 ### Standard Macros
-`DeclareStandardMacros()` loads a predefined set of dynamically generated macros.
+Built-in, dynamic macros are always available. See [Standard Macros](#standard-macros-built-in).
 
 ### Dynamic Macros
-Dynamic macros defer value creation until expansion; they can incorporate timestamps, randomness, environment inspection, etc.
-Generators can read an optional argument to customize the generated value.
+Dynamic macros defer value creation until expansion; they can incorporate timestamps, randomness, environment inspection, etc. Generators can read an optional argument to customize the generated value.
 
 ### Includes (Compile-Time Expansion)
-Includes are macros that are substituted at compile-time. They are useful for static blocks (e.g., license headers, namespaces)
-that do not change per expansion and may contain run-time macros themselves.
+Includes are macros that are substituted at compile-time. They are useful for static blocks (e.g., license headers, namespaces) that do not change per expansion and may contain run-time macros themselves.
 
 ### Arguments
-Arguments are opaque to the engine —no parsing or validation is performed— so generators can interpret them according to domain rules (e.g., format strings or numeric bounds).
+Arguments are opaque to the engine—no parsing or validation is performed—so generators can interpret them according to domain rules (e.g., format strings or numeric bounds).
 
 ### Delimiters, Arguments and Escaping
 - Macros are surrounded by the `TemplateCompilerOptions.MacroDelimiter` (default: `$`).
@@ -98,18 +121,17 @@ Arguments are opaque to the engine —no parsing or validation is performed— s
 var macroTable = new MacroTableBuilder()
   .Declare("Name")
   .Declare("Age")
-  .DeclareStandardMacros()
   .Build();
 ```
 
-### 2. Compile a Template
+### 2. Compile the Template Text
 ```csharp
 var template = TemplateCompiler.Compile(
   macroTable,
   "Hello, $Name$! Today is $NOW:yyyyMMdd$. You are $Age$ years old!"
 );
 ```
-Optional includes:
+With optional includes:
 ```csharp
 var includes = new IncludesCollection();
 includes.AddInclude("HEADER", "// <auto-generated>...</auto-generated>\n");
@@ -126,16 +148,19 @@ var values = macroTable.CreateValues()
 ### 4. Process the Template
 ```csharp
 var sb = new StringBuilder();
-MacroProcessor.ProcessMacros(template, values, sb);
+template.ProcessMacros(sb, values);
 var text = sb.ToString();
+
+// or
+var text2 = template.ProcessMacros(values);
 ```
 
 ## Standard Macros (Built-in)
-When you call `DeclareStandardMacros()`, the engine registers a small set of built-in, dynamic macros.
+Standard macros are always available; you do not need to declare them. Names are case-insensitive.
 
 - `NOW[:<format>]`
   - Emits the current local date/time.
-  - Optional `format` is passed directly to `DateTime.ToString(format)`; common example: `$NOW:yyyyMMdd$`.
+  - Optional `format` is passed directly to `DateTime.ToString(format)`; example: `$NOW:yyyyMMdd$`.
 - `UTC_NOW[:<format>]`
   - Emits the current UTC date/time.
   - Optional `format` behaves like `NOW`; example: `$UTC_NOW:O$`.
@@ -146,7 +171,7 @@ When you call `DeclareStandardMacros()`, the engine registers a small set of bui
   - Reads an environment variable.
   - Argument is the variable name; if unset, emits an empty string; example: `$ENV:PATH$`.
 - `MACHINE`
-  - Emits the current machine name as returned by `Environment.MachineName`; no argument. 
+  - Emits the current machine name as returned by `Environment.MachineName`; no argument.
 - `OS`
   - Emits the current Operating System as returned by `Environment.OSVersion.VersionString`; no argument.
 - `USER`
@@ -154,7 +179,19 @@ When you call `DeclareStandardMacros()`, the engine registers a small set of bui
 - `CLR_VERSION`
   - Emits the current .NET runtime version as returned by `Environment.Version`; no argument.
 
-> **NOTE**: Arguments are not parsed by the engine; they are passed to the macro generator as-is.
+> **Note**. Arguments are not parsed by the engine; they are passed to the macro generator as-is. 
+
+---
+
+## Providing Values
+
+- Use `MacroValues` to bind static strings and/or dynamic generators per declared macro name or slot.
+- For purely static scenarios where you already have values in positional order, use the positional 
+  overloads of `MacroProcessor` that accept a `string?[]` or `ReadOnlySpan<string>`. The array/span 
+  must have one entry per declared macro, ordered by declaration. Standard macros are resolved
+  automatically and do not consume a slot. When using positional overloads, arguments to standard 
+  macros (e.g., the `:format` in `$NOW:O$`) are not passed to the generator and the default 
+  representation is used.
 
 ---
 
@@ -174,24 +211,19 @@ public sealed class TemplateCompilerOptions
 - `TemplateCompilerOptions()` – Initializes with default settings (macro delimiter: `$`, argument separator: `:`).
 - `TemplateCompilerOptions(char macroDelimiter, char argumentSeparator)` – Initializes with custom delimiter and separator. Throws if values are invalid or equal.
 
+#### Fields
+- `TemplateCompilerOptions Default` – Shared default options instance.
+
 #### Properties
+
 | Property | Type | Description |
 |----------|------|-------------|
 | `MacroDelimiter` | `char` | Gets the character used as the macro delimiter in the template engine. |
 | `ArgumentSeparator` | `char` | Gets the character used to separate arguments within a macro. |
-| `Default` | `TemplateCompilerOptions` | Gets the default options instance. |
 
 #### Usage Example
 ```csharp
-// Default options
-var options = new TemplateCompilerOptions();
-
-// or use the shared instance
-var options = TemplateCompilerOptions.Default;
-
-// Custom delimiter and separator
 var options = new TemplateCompilerOptions('#', '|');
-
 var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: options);
 ```
 
@@ -199,15 +231,12 @@ var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: op
 - The delimiter and separator must not be alphanumeric, underscore, dash, or whitespace.
 - The delimiter and separator must be different characters.
 
-#### See Also
-- [String](https://learn.microsoft.com/en-us/dotnet/api/system.string)
-
 ---
 
 ### MacroTableBuilder
 
 #### Summary
-Declares the list of macro names permitted in a template set. Provides deterministic macro slot ordering.
+Declares the list of user macro names permitted in a template set. Provides deterministic macro slot ordering.
 
 #### Syntax
 ```csharp
@@ -218,22 +247,24 @@ public sealed class MacroTableBuilder
 - `MacroTableBuilder()` – Initializes a new instance.
 
 #### Methods
+
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `Declare(string macroName)` | `MacroTableBuilder` | Registers a macro identifier. |
-| `DeclareStandardMacros()` | `MacroTableBuilder` | Declares a set of built-in macro names. |
+| `Declare(string macroName)` | `MacroTableBuilder` | Registers a macro identifier (case-insensitive). Duplicate declarations are ignored. |
+| `Declare(ReadOnlySpan<char> macroName)` | `MacroTableBuilder` | Registers a macro identifier using a span (optimized on .NET 9+ call sites). |
 | `Build()` | `MacroTable` | Materializes an immutable macro name mapping table. |
 
 #### Remarks
 - Macro names are case-insensitive and can only contain alphanumeric, underscore, or dash characters.
-- Macro names must be unique but can be declared multiple times, extra declarations are ignored.
+- Standard macros are always available and do not need to be declared.
+- If a macro with the same name as a standard macro is declared, the user-defined version takes precedence.
 
 ---
 
 ### MacroTable
 
 #### Summary
-Immutable mapping from macro name (case-insensitive) to a slot index.
+Immutable mapping from user macro name (case-insensitive) to a slot number.
 
 #### Syntax
 ```csharp
@@ -241,52 +272,21 @@ public sealed class MacroTable
 ```
 
 #### Properties
+
 | Property | Type | Description |
 |----------|------|-------------|
-| `Count` | `int` | Gets the number of declared macro entries. |
+| `Count` | `int` | Number of declared user macros. |
 
 #### Methods
+
 | Method | Return Type | Description |
 |--------|-------------|-------------|
 | `CreateValues()` | `MacroValues` | Creates a `MacroValues` instance for the macro table. |
-| `GetSlot(string macroName)` | `int` | Resolves the zero-based slot for a name, or -1 if the name was not declared. |
+| `GetSlot(string macroName)` | `int` | Resolves the slot for a name; returns `0` if the name is unknown. |
+| `GetSlot(ReadOnlySpan<char> macroName)` | `int` | Resolves the slot by span (optimized on .NET 9+ call sites). |
 
 #### Remarks
-- Use `CreateValues()` to bind macro values for expansion.
-
----
-
-### MacroValues
-
-#### Summary
-Mutable container binding slot indices to static strings or generator delegates. Designed for rapid reassignment with no allocations.
-
-#### Syntax
-```csharp
-public sealed class MacroValues
-```
-
-#### Methods
-| Method | Return Type | Description |
-|--------|-------------|-------------|
-| `SetValue(string macroName, string? value)` | `MacroValues` | Associates a static string with a macro slot. Passing `null` clears the slot. |
-| `SetValue(string macroName, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro slot. Passing `null` clears the slot. |
-| `SetValue(int slot, string? value)` | `MacroValues` | Associates a static string with a macro slot by index. Passing `null` clears the slot. |
-| `SetValue(int slot, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro slot by index. Passing `null` clears the slot. |
-| `GetValue(string macroName)` | `string?` | Fetches the effective value by name, invoking a dynamic generator if present. Returns `null` when no value/generator is assigned or the name is undeclared. |
-| `GetValue(string macroName, ReadOnlySpan<char> argument)` | `string?` | Same as above but supplies the raw argument span to the generator. |
-| `GetValue(int slot)` | `string?` | Fetches the effective value by slot, invoking a dynamic generator if present. Returns `null` when no value/generator is assigned or the slot is invalid. |
-
-#### .NET 9 or later additional overloads
-When targeting .NET 9 or later (`#if NET9_0_OR_GREATER`), span-based overloads are available to avoid intermediate string allocations for macro names:
-
-- `void SetValue(ReadOnlySpan<char> macroName, MacroValueGenerator? generator)`
-- `void SetValue(ReadOnlySpan<char> macroName, string? value)`
-- `string? GetValue(ReadOnlySpan<char> macroName)`
-- `string? GetValue(ReadOnlySpan<char> macroName, ReadOnlySpan<char> argument)`
-
-#### See Also
-- [ReadOnlySpan<T>](https://learn.microsoft.com/en-us/dotnet/api/system.readonlyspan-1)
+- User macro slots use positive numbers; standard macros use negative slot numbers and do not count towards `Count`.
 
 ---
 
@@ -297,22 +297,46 @@ User-provided callback that generates a dynamic value for a macro.
 
 #### Syntax
 ```csharp
-delegate string MacroValueGenerator(ReadOnlySpan<char> argument);
+delegate string? MacroValueGenerator(ReadOnlySpan<char> argument);
 ```
 
 #### Parameters
-| Name | Type | Description |
-|------|------|-------------|
-| `argument` | `ReadOnlySpan<char>` | The macro argument from the template text; if no value was provided, it contains an empty span. |
+- `ReadOnlySpan<char> argument` – The macro argument from the template text; empty if no value was provided.
 
 #### Returns
-- `string` – The generated macro value.
+- `string?` – The generated macro value, or `null`.
 
-#### Remarks
-- Used for dynamic macro expansion.
+---
 
-#### See Also
-- [Delegate](https://learn.microsoft.com/en-us/dotnet/api/system.delegate)
+### MacroValues
+
+#### Summary
+Mutable container binding user macro slots to static strings or generator delegates. Designed for rapid reassignment with minimal allocations.
+
+#### Syntax
+```csharp
+public sealed class MacroValues
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `MacroTable` | `MacroTable` | The macro table associated with this values container. |
+
+#### Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `SetValue(string macroName, string? value)` | `MacroValues` | Associates a static string value with a macro by name; `null` clears the macro's value. |
+| `SetValue(string macroName, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro by name; `null` clears the macro's value. |
+| `SetValue(int slot, string? value)` | `MacroValues` | Associates a static string with a macro by slot number; `null` clears the macro's value. |
+| `SetValue(int slot, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator with a macro slot by index; `null` clears the slot. |
+| `SetValue(ReadOnlySpan<char> macroName, string? value)` | `MacroValues` | Associates a static value by span-based macro name (optimized on .NET 9+ call sites). |
+| `SetValue(ReadOnlySpan<char> macroName, MacroValueGenerator? generator)` | `MacroValues` | Associates a dynamic generator by span-based macro name (optimized on .NET 9+ call sites). |
+| `GetValue(string macroName, ReadOnlySpan<char> argument = default)` | `string?` | Fetches the value by macro name, invoking a dynamic generator if present. |
+| `GetValue(int slot, ReadOnlySpan<char> argument = default)` | `string?` | Fetches the value by slot number. Returns `null` when not assigned or the slot is invalid. Negative slots resolve to standard macros. |
+| `GetValue(ReadOnlySpan<char> macroName, ReadOnlySpan<char> argument = default)` | `string?` | Fetches the value by span-based macro name (optimized on .NET 9+ call sites). |
 
 ---
 
@@ -327,15 +351,10 @@ public static class TemplateCompiler
 ```
 
 #### Methods
+
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `Compile(MacroTable macroTable, string templateText, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Validates input, performs include substitution (if provided), then scans the resulting text in a single pass to build a collection of segments. |
-
-#### Remarks
-- Use the returned `Template` for macro expansion.
-
-#### See Also
-- [StringBuilder](https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder)
+| `Compile(MacroTable macroTable, string templateText, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Parses the template text into a collection segments, performs include substitution (if provided). |
 
 ---
 
@@ -350,18 +369,20 @@ public static class MacroProcessor
 ```
 
 #### Methods
+
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `ProcessMacros(Template template, MacroValues macroValues, TextWriter writer)` | `void` | Streams expanded output to a `TextWriter`. When a macro has no value/generator, the original macro text is preserved. |
-| `ProcessMacros(Template template, MacroValues macroValues, StringBuilder builder)` | `void` | Appends expanded output into an existing `StringBuilder`. Pre-allocates capacity to the template's original length. When a macro has no value/generator, an empty string is appended. |
-| `ProcessMacros(Template template, MacroValues macroValues)` | `string` | Expands the template and returns the resulting string using a pooled `StringBuilder` for minimal allocations. |
+| `ProcessMacros(this Template template, TextWriter writer, MacroValues macroValues)` | `void` | Streams expanded output to a `TextWriter`. Missing macro values produce empty strings. Exceptions thrown by generators are caught and their messages are emitted. |
+| `ProcessMacros(this Template template, StringBuilder builder, MacroValues macroValues)` | `void` | Appends expanded output into a `StringBuilder`. |
+| `ProcessMacros(this Template template, MacroValues macroValues)` | `string` | Expands the template and returns the resulting string using an internally pooled `StringBuilder`. |
+| `ProcessMacros(this Template template, StringBuilder builder, params ReadOnlySpan<string?> values)` | `void` | Higher-performance, positional, static values variant; span length must be at least `MacroTable.Count`. Standard macros are resolved automatically. |
+| `ProcessMacros(this Template template, StringBuilder builder, params string?[] values)` | `void` | Convenience overload for arrays. |
+| `ProcessMacros(this Template template, params ReadOnlySpan<string?> values)` | `string` | Returns the expanded string using positional values and an internally pooled `StringBuilder`. |
+| `ProcessMacros(this Template template, params string?[] values)` | `string` | Convenience overload for arrays using an internally pooled `StringBuilder`. |
 
 #### Remarks
 - Any exceptions thrown by generators are caught and their messages used as the macro substitution text.
-
-#### See Also
-- [TextWriter](https://learn.microsoft.com/en-us/dotnet/api/system.io.textwriter)
-- [StringBuilder](https://learn.microsoft.com/en-us/dotnet/api/system.text.stringbuilder)
+- For positional overloads, pass values in the order you declared macros. Standard macros do not consume positions.
 
 ---
 
@@ -376,18 +397,17 @@ public sealed class IncludesCollection
 ```
 
 #### Properties
+
 | Property | Type | Description |
 |----------|------|-------------|
-| `Count` | `int` | Gets the current number of include entries tracked. |
+| `Count` | `int` | Number of include entries tracked. |
 
 #### Methods
+
 | Method | Return Type | Description |
 |--------|-------------|-------------|
 | `AddInclude(string name, string? content)` | `void` | Adds or replaces a static include. A `null` content becomes an empty string at expansion. |
 | `AddInclude(string name, MacroValueGenerator? generator = null)` | `void` | Adds or replaces a dynamic include whose content is generated at compile-time. A `null` generator produces an empty string. |
-
-#### Remarks
-- Use includes for static blocks or compile-time expansion.
 
 ---
 
@@ -402,27 +422,23 @@ public readonly record struct Template
 ```
 
 #### Properties
+
 | Property | Type | Description |
 |----------|------|-------------|
-| `MacroTable` | `MacroTable` | Gets the macro table associated with this template. |
-| `Text` | `string` | Gets the original template text. |
+| `MacroTable` | `MacroTable` | The macro table associated with this template. |
+| `Text` | `string` | The original template text (after include expansion, if any). |
 
 #### Methods
+
 | Method | Return Type | Description |
 |--------|-------------|-------------|
 | `CreateValues()` | `MacroValues` | Creates a new `MacroValues` instance associated with the template's macro table. |
 
-#### Remarks
-- The `Text` property returns the original template string as provided to the compiler (after include expansion, if any).
-- Use `CreateValues()` to obtain a container for macro values to be used during template expansion.
-
-#### See Also
-- [String](https://learn.microsoft.com/en-us/dotnet/api/system.string)
+---
 
 ## Advanced Usage
 - Custom delimiters and separators:
   ```csharp
-  // Use custom macro delimiter and argument separator
   var options = new TemplateCompilerOptions('#', '|');
   var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: options);
   ```
@@ -437,22 +453,27 @@ public readonly record struct Template
 
 - High-throughput assignment using slots:
   ```csharp
-  // Resolve once, then reuse slot-based setters in hot paths
-  var slot = macroTable.GetSlot("Name");
-  values.SetValue(slot, "John");
-  values.SetValue(slot, arg => expensiveComputation(arg));
+  var nameSlot = macroTable.GetSlot("Name");
+  values.SetValue(nameSlot, "John");
+  values.SetValue(nameSlot, arg => expensiveComputation(arg));
   ```
 
-- .NET 9+ span-based APIs to avoid intermediate strings:
+- .NET 9+ optimized span-based APIs to avoid intermediate strings:
   ```csharp
-  // #if NET9_0_OR_GREATER
   values.SetValue("Name".AsSpan(), "John");
   var value = values.GetValue("Name".AsSpan());
-  // #endif
+  ```
+
+- Positional values (static-only hot paths):
+  ```csharp
+  // Values must be ordered as macros were declared; standard macros do not consume positions
+  var text = template.ProcessMacros("Benchmark.Tests", "TestType", /* ... more values ... */);
   ```
 
 ---
 ## Benchmarks
+
+The code was benchmarked using [BenchmarkDotNet](https://www.nuget.org/packages/BenchmarkDotNet). `MacroProcessor` demonstrates significantly faster performance and lower memory allocation compared to `StringBuilder.Replace`, regex, and naive string replacement. Using a pooled `StringBuilder` eliminates intermediate allocations and performs even better.
 
 ### Benchmark Setup
 
@@ -552,26 +573,21 @@ And we are going to use the following macro values:
 Using [BenchmarkDotNet](https://benchmarkdotnet.org/)
 
 ```csharp
-[MemoryDiagnoser( false )]
-[HideColumns( "Job", "Error", "StdDev", "Median", "RatioSD", "y" )]
+[Config( typeof( Config ) )]
+[MemoryDiagnoser]
+[HideColumns( "Job", "Median" )]
 public partial class MacroProcessingBenchmarks
 {
-#region Constants
-
-  // Removed for brevity. See content above
+  // Removed for brevity. See content above.
   public const string TemplateText = "";
 
-#endregion
 
-#region Fields
+  // Removed for brevity. String.Format-compatible copy of TemplateText.
+  public const string TemplateTextFormat = "";
 
-  private readonly MacroTable _macroTable;
-  private readonly MacroValues _macroValues;
   private readonly Template _template;
-
-#endregion
-
-#region Constructors
+  private readonly MacroValues _dynamicMacroValues;
+  private readonly CompositeFormat _compositeFormat;
 
   public MacroProcessingBenchmarks()
   {
@@ -583,26 +599,23 @@ public partial class MacroProcessingBenchmarks
       builder.Declare( macroName );
     }
 
-    _macroTable = builder.Build();
+    var macroTable = builder.Build();
 
     // Set macro values
-    _macroValues = _macroTable.CreateValues();
+    _dynamicMacroValues = macroTable.CreateValues();
 
     foreach( var (macroName, value) in Macros )
     {
-      _macroValues.SetValue( macroName, value );
+      _dynamicMacroValues.SetValue( macroName, value );
     }
 
-    // Compile template
-    _template = TemplateCompiler.Compile( _macroTable, TemplateText );
+    // Compile templates
+    _template = TemplateCompiler.Compile( macroTable, TemplateText );
+    _compositeFormat = CompositeFormat.Parse( TemplateTextFormat );
   }
 
-#endregion
-
-#region Properties
-
-  public IReadOnlyDictionary<string, string> Macros
-    => new Dictionary<string, string>
+  public static IReadOnlyDictionary<string, string> Macros =>
+    new Dictionary<string, string>
     {
       { "Namespace", "Benchmark.Tests" },
       { "TypeName", "TestType" },
@@ -613,41 +626,59 @@ public partial class MacroProcessingBenchmarks
       { "JsonWriter", "writer.WriteStringValue( value.Value )" }
     };
 
-#endregion
-
-#region Public Methods
-
-  [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingMacroProcessorWithPooledStringBuilder()
+  [Benchmark]
+  public string MacroProcessor_WithStringParams()
   {
-    var builder = StringBuilderPool.Default.Get();
-
-    try
-    {
-      MacroProcessor.ProcessMacros( _template, _macroValues, builder );
-    }
-    finally
-    {
-      StringBuilderPool.Default.Return( builder );
-    }
+    return _template.ProcessMacros(
+      "MyApp.Primitives",
+      "Type",
+      "MyApp.Primitives.Type",
+      "string",
+      "String",
+      "reader.GetString()",
+      "writer.WriteStringValue( value.Value )"
+    );
   }
 
-  [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingMacroProcessorWithStringBuilder()
+  [Benchmark]
+  public string MacroProcessor_WithMacrosValues()
   {
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( _template, _macroValues, builder );
+    return _template.ProcessMacros( _dynamicMacroValues );
   }
 
-  [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingMacroProcessorWithTextWriter()
+  [Benchmark]
+  public string StringFormat()
   {
-    using var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( _template, _macroValues, writer );
+    return string.Format(
+      TemplateTextFormat,
+      "MyApp.Primitives",
+      "Type",
+      "MyApp.Primitives.Type",
+      "string",
+      "String",
+      "reader.GetString()",
+      "writer.WriteStringValue( value.Value )"
+    );
   }
 
-  [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingStringBuilderReplace()
+  [Benchmark]
+  public string StringFormat_WithCompositeFormat()
+  {
+    return string.Format(
+      CultureInfo.InvariantCulture,
+      _compositeFormat,
+      "MyApp.Primitives",
+      "Type",
+      "MyApp.Primitives.Type",
+      "string",
+      "String",
+      "reader.GetString()",
+      "writer.WriteStringValue( value.Value )"
+    );
+  }
+
+  [Benchmark]
+  public string StringBuilderReplace()
   {
     var sb = new StringBuilder( TemplateText );
 
@@ -656,13 +687,13 @@ public partial class MacroProcessingBenchmarks
       sb.Replace( macro, value );
     }
 
-    var processed = sb.ToString();
+    return sb.ToString();
   }
 
-  [Benchmark( OperationsPerInvoke = 3 )]
-  public void UsingRegularExpressions()
+  [Benchmark]
+  public string RegularExpression()
   {
-    var result = CreateMacroNameRegex()
+    return CreateMacroNameRegex()
       .Replace(
         TemplateText,
         match =>
@@ -673,8 +704,8 @@ public partial class MacroProcessingBenchmarks
       );
   }
 
-  [Benchmark( Baseline = true, OperationsPerInvoke = 3 )]
-  public void UsingStringReplace()
+  [Benchmark( Baseline = true )]
+  public string StringReplace()
   {
     var result = TemplateText;
 
@@ -682,16 +713,20 @@ public partial class MacroProcessingBenchmarks
     {
       result = result.Replace( $"${macroName}$", value, StringComparison.OrdinalIgnoreCase );
     }
+
+    return result;
   }
 
-#endregion
-
-#region Implementation
+  private class Config: ManualConfig
+  {
+    public Config()
+    {
+      SummaryStyle = SummaryStyle.Default.WithRatioStyle( RatioStyle.Trend );
+    }
+  }
 
   [GeneratedRegex( @"\$([^$]+)\$" )]
   private static partial Regex CreateMacroNameRegex();
-
-#endregion
 }
 
 ```
@@ -699,8 +734,8 @@ public partial class MacroProcessingBenchmarks
 #### Benchmark Results
 
 As the results indicate, `MacroProcessor` demonstrates significantly faster performance and lower memory allocation compared to 
-the `StringBuilder`, `Regex`, and `String Replace` implementations. This performance increase is even more dramatic when using a
-pooled `StringBuilder` as no memory allocations are performed at all. 
+the `String.Format`, `CompositeFormat`, `StringBuilder`, `Regex`, and `String Replace` implementations. This performance increase
+is even more dramatic when using a pooled `StringBuilder`. 
 
 ![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/refs/heads/main/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
 
@@ -711,23 +746,13 @@ pooled `StringBuilder` as no memory allocations are performed at all.
 | `TemplateEngineOptions` | `TemplateCompilerOptions` | Use constructor overloads for configuration. |
 | `TemplateCompiler compiler = new(); compiler.Compile(text)` | `TemplateCompiler.Compile(macroTable, text, includes, options)` | Static; must pass table. |
 | `MacroProcessorBuilder` | `MacroTableBuilder` + `MacroTable.CreateValues()` | Separation of declaration and values. |
-| `builder.AddStandardMacros()` | `DeclareStandardMacros()` | Same semantics. |
+| `builder.AddStandardMacros()` | (Removed) | Standard macros are always available; no declaration required. |
 | `builder.AddMacro("Name", "John")` | `values.SetValue("Name", "John")` | Must declare first. |
-| `builder.AddMacro("Rand", _ => ...)` | `values.SetValue("Rand", span => ...)` | Delegate signature unchanged. |
-| `MacroProcessor processor = builder.Build()` | (Removed) | Use static `MacroProcessor`. |
-| `processor.ProcessMacros(template, writer)` | `MacroProcessor.ProcessMacros(template, values, writer)` | Pass values object. |
+| `builder.AddMacro("Rand", _ => ...)` | `values.SetValue("Rand", span => ...)` | Delegate signature uses `ReadOnlySpan<char>`. |
+| `processor.ProcessMacros(template, writer)` | `template.ProcessMacros(writer, values)` | Extension method on `Template`; note parameter order. |
 | `processor.GetMacroValue("Name")` | `values.GetValue("Name")` | Value access moved. |
 | (No includes feature) | `IncludesCollection` | New compile-time expansion. |
-
-Migration steps:
-1. Declare all macro names with `MacroTableBuilder` (add standard macros if needed).
-2. Replace old options with `TemplateCompilerOptions` constructor if customizing.
-3. Build `MacroTable`; create `MacroValues`; map old `AddMacro` calls to `SetValue`.
-4. Recompile templates using static `TemplateCompiler`.
-5. Process via `MacroProcessor.ProcessMacros` with the `MacroValues` instance (choose the overload that best fits your scenario).
-6. Replace any direct value retrieval with `MacroValues.GetValue`.
-7. Use includes for large static blocks previously handled as macros.
+| (N/A) | Positional values overloads | For static-only high-throughput scenarios. |
 
 ## License
 This project is licensed under the MIT License. See `LICENSE` for details.
-
