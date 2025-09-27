@@ -4,8 +4,6 @@
 
 namespace Intercode.Toolbox.TemplateEngine;
 
-using System.Runtime.InteropServices;
-
 /// <summary>
 ///   Represents a template with text and segments within the text.
 /// </summary>
@@ -16,13 +14,13 @@ public readonly record struct Template
   /// <summary>
   ///   Initializes a new instance of the <see cref="Template" /> class with the specified macro table and segments.
   /// </summary>
+  /// <param name="text">The template's text.</param>
   /// <param name="macroTable">
   ///   The <see cref="MacroTable" /> containing macro definitions used by the template.
   /// </param>
   /// <param name="segments">
   ///   An array of <see cref="Segment" /> objects representing the segments of the template.
   /// </param>
-  /// <param name="templateTextLength"></param>
   /// <exception cref="ArgumentNullException">
   ///   Thrown when <paramref name="macroTable" /> or <paramref name="segments" /> is <c>null</c>.
   /// </exception>
@@ -30,17 +28,20 @@ public readonly record struct Template
   ///   Thrown when <paramref name="segments" /> is empty.
   /// </exception>
   internal Template(
+    string text,
     MacroTable macroTable,
-    Segment[] segments,
-    int templateTextLength )
+    Segment[] segments )
   {
-    TemplateTextLength = templateTextLength;
+    Text = text ?? throw new ArgumentNullException( nameof( text ) );
     Segments = segments ?? throw new ArgumentNullException( nameof( segments ) );
     MacroTable = macroTable ?? throw new ArgumentNullException( nameof( macroTable ) );
 
     if( Segments.Length == 0 )
     {
-      throw new ArgumentException( "The template must have at least one segment.", nameof( segments ) );
+      throw new ArgumentException(
+        "The template must have at least one segment.",
+        nameof( segments )
+      );
     }
   }
 
@@ -49,43 +50,23 @@ public readonly record struct Template
   #region Properties
 
   /// <summary>
+  ///   Gets the text content of the template.
+  /// </summary>
+  /// <value>
+  ///   A <see cref="string" /> representing the text of the template.
+  /// </value>
+  /// <remarks>
+  ///   The text serves as the base content of the template, which may include macro placeholders
+  /// </remarks>
+  public string Text { get; }
+
+  /// <summary>
   ///   Gets the <see cref="MacroTable" /> associated with this template.
   /// </summary>
   public MacroTable MacroTable { get; }
 
-  /// <summary>
-  ///   The template's text
-  /// </summary>
-  public string Text
-  {
-    get
-    {
-      var textMemory = Segments[0].Memory;
-
-      if( textMemory.IsEmpty )
-      {
-        return string.Empty;
-      }
-
-      if( MemoryMarshal.TryGetString( textMemory, out var text, out var start, out var length ) )
-      {
-        return text;
-      }
-
-      throw new InvalidOperationException( "Cannot get the template text" );
-    }
-  }
-
   /// <summary>The text segments that have been identified by the <see cref="TemplateCompiler" />.</summary>
   internal Segment[] Segments { get; init; }
-
-  /// <summary>
-  ///   Gets the total length of the template text represented by this instance.
-  /// </summary>
-  /// <value>
-  ///   An <see cref="int" /> representing the total number of characters in the template text.
-  /// </value>
-  internal int TemplateTextLength { get; }
 
   #endregion
 

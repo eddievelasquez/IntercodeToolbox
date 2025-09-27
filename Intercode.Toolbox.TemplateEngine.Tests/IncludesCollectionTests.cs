@@ -4,8 +4,6 @@
 
 namespace Intercode.Toolbox.TemplateEngine.Tests;
 
-using FluentAssertions;
-
 public class IncludesCollectionTests
 {
   #region Tests
@@ -85,7 +83,8 @@ public class IncludesCollectionTests
   }
 
   [Fact]
-  public void AddInclude_WithString_ShouldOverwriteWithNullContent_WhenNullContentIsProvidedForExistingMacro()
+  public void
+    AddInclude_WithString_ShouldOverwriteWithNullContent_WhenNullContentIsProvidedForExistingMacro()
   {
     var collection = new IncludesCollection();
     collection.AddInclude( "Macro1", "Content1" );
@@ -182,7 +181,8 @@ public class IncludesCollectionTests
   }
 
   [Fact]
-  public void TryGetIncludeContent_WithSpan_ShouldBeCaseInsensitive_WhenMacroNameHasDifferentCasing()
+  public void
+    TryGetIncludeContent_WithSpan_ShouldBeCaseInsensitive_WhenMacroNameHasDifferentCasing()
   {
     var collection = new IncludesCollection();
     collection.AddInclude( "SpanMacro", "Value" );

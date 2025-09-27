@@ -10,31 +10,82 @@ using System.Runtime.CompilerServices;
 /// <summary>
 ///   Represents a text segment in a <see cref="Template" />.
 /// </summary>
-[DebuggerDisplay( "IsMacro = {IsMacro}, Text = {Memory}, Slot = {Slot}" )]
+[DebuggerDisplay( "{GetDebuggerString()}" )]
 internal readonly record struct Segment
 {
+  #region Constants
+
+  public static readonly Segment Empty = new ( -1, 0 );
+
+  #endregion
+
+  #region Fields
+
+  private readonly int _textStart;
+  private readonly int _argumentStart;
+  private readonly ushort _textLength;
+  private readonly ushort _argumentLength;
+  private readonly short _slot;
+
+  #endregion
+
   #region Constructors
 
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="Segment" /> struct.
-  /// </summary>
-  /// <param name="memory">
-  ///   The memory that contains the text content of the segment.
-  /// </param>
-  /// <param name="argumentMemory">
-  ///   The memory that contains the argument for the macro segment, if applicable.
-  /// </param>
-  /// <param name="slot">
-  ///   The slot index associated with the macro's value, or -1 if not applicable.
-  /// </param>
   private Segment(
-    ReadOnlyMemory<char> memory,
-    ReadOnlyMemory<char> argumentMemory = default,
-    int slot = -1 )
+    int start,
+    int length,
+    int argumentStart,
+    int argumentLength,
+    int slot )
   {
-    Memory = memory;
-    ArgumentMemory = argumentMemory;
-    Slot = slot;
+    if( length > ushort.MaxValue )
+    {
+      throw new ArgumentOutOfRangeException(
+        nameof( length ),
+        "Length cannot exceed " + ushort.MaxValue
+      );
+    }
+
+    if( argumentLength > ushort.MaxValue )
+    {
+      throw new ArgumentOutOfRangeException(
+        nameof( argumentLength ),
+        "Argument length cannot exceed " + ushort.MaxValue
+      );
+    }
+
+    if( slot > short.MaxValue )
+    {
+      throw new ArgumentOutOfRangeException(
+        nameof( slot ),
+        "Slot cannot exceed " + short.MaxValue
+      );
+    }
+
+    _textStart = start;
+    _textLength = ( ushort ) length;
+    _argumentStart = argumentStart;
+    _argumentLength = ( ushort ) argumentLength;
+    _slot = ( short ) slot;
+  }
+
+  private Segment(
+    int start,
+    int length )
+  {
+    if( length > ushort.MaxValue )
+    {
+      throw new ArgumentOutOfRangeException(
+        nameof( length ),
+        "Length cannot exceed " + ushort.MaxValue
+      );
+    }
+
+    _textStart = start;
+    _textLength = ( ushort ) length;
+    _argumentStart = -1;
+    _argumentLength = 0;
+    _slot = -1;
   }
 
   #endregion
@@ -42,12 +93,21 @@ internal readonly record struct Segment
   #region Properties
 
   /// <summary>
+  ///   Gets the slot identifier associated with the segment.
+  /// </summary>
+  /// <remarks>
+  ///   The slot is used to identify and retrieve the value of a macro during template processing.
+  ///   A non-negative value indicates that the segment represents a macro.
+  /// </remarks>
+  public int Slot => _slot;
+
+  /// <summary>
   ///   Gets a value indicating whether the segment represents a macro.
   /// </summary>
   /// <value>
   ///   <see langword="true" /> if the segment is a macro; otherwise, <see langword="false" />.
   /// </value>
-  public bool IsMacro => Slot >= 0;
+  public bool IsMacro => _slot >= 0;
 
   /// <summary>
   ///   Gets a value indicating whether the segment is constant.
@@ -58,59 +118,157 @@ internal readonly record struct Segment
   /// </value>
   public bool IsConstant => !IsMacro;
 
-  /// <summary>
-  ///   Gets the text representation of the segment.
-  /// </summary>
-  public string Text => Memory.ToString();
-
-  /// <summary>
-  ///   The <see cref="Memory" /> that contains the segment's text.
-  /// </summary>
-  public ReadOnlyMemory<char> Memory { get; init; }
-
-  /// <summary>
-  ///   Optional <see cref="Memory" /> that contains a macro segment's argument.
-  /// </summary>
-  public ReadOnlyMemory<char> ArgumentMemory { get; init; }
-
-  /// <summary>
-  ///   Gets or initializes the slot index associated with the macro's value.
-  /// </summary>
-  /// <remarks>
-  ///   A value of <c>-1</c> indicates that the segment is not associated with a macro.
-  /// </remarks>
-  internal int Slot { get; init; }
-
   #endregion
 
   #region Public Methods
 
   /// <summary>
-  ///   Creates a constant segment with the specified starting position and text content.
+  ///   Retrieves the text content of the segment from the specified <see cref="Template" />.
   /// </summary>
-  /// <param name="memory">The memory that contains the text content of the constant segment.</param>
-  /// <returns>A new <see cref="Segment" /> representing a constant segment.</returns>
+  /// <param name="template">
+  ///   The <see cref="Template" /> instance containing the text from which the segment's content is extracted.
+  /// </param>
+  /// <returns>
+  ///   A <see cref="string" /> representing the text content of the segment. Returns an empty string if the segment has no
+  ///   content.
+  /// </returns>
+  public string GetText(
+    Template template )
+  {
+    return _textLength != 0 ? template.Text.Substring( _textStart, _textLength ) : string.Empty;
+  }
+
+  /// <summary>
+  ///   Retrieves the text span of the segment from the specified <see cref="Template" />.
+  /// </summary>
+  /// <param name="template">
+  ///   The <see cref="Template" /> instance containing the text from which the segment's span is extracted.
+  /// </param>
+  /// <returns>
+  ///   A <see cref="ReadOnlySpan{Char}" /> representing the text span of the segment. Returns an empty span if the segment
+  ///   has no content.
+  /// </returns>
+  public ReadOnlySpan<char> GetTextSpan(
+    Template template )
+  {
+    return _textLength != 0 ? template.Text.AsSpan( _textStart, _textLength ) : default;
+  }
+
+  /// <summary>
+  ///   Retrieves the optional argument of a macro segment from the specified <see cref="Template" />.
+  /// </summary>
+  /// <param name="template">
+  ///   The <see cref="Template" /> instance containing the text from which the macro's argument is extracted.
+  /// </param>
+  /// <returns>
+  ///   A <see cref="ReadOnlySpan{Char}" /> representing the macro's argument. Returns an empty span if the macro has no
+  ///   argument.
+  /// </returns>
+  public ReadOnlySpan<char> GetArgumentSpan(
+    Template template )
+  {
+    return _argumentLength != 0 ? template.Text.AsSpan( _argumentStart, _argumentLength ) : default;
+  }
+
+  /// <summary>
+  ///   Creates a constant segment with the specified starting position and length.
+  /// </summary>
+  /// <param name="start">
+  ///   The starting position of the segment within the text.
+  /// </param>
+  /// <param name="length">
+  ///   The length of the segment.
+  /// </param>
+  /// <returns>
+  ///   A new <see cref="Segment" /> instance representing a constant segment.
+  /// </returns>
   [MethodImpl( MethodImplOptions.AggressiveInlining )]
   public static Segment CreateConstant(
-    ReadOnlyMemory<char> memory )
+    int start,
+    int length )
   {
-    return new Segment( memory );
+    return new Segment( start, length );
   }
 
   /// <summary>
   ///   Creates a macro segment with the specified parameters.
   /// </summary>
-  /// <param name="slot">The slot index associated with the macro's value.</param>
-  /// <param name="memory">The memory that contains the macro segment's text.</param>
-  /// <param name="argument">The memory that contains the macro segment's argument.</param>
-  /// <returns>A new <see cref="Segment" /> representing a macro segment.</returns>
+  /// <param name="start">
+  ///   The starting position of the macro segment within the text.
+  /// </param>
+  /// <param name="length">
+  ///   The length of the macro segment.
+  /// </param>
+  /// <param name="argumentStart">
+  ///   The starting position of the macro's argument within the text.
+  /// </param>
+  /// <param name="argumentLength">
+  ///   The length of the macro's argument.
+  /// </param>
+  /// <param name="slot">
+  ///   The slot index associated with the macro's value.
+  /// </param>
+  /// <returns>
+  ///   A new <see cref="Segment" /> representing a macro segment.
+  /// </returns>
   [MethodImpl( MethodImplOptions.AggressiveInlining )]
   public static Segment CreateMacro(
-    int slot,
-    ReadOnlyMemory<char> memory,
-    ReadOnlyMemory<char> argument = default )
+    int start,
+    int length,
+    int argumentStart,
+    int argumentLength,
+    int slot )
   {
-    return new Segment( memory, argument, slot );
+    return new Segment( start, length, argumentStart, argumentLength, slot );
+  }
+
+  #endregion
+
+  #region Implementation
+
+  private string GetDebuggerString()
+  {
+    var builder = StringBuilderPool.Default.Get();
+
+    try
+    {
+      if( IsMacro )
+      {
+        builder.Append( "Macro { " );
+        builder.Append( "Slot: " );
+        builder.Append( Slot );
+        builder.Append( ", NameStart: " );
+        builder.Append( _textStart );
+        builder.Append( ", NameLength: " );
+        builder.Append( _textLength );
+
+        if( _argumentLength > 0 )
+        {
+          builder.Append( ", ArgumentStart: " );
+          builder.Append( _argumentStart );
+          builder.Append( ", ArgumentLength: " );
+          builder.Append( _argumentLength );
+        }
+
+        builder.Append( " }" );
+      }
+      else
+      {
+        builder.Append( "Constant { " );
+        builder.Append( "TextStart: " );
+        builder.Append( _textStart );
+        builder.Append( ", TextLength: " );
+        builder.Append( _textLength );
+
+        builder.Append( " }" );
+      }
+
+      return builder.ToString();
+    }
+    finally
+    {
+      StringBuilderPool.Default.Return( builder );
+    }
   }
 
   #endregion

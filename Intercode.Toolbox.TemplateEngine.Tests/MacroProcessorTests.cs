@@ -7,7 +7,6 @@
 namespace Intercode.Toolbox.TemplateEngine.Tests;
 
 using System.Text;
-using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
 
 public class MacroProcessorTests

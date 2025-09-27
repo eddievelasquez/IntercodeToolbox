@@ -52,7 +52,8 @@ public static class MacroProcessor
 
         try
         {
-          value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
+          value = macroValues.GetValue( segment.Slot, segment.GetArgumentSpan( template ) ) ??
+                  string.Empty;
         }
         catch( Exception exception )
         {
@@ -64,11 +65,11 @@ public static class MacroProcessor
       }
 
 #if NET6_0_OR_GREATER
-      writer.Write( segment.Memory.Span );
+      writer.Write( segment.GetTextSpan( template ) );
 #else
 
       // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-      writer.Write( segment.Memory.ToString() );
+      writer.Write( segment.GetText( template ) );
 #endif
     }
   }
@@ -100,7 +101,7 @@ public static class MacroProcessor
     }
 
     // Pre-allocate the StringBuilder capacity to avoid multiple allocations during appends
-    builder.EnsureCapacity( template.TemplateTextLength );
+    builder.EnsureCapacity( template.Text.Length );
 
     for( var index = 0; index < template.Segments.Length; index++ )
     {
@@ -112,7 +113,8 @@ public static class MacroProcessor
 
         try
         {
-          value = macroValues.GetValue( segment.Slot, segment.ArgumentMemory.Span ) ?? string.Empty;
+          value = macroValues.GetValue( segment.Slot, segment.GetArgumentSpan( template ) ) ??
+                  string.Empty;
         }
         catch( Exception exception )
         {
@@ -124,11 +126,11 @@ public static class MacroProcessor
       }
 
 #if NET6_0_OR_GREATER
-      builder.Append( segment.Memory.Span );
+      builder.Append( segment.GetTextSpan( template ) );
 #else
 
       // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
-      builder.Append( segment.Memory.ToString() );
+      builder.Append( segment.GetText( template ) );
 #endif
     }
   }
@@ -189,7 +191,7 @@ public static class MacroProcessor
     }
 
     // Pre-allocate the StringBuilder capacity to avoid multiple allocations during appends
-    builder.EnsureCapacity( template.TemplateTextLength );
+    builder.EnsureCapacity( template.Text.Length );
 
     for( var index = 0; index < template.Segments.Length; index++ )
     {
@@ -203,11 +205,11 @@ public static class MacroProcessor
       }
 
 #if NET6_0_OR_GREATER
-      builder.Append( segment.Memory.Span );
+      builder.Append( segment.GetTextSpan( template ) );
 #else
 
       // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
-      builder.Append( segment.Memory.ToString() );
+      builder.Append( segment.GetText( template ) );
 #endif
     }
   }

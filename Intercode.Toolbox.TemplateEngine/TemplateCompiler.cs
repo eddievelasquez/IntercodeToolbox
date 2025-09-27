@@ -64,10 +64,10 @@ public static class TemplateCompiler
     // Create an empty constant segment if we ended up with no segments
     if( segments.Length == 0 )
     {
-      segments = [Segment.CreateConstant( default )];
+      segments = [Segment.Empty];
     }
 
-    return new Template( macroTable, segments, text.Length );
+    return new Template( text, macroTable, segments );
   }
 
   #endregion
@@ -238,40 +238,46 @@ public static class TemplateCompiler
       int start,
       int length )
     {
-      segments.Add( Segment.CreateConstant( text.AsMemory( start, length ) ) );
+      segments.Add( Segment.CreateConstant( start, length ) );
     }
 
     void AddMacroSegment(
       int start,
       int length )
     {
-      var name = text.AsMemory( start, length );
-      var argument = ReadOnlyMemory<char>.Empty;
-      var argStart = name.Span.IndexOf( options.ArgumentSeparator );
+      var name = text.AsSpan( start, length );
+      var argStart = name.IndexOf( options.ArgumentSeparator );
+      var argLength = 0;
 
       // Does the macro placeholder have an argument?
       if( argStart != -1 )
       {
-        argument = name.Slice( argStart + 1 );
+        var argument = name.Slice( argStart + 1 );
         name = name.Slice( 0, argStart );
 
         if( name.IsEmpty )
         {
           throw new InvalidOperationException( "The macro name cannot be empty" );
         }
+
+        length = name.Length;
+
+        // Account for the delimiter, and it is relative to the macros placeholder start
+        argStart += start + 1;
+        argLength = argument.Length;
       }
 
 #if NET9_0_OR_GREATER
-      var slot = macroTable.GetSlot( name.Span );
+      var slot = macroTable.GetSlot( name );
 #else
       var slot = macroTable.GetSlot( name.ToString() );
 #endif
       if( slot < 0 )
       {
-        throw new InvalidOperationException( $"Undefined macro: '{name}'" );
+        throw new InvalidOperationException( $"Undefined macro: '{name.ToString()}'" );
       }
 
-      segments.Add( Segment.CreateMacro( slot, name, argument ) );
+      segments.Add( Segment.CreateMacro( start, length, argStart, argLength, slot ) );
     }
   }
 

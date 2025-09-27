@@ -45,8 +45,8 @@ public class MacroTableBuilderTest
 
     foreach( var std in StandardMacros.GetStandardMacroNames() )
     {
-      table.GetSlot( std.ToLowerInvariant() ).Should().BeGreaterOrEqualTo( 0 );
-      table.GetSlot( std.ToUpperInvariant() ).Should().BeGreaterOrEqualTo( 0 );
+      table.GetSlot( std.ToLowerInvariant() ).Should().BeGreaterThanOrEqualTo( 0 );
+      table.GetSlot( std.ToUpperInvariant() ).Should().BeGreaterThanOrEqualTo( 0 );
     }
   }
 

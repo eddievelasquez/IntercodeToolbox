@@ -43,7 +43,7 @@ public class StringBuilderPoolTests
     var pool = new StringBuilderPool( 256, 2 );
     var builder = pool.Get();
     builder.Should().NotBeNull();
-    builder.Capacity.Should().BeGreaterOrEqualTo( 256 );
+    builder.Capacity.Should().BeGreaterThanOrEqualTo( 256 );
     pool.Size.Should().Be( 0 );
   }
 
