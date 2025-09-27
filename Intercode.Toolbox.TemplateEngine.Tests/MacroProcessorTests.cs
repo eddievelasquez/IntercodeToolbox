@@ -231,6 +231,157 @@ public class MacroProcessorTests
     writer.ToString().Should().Be( "Hello, !" );
   }
 
+  [Fact]
+  public void ProcessMacros_WithStringBuilder_ShouldThrow_WhenMacroValuesFromDifferentTable()
+  {
+    var table1 = new MacroTableBuilder().Declare( "A" ).Build();
+    var table2 = new MacroTableBuilder().Declare( "A" ).Build();
+    var template = TemplateCompiler.Compile( table1, "x$A$x" );
+    var values = table2.CreateValues();
+    values.SetValue( "A", "v" );
+
+    var builder = new StringBuilder();
+    var act = () => template.ProcessMacros( builder, values );
+
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithParameterName( "macroValues" )
+       .WithMessage( "*must be associated with the same MacroTable*" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithTextWriter_ShouldThrow_WhenMacroValuesFromDifferentTable()
+  {
+    var table1 = new MacroTableBuilder().Declare( "A" ).Build();
+    var table2 = new MacroTableBuilder().Declare( "A" ).Build();
+    var template = TemplateCompiler.Compile( table1, "x$A$x" );
+    var values = table2.CreateValues();
+
+    using var writer = new StringWriter();
+    var act = () => template.ProcessMacros( writer, values );
+
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithParameterName( "macroValues" )
+       .WithMessage( "*must be associated with the same MacroTable*" );
+  }
+
+  [Fact]
+  public void ProcessMacros_ReturningString_ShouldReturnProcessedText()
+  {
+    var values = CreateStaticMacroValues( ( "A", "1" ), ( "B", "2" ) );
+    var template = TemplateCompiler.Compile( values.MacroTable, "$A$-$B$" );
+
+    var result = template.ProcessMacros( values );
+    result.Should().Be( "1-2" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithValuesSpan_ShouldThrow_WhenValuesArrayTooSmall()
+  {
+    var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
+    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+
+    var builder = new StringBuilder();
+    var tooSmall = new string?[] { "1" };
+
+    var act = () => template.ProcessMacros( builder, tooSmall );
+
+    act.Should()
+       .Throw<ArgumentException>()
+       .WithParameterName( "values" )
+       .WithMessage( "*must have at least as many elements as the MacroTable has slots*" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithValuesSpan_ShouldUseProvidedValues()
+  {
+    var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
+    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+
+    var builder = new StringBuilder();
+    var values = new string?[] { "X", "Y" };
+
+    template.ProcessMacros( builder, values.AsSpan() );
+    builder.ToString().Should().Be( "X-Y" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithValuesSpan_ShouldSkipNullValues()
+  {
+    var table = new MacroTableBuilder().Declare( "A" ).Build();
+    var template = TemplateCompiler.Compile( table, "X$A$Y" );
+
+    var builder = new StringBuilder();
+    var values = new string?[] { null };
+
+    template.ProcessMacros( builder, values.AsSpan() );
+    builder.ToString().Should().Be( "XY" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithValuesSpan_ShouldUseStandardMacros_ForNegativeSlots()
+  {
+    var table = new MacroTableBuilder().Build();
+    var template = TemplateCompiler.Compile( table, "$GUID$" );
+
+    var builder = new StringBuilder();
+
+    template.ProcessMacros( builder, ReadOnlySpan<string?>.Empty );
+
+    var output = builder.ToString();
+    output.Should().NotBeNullOrEmpty();
+    Guid.TryParse( output, out _ ).Should().BeTrue();
+  }
+
+  [Fact]
+  public void ProcessMacros_WithValuesArray_ShouldUseProvidedValues()
+  {
+    var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
+    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+
+    var builder = new StringBuilder();
+    template.ProcessMacros( builder, "X", "Y" );
+
+    builder.ToString().Should().Be( "X-Y" );
+  }
+
+  [Fact]
+  public void ProcessMacros_ReturningString_WithValuesSpan_ShouldReturnProcessedText()
+  {
+    var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
+    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+
+    var values = new string?[] { "X", "Y" };
+    var result = template.ProcessMacros( values.AsSpan() );
+
+    result.Should().Be( "X-Y" );
+  }
+
+  [Fact]
+  public void ProcessMacros_ReturningString_WithValuesArray_ShouldReturnProcessedText()
+  {
+    var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
+    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+
+    var result = template.ProcessMacros( "X", "Y" );
+
+    result.Should().Be( "X-Y" );
+  }
+
+  [Fact]
+  public void ProcessMacros_WithMacroValues_ShouldSupportStandardMacros()
+  {
+    var table = new MacroTableBuilder().Build();
+    var values = table.CreateValues();
+    var template = TemplateCompiler.Compile( table, "$GUID$" );
+
+    var result = template.ProcessMacros( values );
+
+    result.Should().NotBeNullOrEmpty();
+    Guid.TryParse( result, out _ ).Should().BeTrue();
+  }
+
   #endregion
 
   #region Implementation

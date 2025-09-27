@@ -18,7 +18,6 @@ public sealed class MacroTableBuilder
 #endif
 
   private int _currentSlot;
-  private bool _addStandardMacros;
 
   #endregion
 
@@ -82,90 +81,12 @@ public sealed class MacroTableBuilder
   }
 
   /// <summary>
-  ///   Declares the standard macros.
-  /// </summary>
-  /// <returns>The current <see cref="MacroTableBuilder" /> instance.</returns>
-  /// <remarks>
-  ///   <list type="table">
-  ///     <listheader>
-  ///       <term>Name</term>
-  ///       <description>Description</description>
-  ///     </listheader>
-  ///     <item>
-  ///       <term>NOW</term>
-  ///       <description>
-  ///         Gets the current local date and time. The optional argument is the format string passed to the
-  ///         <see cref="DateTime.ToString(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>UTC_NOW</term>
-  ///       <description>
-  ///         Gets the current UTC date and time. The optional argument is the format string passed to the
-  ///         <see cref="DateTime.ToString(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>GUID</term>
-  ///       <description>
-  ///         Generates a new Guid. The optional argument is the format string passed to the
-  ///         <see cref="Guid.ToString(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>MACHINE</term>
-  ///       <description>
-  ///         Gets the name of the local computer as returned by the <see cref="Environment.MachineName" />
-  ///         property.
-  ///       </description>
-  ///     </item>
-  ///     <item>
-  ///       <term>OS</term>
-  ///       <description>Gets the operating system version as returned by the <see cref="Environment.OSVersion" /> property.</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>USER</term>
-  ///       <description>Gets the name of the current user as returned by the <see cref="Environment.UserName" /> property.</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>CLR_VERSION</term>
-  ///       <description>Gets the CLR version as returned by the <see cref="Environment.Version" /> property.</description>
-  ///     </item>
-  ///     <item>
-  ///       <term>ENV</term>
-  ///       <description>
-  ///         Gets the value of the environment variable specified by the argument as return by the
-  ///         <see cref="Environment.GetEnvironmentVariable(String)" /> method.
-  ///       </description>
-  ///     </item>
-  ///   </list>
-  ///   <para>NOTE: If a generator throws an exception, the macro's value will be the exception's error message.</para>
-  /// </remarks>
-  public MacroTableBuilder DeclareStandardMacros()
-  {
-    _addStandardMacros = true;
-    return this;
-  }
-
-  /// <summary>
   ///   Constructs a <see cref="MacroTable" /> containing all declared macro names.
   /// </summary>
   /// <returns>A <see cref="MacroTable" /> instance populated with the declared macros.</returns>
   public MacroTable Build()
   {
-    // Standard macros are always added at the end to ensure consistent slot assignments;
-    // as custom macros slots are assigned in order of declaration
-    if( _addStandardMacros )
-    {
-      var slot = _macroSlots.Count;
-
-      foreach( var macroName in StandardMacros.GetStandardMacroNames() )
-      {
-        _macroSlots.Add( macroName, slot++ );
-      }
-    }
-
-    return new MacroTable( _macroSlots, _addStandardMacros );
+    return new MacroTable( _macroSlots );
   }
 
   #endregion
@@ -174,7 +95,8 @@ public sealed class MacroTableBuilder
 
   private int GetAssignedSlot()
   {
-    return _currentSlot++;
+    // Slots are 1-based, they are not indices
+    return ++_currentSlot;
   }
 
   #endregion

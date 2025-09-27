@@ -29,29 +29,19 @@ public sealed class MacroValues
   #region Constructors
 
   internal MacroValues(
-    MacroTable macroTable,
-    bool hasStandardMacros )
+    MacroTable macroTable )
   {
     MacroTable = macroTable;
     _generators = new MacroValueGenerator[macroTable.Count];
 
-    var slot = 0;
-
-    // Use the null generator for any remaining slots.
-    for( ; slot < _generators.Length; slot++ )
+#if NET8_0_OR_GREATER
+    Array.Fill( _generators, s_nullGenerator );
+#else
+    for( var i = 0; i < _generators.Length; i++ )
     {
-      _generators[slot] = s_nullGenerator;
+      _generators[i] = s_nullGenerator;
     }
-
-    // If the macro table includes standard macros, initialize their generators last.
-    // Custom macro slots are assigned in order of declaration
-    if( hasStandardMacros )
-    {
-      foreach( var generator in StandardMacros.GetStandardMacroGenerators() )
-      {
-        _generators[slot++] = generator;
-      }
-    }
+#endif
   }
 
   #endregion
@@ -88,13 +78,15 @@ public sealed class MacroValues
   {
     var slot = MacroTable.GetSlot( macroName );
 
-    if( slot == -1 )
+    if( slot == MacroTable.MacroNotFoundSlot )
     {
-      throw new ArgumentException( $"Macro '{macroName}' does not exist in the macro table.", nameof( macroName ) );
+      throw new ArgumentException(
+        $"Macro '{macroName}' does not exist in the macro table.",
+        nameof( macroName )
+      );
     }
 
-    _generators[slot] = generator ?? s_nullGenerator;
-    return this;
+    return SetValue( slot, generator );
   }
 
   /// <summary>
@@ -116,9 +108,12 @@ public sealed class MacroValues
   {
     var slot = MacroTable.GetSlot( macroName );
 
-    if( slot == -1 )
+    if( slot == MacroTable.MacroNotFoundSlot )
     {
-      throw new ArgumentException( $"Macro '{macroName}' does not exist in the macro table.", nameof( macroName ) );
+      throw new ArgumentException(
+        $"Macro '{macroName}' does not exist in the macro table.",
+        nameof( macroName )
+      );
     }
 
     MacroValueGenerator? generator = null;
@@ -129,8 +124,7 @@ public sealed class MacroValues
       generator = _ => value;
     }
 
-    _generators[slot] = generator ?? s_nullGenerator;
-    return this;
+    return SetValue( slot, generator ?? s_nullGenerator );
   }
 
   /// <summary>
@@ -152,16 +146,17 @@ public sealed class MacroValues
     int slot,
     MacroValueGenerator? generator )
   {
-    if( slot < 0 || slot >= _generators.Length )
+    // Only user-defined macros can be assigned
+    if( slot <= MacroTable.MacroNotFoundSlot || slot > _generators.Length )
     {
       throw new ArgumentOutOfRangeException(
         nameof( slot ),
         slot,
-        $"The slot must be between 0 and {_generators.Length - 1}"
+        "Invalid slot number."
       );
     }
 
-    _generators[slot] = generator ?? s_nullGenerator;
+    _generators[slot - 1] = generator ?? s_nullGenerator;
     return this;
   }
 
@@ -185,15 +180,6 @@ public sealed class MacroValues
     int slot,
     string? value )
   {
-    if( slot < 0 || slot >= _generators.Length )
-    {
-      throw new ArgumentOutOfRangeException(
-        nameof( slot ),
-        slot,
-        $"The slot must be between 0 and {_generators.Length - 1}"
-      );
-    }
-
     return SetValue( slot, value != null ? _ => value : null );
   }
 
@@ -230,13 +216,19 @@ public sealed class MacroValues
     int slot,
     ReadOnlySpan<char> argument = default )
   {
-    // If the slot is out of range, return null.
-    if( slot < 0 || slot >= _generators.Length )
+    // Return null if the macro name does not exist or is out of range.
+    if( slot == MacroTable.MacroNotFoundSlot || slot > _generators.Length )
     {
       return null;
     }
 
-    var generator = _generators[slot];
+    // Return the value from StandardMacros if the slot is negative.
+    if( slot < MacroTable.MacroNotFoundSlot )
+    {
+      return StandardMacros.GetValue( slot, argument );
+    }
+
+    var generator = _generators[slot - 1];
     return generator( argument );
   }
 
@@ -254,17 +246,18 @@ public sealed class MacroValues
 #if NET9_0_OR_GREATER
     var slot = MacroTable.GetSlot( macroName );
 
-    if( slot == -1 )
+    if( slot == MacroTable.MacroNotFoundSlot )
     {
-      throw new ArgumentException( $"Macro '{macroName}' does not exist in the macro table.", nameof( macroName ) );
+      throw new ArgumentException(
+        $"Macro '{macroName}' does not exist in the macro table.",
+        nameof( macroName )
+      );
     }
 
-    _generators[slot] = generator ?? s_nullGenerator;
+    return SetValue( slot, generator );
 #else
-    SetValue( macroName.ToString(), generator );
+    return SetValue( macroName.ToString(), generator );
 #endif
-
-    return this;
   }
 
   /// <summary>
@@ -295,15 +288,7 @@ public sealed class MacroValues
     ReadOnlySpan<char> argument = default )
   {
     var slot = MacroTable.GetSlot( macroName );
-
-    // If the macro name does not exist, return null.
-    if( slot == -1 )
-    {
-      return null;
-    }
-
-    var generator = _generators[slot];
-    return generator( argument );
+    return GetValue( slot, argument );
   }
 
   #endregion

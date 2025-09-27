@@ -13,13 +13,17 @@ public sealed class MacroTable
 {
   #region Constants
 
-  private const int MACRO_NOT_FOUND_SLOT = -1;
+  /// <summary>
+  ///   Represents the slot index returned when a macro name is not found in the <see cref="MacroTable" />.
+  /// </summary>
+  /// <remarks>
+  ///   This constant is used as a default value to indicate that a macro name does not have an associated slot.
+  /// </remarks>
+  public const int MacroNotFoundSlot = 0;
 
   #endregion
 
   #region Fields
-
-  private readonly bool _hasStandardMacros;
 
   private readonly FrozenDictionary<string, int> _macroSlots;
 #if NET9_0_OR_GREATER
@@ -35,12 +39,9 @@ public sealed class MacroTable
   ///   indicating the presence of standard macros.
   /// </summary>
   /// <param name="macroSlots">A dictionary containing macro names and their corresponding slot indices.</param>
-  /// <param name="hasStandardMacros">A boolean value indicating whether the table includes standard macros.</param>
   internal MacroTable(
-    IDictionary<string, int> macroSlots,
-    bool hasStandardMacros )
+    IDictionary<string, int> macroSlots )
   {
-    _hasStandardMacros = hasStandardMacros;
     _macroSlots = macroSlots.ToFrozenDictionary( StringComparer.OrdinalIgnoreCase );
 #if NET9_0_OR_GREATER
     _altMacroSlots = _macroSlots.GetAlternateLookup<ReadOnlySpan<char>>();
@@ -69,7 +70,7 @@ public sealed class MacroTable
   /// </returns>
   public MacroValues CreateValues()
   {
-    return new MacroValues( this, _hasStandardMacros );
+    return new MacroValues( this );
   }
 
   /// <summary>
@@ -86,9 +87,13 @@ public sealed class MacroTable
       throw new ArgumentException( "The macro name cannot be null or empty", nameof( macroName ) );
     }
 
-    // netstandard2.0 does not have GetValueOrDefault
-    // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
-    return _macroSlots.TryGetValue( macroName, out var slot ) ? slot : MACRO_NOT_FOUND_SLOT;
+    // First check in the declared macros; then check in standard macros.
+    if( _macroSlots.TryGetValue( macroName, out var slot ) )
+    {
+      return slot;
+    }
+
+    return StandardMacros.GetSlot( macroName );
   }
 
   /// <summary>
@@ -100,7 +105,9 @@ public sealed class MacroTable
     ReadOnlySpan<char> macroName )
   {
 #if NET9_0_OR_GREATER
-    return _altMacroSlots.TryGetValue( macroName, out var slot ) ? slot : MACRO_NOT_FOUND_SLOT;
+    return _altMacroSlots.TryGetValue( macroName, out var slot )
+      ? slot
+      : StandardMacros.GetSlot( macroName );
 #else
     return GetSlot( macroName.ToString() );
 #endif

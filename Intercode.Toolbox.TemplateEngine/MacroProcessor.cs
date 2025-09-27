@@ -199,8 +199,18 @@ public static class MacroProcessor
 
       if( segment.IsMacro )
       {
-        var value = values[segment.Slot] ?? string.Empty;
-        builder.Append( value );
+        var slot = segment.Slot;
+
+        // Negative slots are standard macros.
+        var value = slot < MacroTable.MacroNotFoundSlot
+          ? StandardMacros.GetValue( slot )
+          : values[slot - 1];
+
+        if( value is not null )
+        {
+          builder.Append( value );
+        }
+
         continue;
       }
 

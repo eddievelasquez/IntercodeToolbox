@@ -183,6 +183,19 @@ public class TemplateCompilerTests
   }
 
   [Fact]
+  public void Compile_ShouldNotTreatPlaceholderWithArgumentAsInclude_WhenNameMatchesInclude()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "x", "INC" );
+
+    var macroTable = DefineMacros( "x" );
+    var template = TemplateCompiler.Compile( macroTable, "$x:arg$", includes );
+
+    template.Should().HaveText( "$x:arg$" );
+    template.Should().HaveSingleSegment().Which.BeMacro( "x", "arg" );
+  }
+
+  [Fact]
   public void Compile_ShouldProcessMacrosInIncludeContent()
   {
     var includes = new IncludesCollection();
@@ -243,6 +256,34 @@ public class TemplateCompilerTests
 
     template.Should().HaveText( "A-B" );
     template.Should().HaveSingleSegment().Which.BeConstant( "A-B" );
+  }
+
+  [Fact]
+  public void Compile_ShouldReplaceInclude_WithCustomDelimiter()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "sect", "X" );
+
+    var macroTable = DefineMacros();
+    var options = new TemplateCompilerOptions( '#', ':' );
+    var template = TemplateCompiler.Compile( macroTable, "#sect#", includes, options );
+
+    template.Should().HaveText( "X" );
+    template.Should().HaveSingleSegment().Which.BeConstant( "X" );
+  }
+
+  [Fact]
+  public void Compile_ShouldLeaveUnclosedIncludePlaceholderUnchanged()
+  {
+    var includes = new IncludesCollection();
+    includes.AddInclude( "x", "X" );
+
+    const string Text = "prefix $x";
+    var macroTable = DefineMacros();
+    var template = TemplateCompiler.Compile( macroTable, Text, includes );
+
+    template.Should().HaveText( Text );
+    template.Should().HaveSingleSegment().Which.BeConstant( Text );
   }
 
   [Fact]
@@ -374,9 +415,9 @@ public class TemplateCompilerTests
 
     template.Should().HaveSegmentCount( 3 );
 
-    template.Should().HaveSegmentAt( 0 ).Which.BeMacro( "macroA" ).And.HaveSlot( 0 );
-    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macroB" ).And.HaveSlot( 1 );
-    template.Should().HaveSegmentAt( 2 ).Which.BeMacro( "macroC" ).And.HaveSlot( 2 );
+    template.Should().HaveSegmentAt( 0 ).Which.BeMacro( "macroA" ).And.HaveSlot( 1 );
+    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macroB" ).And.HaveSlot( 2 );
+    template.Should().HaveSegmentAt( 2 ).Which.BeMacro( "macroC" ).And.HaveSlot( 3 );
   }
 
   [Fact]
@@ -388,7 +429,7 @@ public class TemplateCompilerTests
     template.Should().HaveSegmentCount( 3 );
 
     template.Should().HaveSegmentAt( 0 ).Which.BeConstant( "prefix" );
-    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macro" ).And.HaveSlot( 0 );
+    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macro" ).And.HaveSlot( 1 );
     template.Should().HaveSegmentAt( 2 ).Which.BeConstant( "suffix" );
   }
 
@@ -433,9 +474,9 @@ public class TemplateCompilerTests
 
     template.Should().HaveSegmentCount( 3 );
 
-    template.Should().HaveSegmentAt( 0 ).Which.BeMacro( "macroA" ).And.HaveSlot( 0 );
-    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macroB" ).And.HaveSlot( 1 );
-    template.Should().HaveSegmentAt( 2 ).Which.BeMacro( "macroA" ).And.HaveSlot( 0 );
+    template.Should().HaveSegmentAt( 0 ).Which.BeMacro( "macroA" ).And.HaveSlot( 1 );
+    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macroB" ).And.HaveSlot( 2 );
+    template.Should().HaveSegmentAt( 2 ).Which.BeMacro( "macroA" ).And.HaveSlot( 1 );
   }
 
   [Fact]
@@ -447,7 +488,7 @@ public class TemplateCompilerTests
     template.Should().HaveSegmentCount( 2 );
 
     template.Should().HaveSegmentAt( 0 ).Which.BeConstant( "text" );
-    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macro" ).And.HaveSlot( 0 );
+    template.Should().HaveSegmentAt( 1 ).Which.BeMacro( "macro" ).And.HaveSlot( 1 );
   }
 
   [Fact]

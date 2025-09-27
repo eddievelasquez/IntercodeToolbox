@@ -272,7 +272,7 @@ public static class TemplateCompiler
 #else
       var slot = macroTable.GetSlot( name.ToString() );
 #endif
-      if( slot < 0 )
+      if( slot == MacroTable.MacroNotFoundSlot )
       {
         throw new InvalidOperationException( $"Undefined macro: '{name.ToString()}'" );
       }

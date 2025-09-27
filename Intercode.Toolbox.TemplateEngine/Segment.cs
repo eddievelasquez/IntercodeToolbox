@@ -85,7 +85,7 @@ internal readonly record struct Segment
     _textLength = ( ushort ) length;
     _argumentStart = -1;
     _argumentLength = 0;
-    _slot = -1;
+    _slot = MacroTable.MacroNotFoundSlot;
   }
 
   #endregion
@@ -107,7 +107,7 @@ internal readonly record struct Segment
   /// <value>
   ///   <see langword="true" /> if the segment is a macro; otherwise, <see langword="false" />.
   /// </value>
-  public bool IsMacro => _slot >= 0;
+  public bool IsMacro => _slot != MacroTable.MacroNotFoundSlot;
 
   /// <summary>
   ///   Gets a value indicating whether the segment is constant.
