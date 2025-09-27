@@ -37,20 +37,20 @@ public sealed class MacroValues
 
     var slot = 0;
 
-    // If the macro table includes standard macros, initialize their generators first.
-    // They are always assigned the same slots.
+    // Use the null generator for any remaining slots.
+    for( ; slot < _generators.Length; slot++ )
+    {
+      _generators[slot] = s_nullGenerator;
+    }
+
+    // If the macro table includes standard macros, initialize their generators last.
+    // Custom macro slots are assigned in order of declaration
     if( hasStandardMacros )
     {
       foreach( var generator in StandardMacros.GetStandardMacroGenerators() )
       {
         _generators[slot++] = generator;
       }
-    }
-
-    // Use the null generator for any remaining slots.
-    for( ; slot < _generators.Length; slot++ )
-    {
-      _generators[slot] = s_nullGenerator;
     }
   }
 
@@ -198,39 +198,37 @@ public sealed class MacroValues
   }
 
   /// <summary>
-  ///   Gets the value for the specified macro name.
+  ///   Retrieves the value associated with the specified macro name, using the provided argument if applicable.
   /// </summary>
-  /// <param name="macroName">The name of the macro to retrieve the value for.</param>
-  /// <returns>The value of the macro if set; otherwise, <c>null</c>.</returns>
-  public string? GetValue(
-    string macroName )
-  {
-    return GetValue( macroName, ReadOnlySpan<char>.Empty );
-  }
-
-  /// <summary>
-  ///   Gets the value for the specified macro name, using the provided argument.
-  /// </summary>
-  /// <param name="macroName">The name of the macro to retrieve the value for.</param>
-  /// <param name="argument">An argument to pass to the value generator.</param>
-  /// <returns>The value of the macro if set; otherwise, <c>null</c>.</returns>
+  /// <param name="macroName">The name of the macro whose value is to be retrieved.</param>
+  /// <param name="argument">
+  ///   An optional argument to pass to the macro's value generator. Defaults to <see cref="ReadOnlySpan{T}.Empty" /> if not
+  ///   provided.
+  /// </param>
+  /// <returns>
+  ///   The value of the macro if it has been set; otherwise, <c>null</c>.
+  /// </returns>
   public string? GetValue(
     string macroName,
-    ReadOnlySpan<char> argument )
+    ReadOnlySpan<char> argument = default )
   {
     var slot = MacroTable.GetSlot( macroName );
     return GetValue( slot, argument );
   }
 
   /// <summary>
-  ///   Gets the value for the specified macro slot, using the provided argument.
+  ///   Retrieves the value associated with the specified macro slot, using the provided argument if applicable.
   /// </summary>
-  /// <param name="slot">The slot index of the macro to retrieve the value for.</param>
-  /// <param name="argument">An argument to pass to the value generator.</param>
-  /// <returns>The value of the macro if set; otherwise, <c>null</c>.</returns>
+  /// <param name="slot">The index of the macro slot to retrieve the value for.</param>
+  /// <param name="argument">
+  ///   An optional argument to pass to the macro's value generator. Defaults to an empty span if not provided.
+  /// </param>
+  /// <returns>
+  ///   The value of the macro if it is set and the slot is valid; otherwise, <c>null</c>.
+  /// </returns>
   public string? GetValue(
     int slot,
-    ReadOnlySpan<char> argument )
+    ReadOnlySpan<char> argument = default )
   {
     // If the slot is out of range, return null.
     if( slot < 0 || slot >= _generators.Length )
@@ -242,9 +240,6 @@ public sealed class MacroValues
     return generator( argument );
   }
 
-  #endregion
-
-#if NET9_0_OR_GREATER
   /// <summary>
   ///   Sets the value generator for the specified macro name using a <see cref="System.ReadOnlySpan{T}" /> of
   ///   <see cref="char" />.
@@ -252,10 +247,11 @@ public sealed class MacroValues
   /// <param name="macroName">The macro name as a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" />.</param>
   /// <param name="generator">The value generator delegate to associate with the macro, or <c>null</c> to clear the value.</param>
   /// <exception cref="ArgumentException">Thrown if the macro name does not exist in the macro table.</exception>
-  public void SetValue(
+  public MacroValues SetValue(
     ReadOnlySpan<char> macroName,
     MacroValueGenerator? generator )
   {
+#if NET9_0_OR_GREATER
     var slot = MacroTable.GetSlot( macroName );
 
     if( slot == -1 )
@@ -264,6 +260,11 @@ public sealed class MacroValues
     }
 
     _generators[slot] = generator ?? s_nullGenerator;
+#else
+    SetValue( macroName.ToString(), generator );
+#endif
+
+    return this;
   }
 
   /// <summary>
@@ -272,34 +273,26 @@ public sealed class MacroValues
   /// <param name="macroName">The macro name as a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" />.</param>
   /// <param name="value">The value to associate with the macro, or <c>null</c> to clear the value.</param>
   /// <exception cref="ArgumentException">Thrown if the macro name does not exist in the macro table.</exception>
-  public void SetValue(
+  public MacroValues SetValue(
     ReadOnlySpan<char> macroName,
     string? value )
   {
-    SetValue( macroName, value != null ? _ => value : null );
-  }
-
-  /// <summary>
-  ///   Gets the value for the specified macro name using a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" />.
-  /// </summary>
-  /// <param name="macroName">The macro name as a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" />.</param>
-  /// <returns>The value of the macro if set; otherwise, <c>null</c>.</returns>
-  public string? GetValue(
-    ReadOnlySpan<char> macroName )
-  {
-    return GetValue( macroName, ReadOnlySpan<char>.Empty );
+    return SetValue( macroName, value != null ? _ => value : null );
   }
 
   /// <summary>
   ///   Gets the value for the specified macro name using a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" /> and
-  ///   an argument.
+  ///   an optional argument.
   /// </summary>
   /// <param name="macroName">The macro name as a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" />.</param>
-  /// <param name="argument">An argument to pass to the value generator.</param>
+  /// <param name="argument">
+  ///   An optional argument to pass to the value generator. Defaults to
+  ///   <see cref="System.ReadOnlySpan{T}.Empty" />.
+  /// </param>
   /// <returns>The value of the macro if set; otherwise, <c>null</c>.</returns>
   public string? GetValue(
     ReadOnlySpan<char> macroName,
-    ReadOnlySpan<char> argument )
+    ReadOnlySpan<char> argument = default )
   {
     var slot = MacroTable.GetSlot( macroName );
 
@@ -313,5 +306,5 @@ public sealed class MacroValues
     return generator( argument );
   }
 
-#endif
+  #endregion
 }

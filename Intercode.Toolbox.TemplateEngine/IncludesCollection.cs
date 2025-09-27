@@ -140,8 +140,6 @@ public sealed class IncludesCollection
     return false;
   }
 
-#if NET9_0_OR_GREATER
-
   /// <summary>
   ///   Attempts to retrieve the content of an include by its name.
   /// </summary>
@@ -163,6 +161,7 @@ public sealed class IncludesCollection
     ReadOnlySpan<char> name,
     out string? content )
   {
+#if NET9_0_OR_GREATER
     if( _alternate.TryGetValue( name, out var generator ) )
     {
       content = generator?.Invoke( name );
@@ -171,9 +170,10 @@ public sealed class IncludesCollection
 
     content = null;
     return false;
-  }
-
+#else
+    return TryGetIncludeContent( name.ToString(), out content );
 #endif
+  }
 
   #endregion
 

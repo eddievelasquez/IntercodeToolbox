@@ -30,19 +30,6 @@ public class MacroProcessorTests
 
   #region Tests
 
-  // Edge case: Macro not defined in MacroTable
-  [Fact]
-  public void ProcessMacros_ShouldIgnoreUndefinedMacros()
-  {
-    var values = CreateStaticMacroValues( ( "unused", "unused value" ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $undefined$!" );
-    var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
-
-    // Should treat as empty since slot is -1
-    builder.ToString().Should().Be( "Hello, !" );
-  }
-
   // Edge case: Macro with argument but no generator
   [Fact]
   public void ProcessMacros_ShouldTreatMacroWithArgumentButNoGeneratorAsEmpty()
@@ -50,7 +37,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues( ( "who", null ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who:arg$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, !" );
   }
 
@@ -61,7 +48,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues( ( "who", null ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, !" );
   }
 
@@ -71,7 +58,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "Just text." );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Just text." );
   }
 
@@ -81,7 +68,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "$$" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "$" );
   }
 
@@ -91,7 +78,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "$macro" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "$macro" );
   }
 
@@ -101,7 +88,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "Give me the $$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Give me the $!" );
   }
 
@@ -111,7 +98,7 @@ public class MacroProcessorTests
     var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now$" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
   }
 
@@ -121,7 +108,7 @@ public class MacroProcessorTests
     var values = CreateDynamicMacroValues( ( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now:yyyyMMdd$" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Timestamp: 20241020" );
   }
 
@@ -131,7 +118,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues( ( "who", "World" ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, World!" );
   }
 
@@ -141,7 +128,7 @@ public class MacroProcessorTests
     var values = CreateDynamicMacroValues( ( "fail", _ => throw new InvalidOperationException( "fail macro error" ) ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $fail$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Contain( "fail macro error" );
   }
 
@@ -151,7 +138,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues( ( "who", null ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var builder = new StringBuilder();
-    MacroProcessor.ProcessMacros( template, values, builder );
+    template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, !" );
   }
 
@@ -161,7 +148,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "Just text." );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Just text." );
   }
 
@@ -171,7 +158,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "$$" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "$" );
   }
 
@@ -181,7 +168,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "$macro" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "$macro" );
   }
 
@@ -191,7 +178,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues();
     var template = TemplateCompiler.Compile( values.MacroTable, "Give me the $$!" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Give me the $!" );
   }
 
@@ -201,7 +188,7 @@ public class MacroProcessorTests
     var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now$" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
   }
 
@@ -211,7 +198,7 @@ public class MacroProcessorTests
     var values = CreateDynamicMacroValues( ( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now:yyyyMMdd$" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Timestamp: 20241020" );
   }
 
@@ -221,7 +208,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues( ( "who", "World" ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Hello, World!" );
   }
 
@@ -231,7 +218,7 @@ public class MacroProcessorTests
     var values = CreateDynamicMacroValues( ( "fail", _ => throw new InvalidOperationException( "fail macro error" ) ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $fail$!" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Contain( "fail macro error" );
   }
 
@@ -241,7 +228,7 @@ public class MacroProcessorTests
     var values = CreateStaticMacroValues( ( "who", null ) );
     var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
     var writer = new StringWriter();
-    MacroProcessor.ProcessMacros( template, values, writer );
+    template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Hello, !" );
   }
 

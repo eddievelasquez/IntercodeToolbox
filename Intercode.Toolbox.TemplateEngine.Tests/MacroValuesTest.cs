@@ -57,6 +57,16 @@ public class MacroValuesTest
   }
 
   [Fact]
+  public void GetValue_WithSlot_ShouldReturnNull_WhenSlotInvalid()
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    values.GetValue( -1 ).Should().BeNull();
+    values.GetValue( 999 ).Should().BeNull();
+  }
+
+  [Fact]
   public void MacroValues_ShouldBeIsolatedBetweenInstances()
   {
     var macroTable = DefineMacros( "FOO" );
@@ -156,6 +166,74 @@ public class MacroValuesTest
     var values = macroTable.CreateValues();
     var act = () => values.SetValue( "BAR", "baz" );
     act.Should().Throw<ArgumentException>();
+  }
+
+  [Fact]
+  public void SetValue_WithSlotAndString_ShouldSetAndRetrieveStaticValue()
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    values.SetValue( 0, "X" );
+    values.GetValue( 0 ).Should().Be( "X" );
+  }
+
+  [Fact]
+  public void SetValue_WithSlotAndString_ShouldClearValue_WhenNull()
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    values.SetValue( 0, "X" );
+    values.SetValue( 0, ( string? ) null );
+
+    values.GetValue( 0 ).Should().BeNull();
+  }
+
+  [Fact]
+  public void SetValue_WithSlotAndGenerator_ShouldSetAndRetrieveValue()
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    values.SetValue( 0, _ => "X" );
+    values.GetValue( 0 ).Should().Be( "X" );
+  }
+
+  [Fact]
+  public void SetValue_WithSlotAndGenerator_ShouldClearValue_WhenNull()
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    values.SetValue( 0, _ => "X" );
+    values.SetValue( 0, ( MacroValueGenerator? ) null );
+
+    values.GetValue( 0 ).Should().BeNull();
+  }
+
+  [Theory]
+  [InlineData( -1 )]
+  [InlineData( 1 )]
+  public void SetValue_WithSlotAndString_ShouldThrow_WhenSlotInvalid( int slot )
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    var act = () => values.SetValue( slot, "x" );
+    act.Should().Throw<ArgumentOutOfRangeException>().Where( e => e.ParamName == "slot" );
+  }
+
+  [Theory]
+  [InlineData( -1 )]
+  [InlineData( 1 )]
+  public void SetValue_WithSlotAndGenerator_ShouldThrow_WhenSlotInvalid( int slot )
+  {
+    var table = DefineMacros( "A" );
+    var values = table.CreateValues();
+
+    var act = () => values.SetValue( slot, _ => "x" );
+    act.Should().Throw<ArgumentOutOfRangeException>().Where( e => e.ParamName == "slot" );
   }
 
   #endregion

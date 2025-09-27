@@ -11,11 +11,13 @@ public sealed class MacroTableBuilder
 {
   #region Fields
 
-  private readonly HashSet<string> _macroNames = new ( StringComparer.OrdinalIgnoreCase );
+  private readonly Dictionary<string, int> _macroSlots = new ( StringComparer.OrdinalIgnoreCase );
 
 #if NET9_0_OR_GREATER
-  private readonly HashSet<string>.AlternateLookup<ReadOnlySpan<char>> _altMacroNames;
+  private readonly Dictionary<string, int>.AlternateLookup<ReadOnlySpan<char>> _altMacroNames;
 #endif
+
+  private int _currentSlot;
   private bool _addStandardMacros;
 
   #endregion
@@ -28,7 +30,7 @@ public sealed class MacroTableBuilder
   public MacroTableBuilder()
   {
 #if NET9_0_OR_GREATER
-    _altMacroNames = _macroNames.GetAlternateLookup<ReadOnlySpan<char>>();
+    _altMacroNames = _macroSlots.GetAlternateLookup<ReadOnlySpan<char>>();
 #endif
   }
 
@@ -47,7 +49,35 @@ public sealed class MacroTableBuilder
   {
     MacroExtensions.ValidateMacroName( macroName );
 
-    _macroNames.Add( macroName );
+    if( !_macroSlots.ContainsKey( macroName ) )
+    {
+      _macroSlots.Add( macroName, GetAssignedSlot() );
+    }
+
+    return this;
+  }
+
+  /// <summary>
+  ///   Declares a macro name (as a <see cref="ReadOnlySpan{Char}" />) to be included in the resulting
+  ///   <see cref="MacroTable" />.
+  /// </summary>
+  /// <param name="macroName">The macro name to declare.</param>
+  /// <returns>The current <see cref="MacroTableBuilder" /> instance.</returns>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="macroName" /> is invalid.</exception>
+  public MacroTableBuilder Declare(
+    ReadOnlySpan<char> macroName )
+  {
+#if NET9_0_OR_GREATER
+    MacroExtensions.ValidateMacroName( macroName );
+
+    if( !_altMacroNames.ContainsKey( macroName ) )
+    {
+      _altMacroNames.TryAdd( macroName, GetAssignedSlot() );
+    }
+#else
+    Declare( macroName.ToString() );
+#endif
+
     return this;
   }
 
@@ -117,58 +147,34 @@ public sealed class MacroTableBuilder
     return this;
   }
 
-#if NET9_0_OR_GREATER
-  /// <summary>
-  ///   Declares a macro name (as a <see cref="ReadOnlySpan{Char}" />) to be included in the resulting
-  ///   <see cref="MacroTable" />.
-  /// </summary>
-  /// <param name="macroName">The macro name to declare.</param>
-  /// <returns>The current <see cref="MacroTableBuilder" /> instance.</returns>
-  /// <exception cref="ArgumentException">Thrown if <paramref name="macroName" /> is invalid.</exception>
-  public MacroTableBuilder Declare(
-    ReadOnlySpan<char> macroName )
-  {
-    MacroExtensions.ValidateMacroName( macroName );
-    _altMacroNames.Add( macroName );
-
-    return this;
-  }
-#endif
-
   /// <summary>
   ///   Constructs a <see cref="MacroTable" /> containing all declared macro names.
   /// </summary>
   /// <returns>A <see cref="MacroTable" /> instance populated with the declared macros.</returns>
-  /// <exception cref="InvalidOperationException">
-  ///   Thrown if no macros have been declared or added before invoking this method.
-  /// </exception>
   public MacroTable Build()
   {
-    //if( _macroNames.Count == 0 && !_addStandardMacros )
-    //{
-    //  throw new InvalidOperationException( "Must declare at least one macro" );
-    //}
-
-    var macroSlots = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
-    var slot = 0;
-
+    // Standard macros are always added at the end to ensure consistent slot assignments;
+    // as custom macros slots are assigned in order of declaration
     if( _addStandardMacros )
     {
-      // Standard macro names are added first to ensure they occupy the lowest slots
-      // and are always assigned the same slots
+      var slot = _macroSlots.Count;
+
       foreach( var macroName in StandardMacros.GetStandardMacroNames() )
       {
-        macroSlots.Add( macroName, slot++ );
+        _macroSlots.Add( macroName, slot++ );
       }
     }
 
-    // Add declared macros
-    foreach( var macroName in _macroNames )
-    {
-      macroSlots.Add( macroName, slot++ );
-    }
+    return new MacroTable( _macroSlots, _addStandardMacros );
+  }
 
-    return new MacroTable( macroSlots, _addStandardMacros );
+  #endregion
+
+  #region Implementation
+
+  private int GetAssignedSlot()
+  {
+    return _currentSlot++;
   }
 
   #endregion

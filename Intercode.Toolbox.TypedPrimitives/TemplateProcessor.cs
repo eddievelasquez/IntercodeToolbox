@@ -105,18 +105,8 @@ internal class TemplateProcessor
     Template template,
     MacroValues macroValues )
   {
-    // Use a pooled StringBuilder for efficiency
-    var builder = StringBuilderPool.Default.Get();
-
-    try
-    {
-      MacroProcessor.ProcessMacros( template, macroValues, builder );
-      return SourceText.From( builder.ToString(), Encoding.UTF8 );
-    }
-    finally
-    {
-      StringBuilderPool.Default.Return( builder );
-    }
+    var text = template.ProcessMacros( macroValues );
+    return SourceText.From( text, Encoding.UTF8 );
   }
 
   #endregion

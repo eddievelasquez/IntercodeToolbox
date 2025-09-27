@@ -58,16 +58,17 @@ public class MacroTableBuilderTest
     builder.Declare( "USER1" );
     builder.Declare( "USER2" );
     var table = builder.Build();
+
     var std = StandardMacros.GetStandardMacroNames().ToList();
     table.Count.Should().Be( std.Count + 2 );
 
+    table.GetSlot( "USER1" ).Should().Be( 0 );
+    table.GetSlot( "USER2" ).Should().Be( 1 );
+
     for( var i = 0; i < std.Count; i++ )
     {
-      table.GetSlot( std[i] ).Should().Be( i );
+      table.GetSlot( std[i] ).Should().Be( i + 2 );
     }
-
-    table.GetSlot( "USER1" ).Should().Be( std.Count );
-    table.GetSlot( "USER2" ).Should().Be( std.Count + 1 );
   }
 
   [Fact]

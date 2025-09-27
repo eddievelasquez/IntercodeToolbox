@@ -83,15 +83,13 @@ public sealed class MacroTable
   {
     if( string.IsNullOrEmpty( macroName ) )
     {
-      throw new ArgumentException( nameof( macroName ) );
+      throw new ArgumentException( "The macro name cannot be null or empty", nameof( macroName ) );
     }
 
     // netstandard2.0 does not have GetValueOrDefault
     // ReSharper disable once CanSimplifyDictionaryTryGetValueWithGetValueOrDefault
     return _macroSlots.TryGetValue( macroName, out var slot ) ? slot : MACRO_NOT_FOUND_SLOT;
   }
-
-#if NET9_0_OR_GREATER
 
   /// <summary>
   ///   Gets the slot index for the specified macro name as a <see cref="System.ReadOnlySpan{T}" /> of <see cref="char" />.
@@ -101,10 +99,12 @@ public sealed class MacroTable
   public int GetSlot(
     ReadOnlySpan<char> macroName )
   {
+#if NET9_0_OR_GREATER
     return _altMacroSlots.TryGetValue( macroName, out var slot ) ? slot : MACRO_NOT_FOUND_SLOT;
-  }
-
+#else
+    return GetSlot( macroName.ToString() );
 #endif
+  }
 
   #endregion
 }
