@@ -8,7 +8,9 @@
     <File Path="Directory.Packages.props" />
     <File Path="GitVersion.yml" />
     <File Path="LICENSE" />
+    <File Path="nuget.config" />
     <File Path="README.md" />
+    <File Path="version.json" />
   </Folder>
   <Folder Name="/Core/" Id="f6a5b072-1ba0-4299-8474-4f404202cd73">
     <Project Path="Intercode.Toolbox.AspNetCore.Extensions/Intercode.Toolbox.AspNetCore.Extensions.csproj" />

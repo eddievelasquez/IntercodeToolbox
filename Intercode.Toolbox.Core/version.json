@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
+  "version": "2.5.0",
+  "pathFilters": [
+    "Intercode.Toolbox.Core/"
+  ],
+  "publicReleaseRefSpec": [
+    "^refs/heads/main$",
+    "^refs/heads/release/.*$",
+    "^refs/tags/Intercode.Toolbox.Core-v\\d+\\.\\d+\\.\\d+.*$"
+  ]
+}

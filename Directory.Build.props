@@ -1,17 +1,19 @@
 <Project>
-
   <PropertyGroup>
     <Authors>Eddie Velasquez</Authors>
     <Company>Intercode Consulting.</Company>
     <CurrentYear>$([System.DateTime]::Now.Year)</CurrentYear>
     <Copyright>(c) 2020-$(CurrentYear), Intercode Consulting</Copyright>
   </PropertyGroup>
-
   <PropertyGroup>
     <WriteVersionInfoToBuildLog>true</WriteVersionInfoToBuildLog>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
-      <!-- Reduce source paths See: https://bit.ly/44fmmmf  -->
+    <!-- Reduce source paths See: https://bit.ly/44fmmmf  -->
     <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning" Condition="!Exists('packages.config')">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>
