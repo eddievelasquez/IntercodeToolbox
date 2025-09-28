@@ -17,9 +17,8 @@ internal sealed class SegmentAssertions: ObjectAssertions<Segment, SegmentAssert
   /// <inheritdoc />
   public SegmentAssertions(
     Template template,
-    Segment segment,
-    AssertionChain assertionChain )
-    : base( segment, assertionChain )
+    Segment segment )
+    : base( segment )
   {
     Template = template;
   }
@@ -44,25 +43,25 @@ internal sealed class SegmentAssertions: ObjectAssertions<Segment, SegmentAssert
   {
     using var _ = new AssertionScope();
 
-    CurrentAssertionChain
-      .ForCondition( !Subject.IsMacro )
-      .BecauseOf( because, becauseArgs )
-      .FailWith(
-        "Expected {context:segment} to be a constant segment{reason}, but it was a macro (name: {0}, slot: {1}).",
-        Subject.GetText( Template ),
-        Subject.Slot
-      );
+    Execute.Assertion
+           .ForCondition( !Subject.IsMacro )
+           .BecauseOf( because, becauseArgs )
+           .FailWith(
+             "Expected {context:segment} to be a constant segment{reason}, but it was a macro (name: {0}, slot: {1}).",
+             Subject.GetText( Template ),
+             Subject.Slot
+           );
 
     if( text is not null )
     {
-      CurrentAssertionChain
-        .ForCondition( Subject.GetText( Template ) == text )
-        .BecauseOf( because, becauseArgs )
-        .FailWith(
-          "Expected {context:segment} constant text to be {0}{reason}, but found {1}.",
-          text,
-          Subject.GetText( Template )
-        );
+      Execute.Assertion
+             .ForCondition( Subject.GetText( Template ) == text )
+             .BecauseOf( because, becauseArgs )
+             .FailWith(
+               "Expected {context:segment} constant text to be {0}{reason}, but found {1}.",
+               text,
+               Subject.GetText( Template )
+             );
     }
 
     return new AndConstraint<SegmentAssertions>( this );
@@ -79,38 +78,38 @@ internal sealed class SegmentAssertions: ObjectAssertions<Segment, SegmentAssert
   {
     using var _ = new AssertionScope();
 
-    CurrentAssertionChain
-      .ForCondition( Subject.IsMacro )
-      .BecauseOf( because, becauseArgs )
-      .FailWith(
-        "Expected {context:segment} to be a macro segment{reason}, but it was a constant (text: {0}).",
-        Subject.GetText( Template )
-      );
+    Execute.Assertion
+           .ForCondition( Subject.IsMacro )
+           .BecauseOf( because, becauseArgs )
+           .FailWith(
+             "Expected {context:segment} to be a macro segment{reason}, but it was a constant (text: {0}).",
+             Subject.GetText( Template )
+           );
 
     if( name is not null )
     {
-      CurrentAssertionChain
-        .ForCondition( Subject.GetText( Template ) == name )
-        .BecauseOf( because, becauseArgs )
-        .FailWith(
-          "Expected {context:segment} macro name to be {0}{reason}, but found {1}.",
-          name,
-          Subject.GetText( Template )
-        );
+      Execute.Assertion
+             .ForCondition( Subject.GetText( Template ) == name )
+             .BecauseOf( because, becauseArgs )
+             .FailWith(
+               "Expected {context:segment} macro name to be {0}{reason}, but found {1}.",
+               name,
+               Subject.GetText( Template )
+             );
     }
 
     if( argument is not null )
     {
       var actualArg = Subject.GetArgumentSpan( Template ).ToString();
 
-      CurrentAssertionChain
-        .ForCondition( actualArg == argument )
-        .BecauseOf( because, becauseArgs )
-        .FailWith(
-          "Expected {context:segment} macro argument to be {0}{reason}, but found {1}.",
-          argument,
-          actualArg
-        );
+      Execute.Assertion
+             .ForCondition( actualArg == argument )
+             .BecauseOf( because, becauseArgs )
+             .FailWith(
+               "Expected {context:segment} macro argument to be {0}{reason}, but found {1}.",
+               argument,
+               actualArg
+             );
     }
 
     return new AndConstraint<SegmentAssertions>( this );
@@ -124,14 +123,14 @@ internal sealed class SegmentAssertions: ObjectAssertions<Segment, SegmentAssert
     string because = "",
     params object[] becauseArgs )
   {
-    CurrentAssertionChain
-      .ForCondition( Subject.GetText( Template ) == expected )
-      .BecauseOf( because, becauseArgs )
-      .FailWith(
-        "Expected {context:segment} text to be {0}{reason}, but found {1}.",
-        expected,
-        Subject.GetText( Template )
-      );
+    Execute.Assertion
+           .ForCondition( Subject.GetText( Template ) == expected )
+           .BecauseOf( because, becauseArgs )
+           .FailWith(
+             "Expected {context:segment} text to be {0}{reason}, but found {1}.",
+             expected,
+             Subject.GetText( Template )
+           );
 
     return new AndConstraint<SegmentAssertions>( this );
   }
@@ -146,14 +145,14 @@ internal sealed class SegmentAssertions: ObjectAssertions<Segment, SegmentAssert
   {
     var actual = Subject.GetArgumentSpan( Template ).ToString();
 
-    CurrentAssertionChain
-      .ForCondition( actual == expected )
-      .BecauseOf( because, becauseArgs )
-      .FailWith(
-        "Expected {context:segment} argument to be {0}{reason}, but found {1}.",
-        expected,
-        actual
-      );
+    Execute.Assertion
+           .ForCondition( actual == expected )
+           .BecauseOf( because, becauseArgs )
+           .FailWith(
+             "Expected {context:segment} argument to be {0}{reason}, but found {1}.",
+             expected,
+             actual
+           );
 
     return new AndConstraint<SegmentAssertions>( this );
   }
@@ -166,14 +165,14 @@ internal sealed class SegmentAssertions: ObjectAssertions<Segment, SegmentAssert
     string because = "",
     params object[] becauseArgs )
   {
-    CurrentAssertionChain
-      .ForCondition( Subject.Slot == expected )
-      .BecauseOf( because, becauseArgs )
-      .FailWith(
-        "Expected {context:segment} slot to be {0}{reason}, but found {1}.",
-        expected,
-        Subject.Slot
-      );
+    Execute.Assertion
+           .ForCondition( Subject.Slot == expected )
+           .BecauseOf( because, becauseArgs )
+           .FailWith(
+             "Expected {context:segment} slot to be {0}{reason}, but found {1}.",
+             expected,
+             Subject.Slot
+           );
 
     return new AndConstraint<SegmentAssertions>( this );
   }

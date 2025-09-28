@@ -4,8 +4,6 @@
 
 namespace Intercode.Toolbox.TemplateEngine.Tests.FluentAssertions;
 
-using global::FluentAssertions.Execution;
-
 internal static class TemplateAssertionsExtensions
 {
   #region Public Methods
@@ -13,7 +11,7 @@ internal static class TemplateAssertionsExtensions
   public static TemplateAssertions Should(
     this Template instance )
   {
-    return new TemplateAssertions( instance, AssertionChain.GetOrCreate() );
+    return new TemplateAssertions( instance );
   }
 
   #endregion
