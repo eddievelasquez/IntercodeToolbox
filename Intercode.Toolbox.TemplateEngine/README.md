@@ -355,7 +355,7 @@ public static class TemplateCompiler
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `Compile(MacroTable macroTable, string templateText, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Parses the template text into a collection segments, performs include substitution (if provided). |
+| `Compile(string templateText, MacroTable macroTable, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Parses the template text into a collection segments, performs include substitution (if provided). |
 
 ---
 

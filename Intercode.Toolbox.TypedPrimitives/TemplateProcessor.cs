@@ -17,7 +17,8 @@ internal class TemplateProcessor
   #region Constants
 
   // The macro table used for processing templates
-  private static readonly MacroTable s_macroTable = new MacroTableBuilder().DeclareTemplateProcessorMacros().Build();
+  private static readonly MacroTable s_macroTable =
+    new MacroTableBuilder().DeclareTemplateProcessorMacros().Build();
 
   // Caches compiled templates by key for reuse and performance
   private static readonly ConcurrentDictionary<string, Template> s_templateCache = new ();
@@ -71,8 +72,15 @@ internal class TemplateProcessor
     // Generate source text for each enabled converter
     foreach( var converter in descriptor.Model.GetEnabledConverters() )
     {
-      var template = LoadAndCompileTemplate( descriptor.GetTemplateTypeDescriptor( converter.TemplateType ) );
-      yield return new GeneratedType( descriptor.Model, converter, GenerateSourceText( template, macroValues ) );
+      var template = LoadAndCompileTemplate(
+        descriptor.GetTemplateTypeDescriptor( converter.TemplateType )
+      );
+
+      yield return new GeneratedType(
+        descriptor.Model,
+        converter,
+        GenerateSourceText( template, macroValues )
+      );
     }
   }
 
@@ -94,7 +102,7 @@ internal class TemplateProcessor
           processIncludes( includes );
         }
 
-        return TemplateCompiler.Compile( s_macroTable, templateText, includes );
+        return TemplateCompiler.Compile( templateText, s_macroTable, includes );
       }
     );
 

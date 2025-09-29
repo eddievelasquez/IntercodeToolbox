@@ -167,7 +167,7 @@ var macroTable = new MacroTableBuilder()
                  .Declare( "JsonWriter" )
                  .Build();
 
-var template = TemplateCompiler.Compile( macroTable, TemplateText );
+var template = TemplateCompiler.Compile( TemplateText, macroTable );
 
 const int Iterations = 1_000_000;
 

@@ -34,7 +34,7 @@ public class MacroProcessorTests
   public void ProcessMacros_ShouldTreatMacroWithArgumentButNoGeneratorAsEmpty()
   {
     var values = CreateStaticMacroValues( ( "who", null ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who:arg$!" );
+    var template = TemplateCompiler.Compile( "Hello, $who:arg$!", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, !" );
@@ -45,7 +45,7 @@ public class MacroProcessorTests
   public void ProcessMacros_ShouldTreatNullMacroValueAsEmpty()
   {
     var values = CreateStaticMacroValues( ( "who", null ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var template = TemplateCompiler.Compile( "Hello, $who$!", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, !" );
@@ -55,7 +55,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldProcessConstantOnlyTemplate()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "Just text." );
+    var template = TemplateCompiler.Compile( "Just text.", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Just text." );
@@ -65,7 +65,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldProcessDelimiterOnlyTemplate()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "$$" );
+    var template = TemplateCompiler.Compile( "$$", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "$" );
@@ -75,7 +75,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldProcessUnclosedMacroAsConstant()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "$macro" );
+    var template = TemplateCompiler.Compile( "$macro", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "$macro" );
@@ -85,7 +85,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldReplaceEscapedDelimiters()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "Give me the $$!" );
+    var template = TemplateCompiler.Compile( "Give me the $$!", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Give me the $!" );
@@ -95,7 +95,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValues()
   {
     var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now$" );
+    var template = TemplateCompiler.Compile( "Timestamp: $now$", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
@@ -105,7 +105,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValuesAndArgument()
   {
     var values = CreateDynamicMacroValues( ( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now:yyyyMMdd$" );
+    var template = TemplateCompiler.Compile( "Timestamp: $now:yyyyMMdd$", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Timestamp: 20241020" );
@@ -115,7 +115,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithStaticValues()
   {
     var values = CreateStaticMacroValues( ( "who", "World" ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var template = TemplateCompiler.Compile( "Hello, $who$!", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, World!" );
@@ -125,7 +125,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldWriteExceptionMessageIfMacroThrows()
   {
     var values = CreateDynamicMacroValues( ( "fail", _ => throw new InvalidOperationException( "fail macro error" ) ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $fail$!" );
+    var template = TemplateCompiler.Compile( "Hello, $fail$!", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Contain( "fail macro error" );
@@ -135,7 +135,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringBuilder_ShouldWriteMacroTextIfValueIsNull()
   {
     var values = CreateStaticMacroValues( ( "who", null ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var template = TemplateCompiler.Compile( "Hello, $who$!", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
     builder.ToString().Should().Be( "Hello, !" );
@@ -145,7 +145,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldProcessConstantOnlyTemplate()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "Just text." );
+    var template = TemplateCompiler.Compile( "Just text.", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Just text." );
@@ -155,7 +155,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldProcessDelimiterOnlyTemplate()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "$$" );
+    var template = TemplateCompiler.Compile( "$$", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "$" );
@@ -165,7 +165,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldProcessUnclosedMacroAsConstant()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "$macro" );
+    var template = TemplateCompiler.Compile( "$macro", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "$macro" );
@@ -175,7 +175,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldReplaceEscapedDelimiters()
   {
     var values = CreateStaticMacroValues();
-    var template = TemplateCompiler.Compile( values.MacroTable, "Give me the $$!" );
+    var template = TemplateCompiler.Compile( "Give me the $$!", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Give me the $!" );
@@ -185,7 +185,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValues()
   {
     var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now$" );
+    var template = TemplateCompiler.Compile( "Timestamp: $now$", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
@@ -195,7 +195,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValuesAndArgument()
   {
     var values = CreateDynamicMacroValues( ( "now", arg => _timeProvider.GetLocalNow().ToString( arg.ToString() ) ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Timestamp: $now:yyyyMMdd$" );
+    var template = TemplateCompiler.Compile( "Timestamp: $now:yyyyMMdd$", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Timestamp: 20241020" );
@@ -205,7 +205,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithStaticValues()
   {
     var values = CreateStaticMacroValues( ( "who", "World" ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var template = TemplateCompiler.Compile( "Hello, $who$!", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Hello, World!" );
@@ -215,7 +215,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldWriteExceptionMessageIfMacroThrows()
   {
     var values = CreateDynamicMacroValues( ( "fail", _ => throw new InvalidOperationException( "fail macro error" ) ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $fail$!" );
+    var template = TemplateCompiler.Compile( "Hello, $fail$!", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Contain( "fail macro error" );
@@ -225,7 +225,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithStringWriter_ShouldWriteMacroTextIfValueIsNull()
   {
     var values = CreateStaticMacroValues( ( "who", null ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "Hello, $who$!" );
+    var template = TemplateCompiler.Compile( "Hello, $who$!", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
     writer.ToString().Should().Be( "Hello, !" );
@@ -236,7 +236,7 @@ public class MacroProcessorTests
   {
     var table1 = new MacroTableBuilder().Declare( "A" ).Build();
     var table2 = new MacroTableBuilder().Declare( "A" ).Build();
-    var template = TemplateCompiler.Compile( table1, "x$A$x" );
+    var template = TemplateCompiler.Compile( "x$A$x", table1 );
     var values = table2.CreateValues();
     values.SetValue( "A", "v" );
 
@@ -254,7 +254,7 @@ public class MacroProcessorTests
   {
     var table1 = new MacroTableBuilder().Declare( "A" ).Build();
     var table2 = new MacroTableBuilder().Declare( "A" ).Build();
-    var template = TemplateCompiler.Compile( table1, "x$A$x" );
+    var template = TemplateCompiler.Compile( "x$A$x", table1 );
     var values = table2.CreateValues();
 
     using var writer = new StringWriter();
@@ -270,7 +270,7 @@ public class MacroProcessorTests
   public void ProcessMacros_ReturningString_ShouldReturnProcessedText()
   {
     var values = CreateStaticMacroValues( ( "A", "1" ), ( "B", "2" ) );
-    var template = TemplateCompiler.Compile( values.MacroTable, "$A$-$B$" );
+    var template = TemplateCompiler.Compile( "$A$-$B$", values.MacroTable );
 
     var result = template.ProcessMacros( values );
     result.Should().Be( "1-2" );
@@ -280,7 +280,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithValuesSpan_ShouldThrow_WhenValuesArrayTooSmall()
   {
     var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
-    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+    var template = TemplateCompiler.Compile( "$A$-$B$", table );
 
     var builder = new StringBuilder();
     var tooSmall = new string?[] { "1" };
@@ -297,7 +297,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithValuesSpan_ShouldUseProvidedValues()
   {
     var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
-    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+    var template = TemplateCompiler.Compile( "$A$-$B$", table );
 
     var builder = new StringBuilder();
     var values = new string?[] { "X", "Y" };
@@ -310,7 +310,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithValuesSpan_ShouldSkipNullValues()
   {
     var table = new MacroTableBuilder().Declare( "A" ).Build();
-    var template = TemplateCompiler.Compile( table, "X$A$Y" );
+    var template = TemplateCompiler.Compile( "X$A$Y", table );
 
     var builder = new StringBuilder();
     var values = new string?[] { null };
@@ -323,7 +323,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithValuesSpan_ShouldUseStandardMacros_ForNegativeSlots()
   {
     var table = new MacroTableBuilder().Build();
-    var template = TemplateCompiler.Compile( table, "$GUID$" );
+    var template = TemplateCompiler.Compile( "$GUID$", table );
 
     var builder = new StringBuilder();
 
@@ -338,7 +338,7 @@ public class MacroProcessorTests
   public void ProcessMacros_WithValuesArray_ShouldUseProvidedValues()
   {
     var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
-    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+    var template = TemplateCompiler.Compile( "$A$-$B$", table );
 
     var builder = new StringBuilder();
     template.ProcessMacros( builder, "X", "Y" );
@@ -350,7 +350,7 @@ public class MacroProcessorTests
   public void ProcessMacros_ReturningString_WithValuesSpan_ShouldReturnProcessedText()
   {
     var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
-    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+    var template = TemplateCompiler.Compile( "$A$-$B$", table );
 
     var values = new string?[] { "X", "Y" };
     var result = template.ProcessMacros( values.AsSpan() );
@@ -362,7 +362,7 @@ public class MacroProcessorTests
   public void ProcessMacros_ReturningString_WithValuesArray_ShouldReturnProcessedText()
   {
     var table = new MacroTableBuilder().Declare( "A" ).Declare( "B" ).Build();
-    var template = TemplateCompiler.Compile( table, "$A$-$B$" );
+    var template = TemplateCompiler.Compile( "$A$-$B$", table );
 
     var result = template.ProcessMacros( "X", "Y" );
 
@@ -374,7 +374,7 @@ public class MacroProcessorTests
   {
     var table = new MacroTableBuilder().Build();
     var values = table.CreateValues();
-    var template = TemplateCompiler.Compile( table, "$GUID$" );
+    var template = TemplateCompiler.Compile( "$GUID$", table );
 
     var result = template.ProcessMacros( values );
 

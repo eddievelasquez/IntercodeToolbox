@@ -14,7 +14,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldHandleEscapedDelimiter_WhenStringEndsWithEscapedDelimiter()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "template $$" );
+    var template = TemplateCompiler.Compile( "template $$", macroTable );
 
     template.Should()
             .HaveSingleSegment()
@@ -28,7 +28,7 @@ public class TemplateCompilerTests
     const string Text = "$$ template.";
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should()
             .HaveSingleSegment()
@@ -40,7 +40,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldHandleEscapedDelimiters_WhenStringHasEscapedDelimitersInMiddle()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "012345$$$$012345" );
+    var template = TemplateCompiler.Compile( "012345$$$$012345", macroTable );
 
     template.Should().HaveSegmentCount( 2 );
     template.Should().HaveSegmentAt( 0 ).Which.BeConstant( "012345$" );
@@ -54,7 +54,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "empty", string.Empty );
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$empty$", includes );
+    var template = TemplateCompiler.Compile( "$empty$", macroTable, includes );
 
     template.Text.Should().BeEmpty();
 
@@ -68,7 +68,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "empty", ( MacroValueGenerator? ) null );
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$empty$", includes );
+    var template = TemplateCompiler.Compile( "$empty$", macroTable, includes );
 
     template.Text.Should().BeEmpty();
     template.Should().HaveSingleSegment().Which.BeConstant( string.Empty );
@@ -81,7 +81,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "empty", ( string? ) null );
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$empty$", includes );
+    var template = TemplateCompiler.Compile( "$empty$", macroTable, includes );
 
     template.Text.Should().BeEmpty();
     template.Should().HaveSingleSegment().Which.BeConstant( string.Empty );
@@ -91,7 +91,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldHandleMacroWithArgument()
   {
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, "$macro:argument$" );
+    var template = TemplateCompiler.Compile( "$macro:argument$", macroTable );
 
     template.Should().HaveSingleSegment().Which.BeMacro( "macro", "argument" );
   }
@@ -101,7 +101,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro$";
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, Text, null );
+    var template = TemplateCompiler.Compile( Text, macroTable, null );
 
     template.Should().HaveText( Text );
     template.Should().HaveSingleSegment().Which.BeMacro( "macro" );
@@ -114,7 +114,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "present", "X" );
 
     var macroTable = DefineMacros( "missing" );
-    var template = TemplateCompiler.Compile( macroTable, "$missing$", includes );
+    var template = TemplateCompiler.Compile( "$missing$", macroTable, includes );
 
     template.Should().HaveText( "$missing$" );
     template.Should().HaveSingleSegment().Which.BeMacro( "missing" );
@@ -129,7 +129,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "b", "B" );
 
     var macroTable = DefineMacros( "b" );
-    var template = TemplateCompiler.Compile( macroTable, "$a$", includes );
+    var template = TemplateCompiler.Compile( "$a$", macroTable, includes );
 
     template.Should().HaveText( "$b$" );
     template.Should().HaveSingleSegment().Which.BeMacro( "b" );
@@ -143,7 +143,7 @@ public class TemplateCompilerTests
 
     const string Text = "No macros here";
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text, includes );
+    var template = TemplateCompiler.Compile( Text, macroTable, includes );
 
     template.Should().HaveText( Text );
     template.Should().HaveSingleSegment().Which.BeConstant( Text );
@@ -156,7 +156,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "section", "Start $$ End" );
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$section$", includes );
+    var template = TemplateCompiler.Compile( "$section$", macroTable, includes );
 
     template.Should().HaveText( "Start $$ End" );
     template.Should().HaveSegmentCount( 2 );
@@ -172,7 +172,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "section", "Start $macro:arg$ End" );
 
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, "$section$", includes );
+    var template = TemplateCompiler.Compile( "$section$", macroTable, includes );
 
     template.Should().HaveText( "Start $macro:arg$ End" );
     template.Should().HaveSegmentCount( 3 );
@@ -189,7 +189,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "x", "INC" );
 
     var macroTable = DefineMacros( "x" );
-    var template = TemplateCompiler.Compile( macroTable, "$x:arg$", includes );
+    var template = TemplateCompiler.Compile( "$x:arg$", macroTable, includes );
 
     template.Should().HaveText( "$x:arg$" );
     template.Should().HaveSingleSegment().Which.BeMacro( "x", "arg" );
@@ -202,7 +202,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "section", "Start $macro$ End" );
 
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, "$section$", includes );
+    var template = TemplateCompiler.Compile( "$section$", macroTable, includes );
 
     template.Should().HaveText( "Start $macro$ End" );
     template.Should().HaveSegmentCount( 3 );
@@ -219,7 +219,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "b", "B$macroB$" );
 
     var macroTable = DefineMacros( "macroA", "macroB" );
-    var template = TemplateCompiler.Compile( macroTable, "$a$-$b$", includes );
+    var template = TemplateCompiler.Compile( "$a$-$b$", macroTable, includes );
 
     template.Should().HaveText( "A$macroA$-B$macroB$" );
     template.Should().HaveSegmentCount( 4 );
@@ -237,7 +237,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "header", "HeaderContent" );
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$header$ body", includes );
+    var template = TemplateCompiler.Compile( "$header$ body", macroTable, includes );
 
     template.Should().HaveText( "HeaderContent body" );
 
@@ -252,7 +252,7 @@ public class TemplateCompilerTests
     includes.AddInclude( "b", "B" );
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$a$-$b$", includes );
+    var template = TemplateCompiler.Compile( "$a$-$b$", macroTable, includes );
 
     template.Should().HaveText( "A-B" );
     template.Should().HaveSingleSegment().Which.BeConstant( "A-B" );
@@ -266,7 +266,7 @@ public class TemplateCompilerTests
 
     var macroTable = DefineMacros();
     var options = new TemplateCompilerOptions( '#', ':' );
-    var template = TemplateCompiler.Compile( macroTable, "#sect#", includes, options );
+    var template = TemplateCompiler.Compile( "#sect#", macroTable, includes, options );
 
     template.Should().HaveText( "X" );
     template.Should().HaveSingleSegment().Which.BeConstant( "X" );
@@ -280,7 +280,7 @@ public class TemplateCompilerTests
 
     const string Text = "prefix $x";
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text, includes );
+    var template = TemplateCompiler.Compile( Text, macroTable, includes );
 
     template.Should().HaveText( Text );
     template.Should().HaveSingleSegment().Which.BeConstant( Text );
@@ -291,7 +291,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$missing$";
     var macroTable = DefineMacros( "missing" );
-    var template = TemplateCompiler.Compile( macroTable, Text, new IncludesCollection() );
+    var template = TemplateCompiler.Compile( Text, macroTable, new IncludesCollection() );
 
     template.Should().HaveText( Text );
     template.Should().HaveSingleSegment().Which.BeMacro( "missing" );
@@ -302,7 +302,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$";
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "$" );
   }
@@ -312,7 +312,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$macro";
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "$macro" );
   }
@@ -322,7 +322,7 @@ public class TemplateCompilerTests
   {
     const string Text = "$$$$";
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "$$" );
   }
@@ -332,7 +332,7 @@ public class TemplateCompilerTests
   {
     var includes = new IncludesCollection();
     var macroTable = DefineMacros( "missing" );
-    var template = TemplateCompiler.Compile( macroTable, "$missing$", includes );
+    var template = TemplateCompiler.Compile( "$missing$", macroTable, includes );
 
     template.Should().HaveText( "$missing$" );
     template.Should().HaveSingleSegment().Which.BeMacro( "missing" );
@@ -342,7 +342,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnOneSegment_WhenConstantFollowedByEscapedDelimiter()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "text$$" );
+    var template = TemplateCompiler.Compile( "text$$", macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "text$" );
   }
@@ -351,7 +351,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnOneSegment_WhenConstantFollowedByOpenMacro()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "text$" );
+    var template = TemplateCompiler.Compile( "text$", macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "text$" );
   }
@@ -360,7 +360,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnOneSegment_WhenEscapedDelimiterFollowedByConstant()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$$text" );
+    var template = TemplateCompiler.Compile( "$$text", macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "$text" );
   }
@@ -369,7 +369,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnOneSegment_WhenOnlyConstant()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "text" );
+    var template = TemplateCompiler.Compile( "text", macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "text" );
   }
@@ -378,7 +378,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnOneSegment_WhenOpenMacroFollowedByConstant()
   {
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, "$text" );
+    var template = TemplateCompiler.Compile( "$text", macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( "$text" );
   }
@@ -389,7 +389,7 @@ public class TemplateCompilerTests
     const string Text = "I have no macros";
 
     var macroTable = DefineMacros();
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSingleSegment().Which.BeConstant( Text );
   }
@@ -400,7 +400,7 @@ public class TemplateCompilerTests
     const string Text = "$macro$";
 
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSingleSegment().Which.BeMacro( "macro" );
   }
@@ -411,7 +411,7 @@ public class TemplateCompilerTests
     const string Text = "$macroA$$macroB$$macroC$";
 
     var macroTable = DefineMacros( "macroA", "macroB", "macroC" );
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSegmentCount( 3 );
 
@@ -424,7 +424,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnThreeSegments_WhenConstantFollowedByMacroAndConstant()
   {
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, "prefix$macro$suffix" );
+    var template = TemplateCompiler.Compile( "prefix$macro$suffix", macroTable );
 
     template.Should().HaveSegmentCount( 3 );
 
@@ -439,7 +439,7 @@ public class TemplateCompilerTests
     const string Text = "$macro$$$$macro$";
 
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSegmentCount( 3 );
 
@@ -454,7 +454,7 @@ public class TemplateCompilerTests
     const string Text = "This is a $macro$ template.";
 
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSegmentCount( 3 );
 
@@ -470,7 +470,7 @@ public class TemplateCompilerTests
     const string Text = "$macroA$$macroB$$macroA$";
 
     var macroTable = DefineMacros( "macroA", "macroB" );
-    var template = TemplateCompiler.Compile( macroTable, Text );
+    var template = TemplateCompiler.Compile( Text, macroTable );
 
     template.Should().HaveSegmentCount( 3 );
 
@@ -483,7 +483,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldReturnTwoSegments_WhenConstantFollowedByMacro()
   {
     var macroTable = DefineMacros( "macro" );
-    var template = TemplateCompiler.Compile( macroTable, "text$macro$" );
+    var template = TemplateCompiler.Compile( "text$macro$", macroTable );
 
     template.Should().HaveSegmentCount( 2 );
 
@@ -496,7 +496,7 @@ public class TemplateCompilerTests
   {
     var options = new TemplateCompilerOptions( '#', ':' );
     var macroTable = new MacroTableBuilder().Declare( "macro" ).Build();
-    var template = TemplateCompiler.Compile( macroTable, "#macro:arg#", options: options );
+    var template = TemplateCompiler.Compile( "#macro:arg#", macroTable, options: options );
 
     template.Should().HaveSingleSegment().Which.BeMacro( "macro", "arg" );
   }
@@ -505,7 +505,7 @@ public class TemplateCompilerTests
   public void Compile_ShouldThrow_WhenMacroNotDeclared()
   {
     var macroTable = DefineMacros();
-    var act = () => TemplateCompiler.Compile( macroTable, "$unknown$" );
+    var act = () => TemplateCompiler.Compile( "$unknown$", macroTable );
 
     act.Should().Throw<InvalidOperationException>().WithMessage( "Undefined macro: 'unknown'" );
   }
@@ -515,7 +515,7 @@ public class TemplateCompilerTests
   {
     var macroTable = DefineMacros( "x" );
 
-    Action act = () => TemplateCompiler.Compile( macroTable, "$:arg$" );
+    Action act = () => TemplateCompiler.Compile( "$:arg$", macroTable );
     act.Should().Throw<InvalidOperationException>().WithMessage( "The macro name cannot be empty" );
   }
 
@@ -527,7 +527,7 @@ public class TemplateCompilerTests
     string? text )
   {
     var macroTable = DefineMacros();
-    Action act = () => TemplateCompiler.Compile( macroTable, text! );
+    Action act = () => TemplateCompiler.Compile( text!, macroTable );
 
     act.Should()
        .Throw<ArgumentException>()
@@ -538,7 +538,7 @@ public class TemplateCompilerTests
   [Fact]
   public void Compile_ShouldThrowArgumentNullException_WhenMacroTableIsNull()
   {
-    Action act = () => TemplateCompiler.Compile( null!, "text" );
+    Action act = () => TemplateCompiler.Compile( "text", null! );
 
     act.Should()
        .Throw<ArgumentNullException>()

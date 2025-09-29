@@ -202,7 +202,7 @@ public partial class MacroProcessingBenchmarks
     }
 
     // Compile templates
-    _template = TemplateCompiler.Compile( macroTable, TemplateText );
+    _template = TemplateCompiler.Compile( TemplateText, macroTable );
     _compositeFormat = CompositeFormat.Parse( TemplateTextFormat );
   }
 

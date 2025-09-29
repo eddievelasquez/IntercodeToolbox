@@ -14,11 +14,11 @@ public static class TemplateCompiler
   /// <summary>
   ///   Compiles the specified template text into a <see cref="Template" />.
   /// </summary>
-  /// <param name="macroTable">
-  ///   The <see cref="MacroTable" /> containing macro definitions used during compilation.
-  /// </param>
   /// <param name="text">
   ///   The text of the template to compile. Must not be <c>null</c>, empty, or consist only of whitespace.
+  /// </param>
+  /// <param name="macroTable">
+  ///   The <see cref="MacroTable" /> containing macro definitions used during compilation.
   /// </param>
   /// <param name="includes">
   ///   An optional <see cref="IncludesCollection" /> containing additional content to include in the template.
@@ -34,8 +34,8 @@ public static class TemplateCompiler
   ///   Thrown if <paramref name="text" /> is <c>null</c>, empty, or consists only of whitespace.
   /// </exception>
   public static Template Compile(
-    MacroTable macroTable,
     string text,
+    MacroTable macroTable,
     IncludesCollection? includes = null,
     TemplateCompilerOptions? options = null )
   {
