@@ -220,7 +220,7 @@ public class BytePrimitiveTests
     : ValuePrimitiveValidationTests<byte, BytePrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<BytePrimitive, BytePrimitiveValueConverter, PrimitiveFactory>;
+    : ValueConverterTests<BytePrimitive, BytePrimitiveEFCoreValueConverter, PrimitiveFactory>;
 
   public class ValueFactory: ITestDataFactory
   {

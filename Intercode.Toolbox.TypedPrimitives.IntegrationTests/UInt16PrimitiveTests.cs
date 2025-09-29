@@ -220,7 +220,7 @@ public class UInt16PrimitiveTests
     : ValuePrimitiveValidationTests<ushort, UInt16Primitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<UInt16Primitive, UInt16PrimitiveValueConverter, PrimitiveFactory>;
+    : ValueConverterTests<UInt16Primitive, UInt16PrimitiveEFCoreValueConverter, PrimitiveFactory>;
 
   public class ValueFactory: ITestDataFactory
   {

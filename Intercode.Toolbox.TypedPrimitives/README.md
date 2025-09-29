@@ -2,6 +2,11 @@
 
 ## Updates
 
+- **Version 2.6.0**
+  - Updated to `Intercode.Toolbox.TemplateEngine` version `3.0.0`.
+  - **Breaking Change**: The generated value converter class name has changed from 
+    `{TypeName}ValueConverter` to `{TypeName}EFCoreValueConverter` to avoid conflicts with other value converters.
+
 - **Version 2.5.1**
     - *Improvements*:
         - Typed primitives now implement `IComparable<T>` with the underlying primitive type.

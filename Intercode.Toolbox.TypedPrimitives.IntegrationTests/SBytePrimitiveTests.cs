@@ -220,7 +220,7 @@ public class SBytePrimitiveTests
     : ValuePrimitiveValidationTests<sbyte, SBytePrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<SBytePrimitive, SBytePrimitiveValueConverter, PrimitiveFactory>;
+    : ValueConverterTests<SBytePrimitive, SBytePrimitiveEFCoreValueConverter, PrimitiveFactory>;
 
   public class ValueFactory: ITestDataFactory
   {

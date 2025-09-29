@@ -213,7 +213,7 @@ public class UriPrimitiveTests
     : ReferencePrimitiveValidationTests<Uri, UriPrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<UriPrimitive, UriPrimitiveValueConverter, ValueConverter>,
+    : ValueConverterTests<UriPrimitive, UriPrimitiveEFCoreValueConverter, ValueConverter>,
       ITestDataFactory
   {
     #region Public Methods

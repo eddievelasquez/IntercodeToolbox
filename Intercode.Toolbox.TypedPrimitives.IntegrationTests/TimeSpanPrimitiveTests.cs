@@ -231,7 +231,7 @@ public class TimeSpanPrimitiveTests
     : ValuePrimitiveValidationTests<TimeSpan, TimeSpanPrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<TimeSpanPrimitive, TimeSpanPrimitiveValueConverter, ValueConverter>,
+    : ValueConverterTests<TimeSpanPrimitive, TimeSpanPrimitiveEFCoreValueConverter, ValueConverter>,
       ITestDataFactory
   {
     #region Public Methods

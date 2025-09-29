@@ -231,7 +231,7 @@ public class GuidPrimitiveTests
     : ValuePrimitiveValidationTests<Guid, GuidPrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<GuidPrimitive, GuidPrimitiveValueConverter, ValueConverter>,
+    : ValueConverterTests<GuidPrimitive, GuidPrimitiveEFCoreValueConverter, ValueConverter>,
       ITestDataFactory
   {
     #region Public Methods
