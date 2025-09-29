@@ -7,6 +7,7 @@ A fast, allocation-conscious text templating engine for .NET.
 - Compile-time includes for pre-expanding static blocks before macro processing.
 - Standard macros are always available; no explicit declaration required.
 - Major performance gains.
+- Requires .NET Standard 2.0, or .NET 8.0 or later.
 
 ## Table of Contents
   - [Overview](#overview)
