@@ -1,12 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
+  "inherit": true,
   "version": "2.5.0",
-  "pathFilters": [
-    "Intercode.Toolbox.AspNetCore.Extensions/"
-  ],
-  "publicReleaseRefSpec": [
-    "^refs/heads/main$",
-    "^refs/heads/release/.*$",
-    "^refs/tags/Intercode.Toolbox.AspNetCore.Extensions-v\\d+\\.\\d+\\.\\d+.*$"
-  ]
+  "pathFilters": [ "." ]
 }

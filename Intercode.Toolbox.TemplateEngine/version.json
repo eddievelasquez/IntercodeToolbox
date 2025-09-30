@@ -1,12 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "3.0-alpha",
-  "publicReleaseRefSpec": [
-    "^refs/heads/main$",
-    "^refs/heads/release/.*$",
-    "^refs/tags/Intercode.Toolbox.TemplateEngine-v\\d+\\.\\d+\\.\\d+.*$"
-  ],
-  "pathFilters": [
-    "./Intercode.Toolbox.TemplateEngine"
-  ]
+  "inherit": true,
+  "version": "3.0-beta.{height}",
+  "pathFilters": [ "." ]
 }

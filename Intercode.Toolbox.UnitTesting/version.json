@@ -1,12 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
+  "inherit": true,
   "version": "2.5.0",
-  "pathFilters": [
-    "Intercode.Toolbox.UnitTesting/"
-  ],
-  "publicReleaseRefSpec": [
-    "^refs/heads/main$",
-    "^refs/heads/release/.*$",
-    "^refs/tags/Intercode.Toolbox.UnitTesting-v\\d+\\.\\d+\\.\\d+.*$"
-  ]
+  "pathFilters": [ "." ]
 }

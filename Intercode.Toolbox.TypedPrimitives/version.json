@@ -1,12 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/Nerdbank.GitVersioning/main/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "2.6.0-alpha",
-  "publicReleaseRefSpec": [
-    "^refs/heads/main$",
-    "^refs/heads/release/.*$",
-    "^refs/tags/Intercode.Toolbox.TypedPrimitives-v\\d+\\.\\d+\\.\\d+.*$"
-  ],
-  "pathFilters": [
-    "./Intercode.Toolbox.TypedPrimitives"
-  ]
+  "inherit": true,
+  "version": "2.6.0-beta.{height}",
+  "pathFilters": [ "." ]
 }
