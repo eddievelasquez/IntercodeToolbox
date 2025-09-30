@@ -738,7 +738,7 @@ As the results indicate, `MacroProcessor` demonstrates significantly faster perf
 the `String.Format`, `CompositeFormat`, `StringBuilder`, `Regex`, and `String Replace` implementations. This performance increase
 is even more dramatic when using a pooled `StringBuilder`. 
 
-![Results](https://raw.githubusercontent.com/eddievelasquez/IntercodeToolbox/refs/heads/main/Intercode.Toolbox.TemplateEngine/BenchmarkResults.png)
+![Results](BenchmarkResults.png)
 
 ## Migrating from 2.x to 3.0
 
