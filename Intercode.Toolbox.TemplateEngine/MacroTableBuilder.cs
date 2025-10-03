@@ -46,13 +46,7 @@ public sealed class MacroTableBuilder
   public MacroTableBuilder Declare(
     string macroName )
   {
-    MacroExtensions.ValidateMacroName( macroName );
-
-    if( !_macroSlots.ContainsKey( macroName ) )
-    {
-      _macroSlots.Add( macroName, GetAssignedSlot() );
-    }
-
+    DeclareInternal( macroName );
     return this;
   }
 
@@ -60,23 +54,13 @@ public sealed class MacroTableBuilder
   ///   Declares a macro name (as a <see cref="ReadOnlySpan{Char}" />) to be included in the resulting
   ///   <see cref="MacroTable" />.
   /// </summary>
-  /// <param name="macroName">The macro name to declare.</param>
+  /// <param name="macroName">The macro name to declare as a span.</param>
   /// <returns>The current <see cref="MacroTableBuilder" /> instance.</returns>
   /// <exception cref="ArgumentException">Thrown if <paramref name="macroName" /> is invalid.</exception>
   public MacroTableBuilder Declare(
     ReadOnlySpan<char> macroName )
   {
-#if NET9_0_OR_GREATER
-    MacroExtensions.ValidateMacroName( macroName );
-
-    if( !_altMacroNames.ContainsKey( macroName ) )
-    {
-      _altMacroNames.TryAdd( macroName, GetAssignedSlot() );
-    }
-#else
-    Declare( macroName.ToString() );
-#endif
-
+    DeclareInternal( macroName );
     return this;
   }
 
@@ -93,6 +77,41 @@ public sealed class MacroTableBuilder
 
   #region Implementation
 
+  /// <summary>
+  ///   Declares a macro name and assigns a slot index.
+  /// </summary>
+  /// <param name="macroName">The macro name to declare.</param>
+  /// <returns>The slot index assigned to the macro name.</returns>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="macroName" /> is invalid.</exception>
+  internal int DeclareInternal(
+    string macroName )
+  {
+    MacroExtensions.ValidateMacroName( macroName );
+    return _macroSlots.GetOrAdd( macroName, _ => GetAssignedSlot() );
+  }
+
+  /// <summary>
+  ///   Declares a macro name from a <see cref="ReadOnlySpan{T}" /> and assigns a slot index.
+  /// </summary>
+  /// <param name="macroName">The macro name to declare as a span.</param>
+  /// <returns>The slot index assigned to the macro name.</returns>
+  /// <exception cref="ArgumentException">Thrown if <paramref name="macroName" /> is invalid.</exception>
+  internal int DeclareInternal(
+    ReadOnlySpan<char> macroName )
+  {
+    MacroExtensions.ValidateMacroName( macroName );
+
+#if NET9_0_OR_GREATER
+    return _altMacroNames.GetOrAdd( macroName, _ => GetAssignedSlot() );
+#else
+    return DeclareInternal( macroName.ToString() );
+#endif
+  }
+
+  /// <summary>
+  ///   Returns the next available slot index for a macro. Slots are 1-based.
+  /// </summary>
+  /// <returns>The next slot index.</returns>
   private int GetAssignedSlot()
   {
     // Slots are 1-based, they are not indices

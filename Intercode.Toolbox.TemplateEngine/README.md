@@ -29,7 +29,7 @@ A fast, allocation-conscious text templating engine for .NET.
     - [StringBuilderPool](#stringbuilderpool)
   - [Advanced Usage](#advanced-usage)
   - [Benchmarks](#benchmarks)
-  - [Migrating from 2.x to 3.0](#migrating-from-2.x-to-3.0)
+  - [Migrating from 2.x to 3.0](#migrating-from-2x-to-30)
   - [License](#license)
 
 ## Overview
@@ -45,7 +45,24 @@ Hello, $Name$! Today is $NOW:yyyyMMdd$.
 
 ## Quick Start
 
-Dynamic + standard macro scenario:
+Option A: Simplest flow (auto-declare macros while compiling)
+
+```csharp
+// 1. Compile template (macros encountered in text are declared automatically)
+var template = TemplateCompiler.Compile(
+  "Hello, $Name$! Today is $NOW:yyyyMMdd$. You are $Age$ years old!"
+);
+
+// 2. Provide values (static and/or dynamically generated)
+var values = template.CreateValues()
+  .SetValue("Name", "John")
+  .SetValue("Age", _ => Random.Shared.Next(18, 100).ToString());
+
+// 3. Process the template
+var text = template.ProcessMacros(values);
+```
+
+Option B: Explicit macro declaration and shared macro table
 
 ```csharp
 // 1. Declare user macros
@@ -56,21 +73,16 @@ var macroTable = new MacroTableBuilder()
 
 // 2. Compile template
 var template = TemplateCompiler.Compile(
-  macroTable,
-  "Hello, $Name$! Today is $NOW:yyyyMMdd$. You are $Age$ years old!"
+  "Hello, $Name$! Today is $NOW:yyyyMMdd$. You are $Age$ years old!",
+  macroTable
 );
 
-// 3. Provide values (static and/or dynamically generated)
+// 3. Provide values
 var values = macroTable.CreateValues()
   .SetValue("Name", "John")
   .SetValue("Age", _ => Random.Shared.Next(18, 100).ToString());
 
-// 4. Process the template and generate text
-var sb = new StringBuilder();
-template.ProcessMacros(sb, values);
-var result = sb.ToString();
-
-// Or get a string directly using an internally pooled StringBuilder
+// 4. Process the template
 var text = template.ProcessMacros(values);
 ```
 
@@ -80,7 +92,7 @@ var table = new MacroTableBuilder()
   .Declare("Name")
   .Build();
 
-var template = TemplateCompiler.Compile(table, "Hello, $Name$!");
+var template = TemplateCompiler.Compile("Hello, $Name$!", table);
 
 var values = table.CreateValues()
   .SetValue("Name", "World");
@@ -89,14 +101,22 @@ var text = template.ProcessMacros(values);
 
 // Or use positional overloads for high-throughput scenarios
 var text2 = template.ProcessMacros("World");
-
 ```
+
+### Choosing a Compile overload
+- `Compile(string text)`: Easiest on-ramp. Macros are auto-declared as they are encountered in the template. The declaration (slot) order follows the first occurrence of each macro placeholder in the template text after include expansion. Use `template.CreateValues()` to provide values. Good for one-off templates where you don’t need to share a macro table.
+- `Compile(string text, MacroTableBuilder builder, ...)`: Simplifies usage while still letting you accumulate macro declarations into a builder you control. Macros are declared into the builder in the order they first appear in the template text (post-include). Pass the same builder to multiple `Compile` calls to keep a shared mapping; slots are assigned in the sequence templates are compiled and, within each template, by first occurrence. Note that a new `MacroTable` instance is built for each compiled template. .
+- `Compile(string text, MacroTable macroTable, ...)`: Maximum control. You decide declaration order and reuse the same `MacroTable` across many templates. This guarantees consistent slot ordering and is recommended for high-throughput scenarios that must share values containers and avoid churn.
 
 ## Concepts
 
 ### Macro Declaration vs. Definition
 - Declare macro names once; assign or change values as necessary without recompiling the template.
 - Built-in standard macros are implicitly defined (no declaration required).
+- Declaration Ownership:
+  - Auto-declare during compile using `Compile(string text)` (order is first-encounter in text, after includes).
+  - Use a `MacroTableBuilder` to collect declarations as templates are compiled (order is first-encounter per compiled template, after includes), then call `Build()` to produce a reusable `MacroTable`.
+  - Supply a pre-built `MacroTable` to multiple `Compile` calls when you need consistent slot ordering across templates.
 
 ### Standard Macros
 Built-in, dynamic macros are always available. See [Standard Macros](#standard-macros-built-in).
@@ -124,24 +144,42 @@ var macroTable = new MacroTableBuilder()
   .Declare("Age")
   .Build();
 ```
+Alternatively, use auto-declaration by compiling with `Compile(string text)` or track declarations by passing a `MacroTableBuilder`. In both cases, macros are declared in the order they are first encountered in the template text after include expansion.
 
 ### 2. Compile the Template Text
 ```csharp
 var template = TemplateCompiler.Compile(
-  macroTable,
-  "Hello, $Name$! Today is $NOW:yyyyMMdd$. You are $Age$ years old!"
+  "Hello, $Name$! Today is $NOW:yyyyMMdd$. You are $Age$ years old!",
+  macroTable
 );
 ```
 With optional includes:
 ```csharp
 var includes = new IncludesCollection();
 includes.AddInclude("HEADER", "// <auto-generated>...</auto-generated>\n");
-var template = TemplateCompiler.Compile(macroTable, "$HEADER$namespace $Name$;", includes);
+var template = TemplateCompiler.Compile("$HEADER$namespace $Name$;", macroTable, includes);
+```
+Or use auto-declaration:
+```csharp
+var template = TemplateCompiler.Compile("$HEADER$namespace $Name$;", includes);
+```
+Or accumulate declarations using a `MacroTableBuilder`:
+```csharp
+var builder = new MacroTableBuilder();
+var template = TemplateCompiler.Compile("$HEADER$namespace $Name$;", builder, includes);
+// Later, lock mapping:
+var table = builder.Build();
 ```
 
 ### 3. Define Macro Values
 ```csharp
 var values = macroTable.CreateValues()
+  .SetValue("Name", "John")
+  .SetValue("Age", _ => Random.Shared.Next(18, 100).ToString());
+```
+When using auto-declaration:
+```csharp
+var values = template.CreateValues()
   .SetValue("Name", "John")
   .SetValue("Age", _ => Random.Shared.Next(18, 100).ToString());
 ```
@@ -180,7 +218,7 @@ Standard macros are always available; you do not need to declare them. Names are
 - `CLR_VERSION`
   - Emits the current .NET runtime version as returned by `Environment.Version`; no argument.
 
-> **Note**. Arguments are not parsed by the engine; they are passed to the macro generator as-is. 
+> Note. Arguments are not parsed by the engine; they are passed to the macro generator as-is. 
 
 ---
 
@@ -190,9 +228,7 @@ Standard macros are always available; you do not need to declare them. Names are
 - For purely static scenarios where you already have values in positional order, use the positional 
   overloads of `MacroProcessor` that accept a `string?[]` or `ReadOnlySpan<string>`. The array/span 
   must have one entry per declared macro, ordered by declaration. Standard macros are resolved
-  automatically and do not consume a slot. When using positional overloads, arguments to standard 
-  macros (e.g., the `:format` in `$NOW:O$`) are not passed to the generator and the default 
-  representation is used.
+  automatically and do not consume a slot.
 
 ---
 
@@ -225,7 +261,7 @@ public sealed class TemplateCompilerOptions
 #### Usage Example
 ```csharp
 var options = new TemplateCompilerOptions('#', '|');
-var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: options);
+var template = TemplateCompiler.Compile("#Name|formal#", options: options);
 ```
 
 #### Remarks
@@ -259,6 +295,7 @@ public sealed class MacroTableBuilder
 - Macro names are case-insensitive and can only contain alphanumeric, underscore, or dash characters.
 - Standard macros are always available and do not need to be declared.
 - If a macro with the same name as a standard macro is declared, the user-defined version takes precedence.
+- When used via `TemplateCompiler.Compile(string text)` (implicit builder) or `TemplateCompiler.Compile(string text, MacroTableBuilder builder, ...)`, macros are declared in the order they are first encountered in the template text after include expansion. This order determines slot assignment.
 
 ---
 
@@ -285,9 +322,6 @@ public sealed class MacroTable
 | `CreateValues()` | `MacroValues` | Creates a `MacroValues` instance for the macro table. |
 | `GetSlot(string macroName)` | `int` | Resolves the slot for a name; returns `0` if the name is unknown. |
 | `GetSlot(ReadOnlySpan<char> macroName)` | `int` | Resolves the slot by span (optimized on .NET 9+ call sites). |
-
-#### Remarks
-- User macro slots use positive numbers; standard macros use negative slot numbers and do not count towards `Count`.
 
 ---
 
@@ -355,7 +389,12 @@ public static class TemplateCompiler
 
 | Method | Return Type | Description |
 |--------|-------------|-------------|
-| `Compile(string templateText, MacroTable macroTable, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Parses the template text into a collection segments, performs include substitution (if provided). |
+| `Compile(string text, MacroTable macroTable, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Parses the template text into segments, performs include substitution (if provided), and resolves slots using the supplied `MacroTable`. Use when you want strict, shared ordering across templates. |
+| `Compile(string text, MacroTableBuilder builder, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Parses the template and declares any encountered macros into the provided builder in the order they first appear in the template (after include expansion), then builds a `MacroTable` for the returned `Template`. Pass the same builder to multiple calls to accumulate a shared mapping before calling `Build()`. |
+| `Compile(string text, IncludesCollection? includes = null, TemplateCompilerOptions? options = null)` | `Template` | Convenience overload that auto-declares macros using an internal `MacroTableBuilder`. Macros are declared in the order they are first encountered in the template text after include expansion. Simplest usage; create values with `template.CreateValues()`. |
+
+#### Remarks
+- Choose the overload based on ownership of the macro table: auto-declare (simplest), builder (accumulate and later lock), or pre-built table (deterministic reuse across templates).
 
 ---
 
@@ -441,20 +480,21 @@ public readonly record struct Template
 - Custom delimiters and separators:
   ```csharp
   var options = new TemplateCompilerOptions('#', '|');
-  var template = TemplateCompiler.Compile(macroTable, "#Name|formal#", options: options);
+  var template = TemplateCompiler.Compile("#Name|formal#", options: options);
   ```
 
 - Dynamic macros with arguments:
   ```csharp
-  var values = macroTable.CreateValues()
-    .SetValue("Format", arg => DateTime.Now.ToString(arg.IsEmpty ? "O" : arg.ToString()));
+  var values = template.CreateValues()
+    .SetValue("RightNow", arg => DateTime.Now.ToString(arg.IsEmpty ? "O" : arg.ToString()));
   ```
 
 - Escaping delimiters: `$$` yields a literal `$` in output when `$` is the delimiter.
 
 - High-throughput assignment using slots:
   ```csharp
-  var nameSlot = macroTable.GetSlot("Name");
+  var nameSlot = template.MacroTable.GetSlot("Name");
+  var values = template.CreateValues();
   values.SetValue(nameSlot, "John");
   values.SetValue(nameSlot, arg => expensiveComputation(arg));
   ```
@@ -611,7 +651,7 @@ public partial class MacroProcessingBenchmarks
     }
 
     // Compile templates
-    _template = TemplateCompiler.Compile( macroTable, TemplateText );
+    _template = TemplateCompiler.Compile( TemplateText, macroTable );
     _compositeFormat = CompositeFormat.Parse( TemplateTextFormat );
   }
 
@@ -745,10 +785,10 @@ is even more dramatic when using a pooled `StringBuilder`.
 | 2.x Concept / API | 3.0 Replacement | Notes |
 |-------------------|-----------------|-------|
 | `TemplateEngineOptions` | `TemplateCompilerOptions` | Use constructor overloads for configuration. |
-| `TemplateCompiler compiler = new(); compiler.Compile(text)` | `TemplateCompiler.Compile(macroTable, text, includes, options)` | Static; must pass table. |
+| `TemplateCompiler compiler = new(); compiler.Compile(text)` | `TemplateCompiler.Compile(text, macroTable, includes, options)` or `TemplateCompiler.Compile(text, builder, includes, options)` or `TemplateCompiler.Compile(text, includes, options)` | Static; choose overload based on macro table ownership. |
 | `MacroProcessorBuilder` | `MacroTableBuilder` + `MacroTable.CreateValues()` | Separation of declaration and values. |
 | `builder.AddStandardMacros()` | (Removed) | Standard macros are always available; no declaration required. |
-| `builder.AddMacro("Name", "John")` | `values.SetValue("Name", "John")` | Must declare first. |
+| `builder.AddMacro("Name", "John")` | `values.SetValue("Name", "John")` | Must declare first (unless using auto-declare overload). |
 | `builder.AddMacro("Rand", _ => ...)` | `values.SetValue("Rand", span => ...)` | Delegate signature uses `ReadOnlySpan<char>`. |
 | `processor.ProcessMacros(template, writer)` | `template.ProcessMacros(writer, values)` | Extension method on `Template`; note parameter order. |
 | `processor.GetMacroValue("Name")` | `values.GetValue("Name")` | Value access moved. |
