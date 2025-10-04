@@ -5,9 +5,23 @@
     <Company>Intercode Consulting.</Company>
     <CurrentYear>$([System.DateTime]::Now.Year)</CurrentYear>
     <Copyright>(c) 2020-$(CurrentYear), Intercode Consulting</Copyright>
+    <Product>Intercode.Toolbox</Product>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Deterministic>true</Deterministic>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <PropertyGroup>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <DebugType>portable</DebugType>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <WriteVersionInfoToBuildLog>true</WriteVersionInfoToBuildLog>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
     <!-- Reduce source paths See: https://bit.ly/44fmmmf  -->

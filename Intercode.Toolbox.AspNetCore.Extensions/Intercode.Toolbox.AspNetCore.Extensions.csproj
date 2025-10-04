@@ -9,33 +9,21 @@
     <TrimmerDefaultAction>link</TrimmerDefaultAction>
     <IsTrimmable>True</IsTrimmable>
     <IsAotCompatible>True</IsAotCompatible>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageId>Intercode.Toolbox.AspNetCore.Extensions</PackageId>
     <Title>Toolbox ASP.NET Core Extensions</Title>
     <Description>A trimmable, AOT-compatible .NET library that contains types that provide functionality commonly used in ASP.NET Core applications.</Description>
-    <Product>Intercode.Toolbox</Product>
-    <Copyright>Intercode Consulting</Copyright>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>JWT;JSON Web Token;JwtSecurityToken;OpenAPI;OpenApiInfo;builder;AOT;trim-compatible</PackageTags>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/eddievelasquez/IntercodeToolbox</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Deterministic>true</Deterministic>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <IncludeSource>true</IncludeSource>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
-    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
   <ItemGroup>
