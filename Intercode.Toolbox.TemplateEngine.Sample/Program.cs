@@ -193,6 +193,28 @@ Profile(
   }
 );
 
+// Using explicit string array
+var macroValues = macroTable.CreateValues();
+macroValues.SetValue( 1, "MyApp.Primitives" );
+macroValues.SetValue( 4, "string" );
+macroValues.SetValue( 5, "String" ); // {4}
+macroValues.SetValue( 6, "reader.GetString()" ); // {5}
+macroValues.SetValue( 7, "writer.WriteStringValue( value.Value );" );
+
+Profile(
+  "MacroProcessor.ProcessMacros with MacroValues",
+  () =>
+  {
+    for( var i = 0; i < Iterations; i++ )
+    {
+      macroValues.SetValue( 2, $"Type{i}" );
+      macroValues.SetValue( 3, $"MyApp.Primitives.Type{i}" );
+
+      var processed = template.ProcessMacros( macroValues );
+    }
+  }
+);
+
 // Using string params
 Profile(
   "MacroProcessor.ProcessMacros with string params",
@@ -255,7 +277,11 @@ Profile(
       compositeArgs[1] = $"Type{i}"; // {1}
       compositeArgs[2] = $"MyApp.Primitives.Type{i}"; // {2}
 
-      var formatted = string.Format( CultureInfo.InvariantCulture, templateCompositeFormat, compositeArgs );
+      var formatted = string.Format(
+        CultureInfo.InvariantCulture,
+        templateCompositeFormat,
+        compositeArgs
+      );
     }
   }
 );

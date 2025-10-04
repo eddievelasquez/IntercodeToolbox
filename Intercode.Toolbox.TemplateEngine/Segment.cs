@@ -151,7 +151,9 @@ internal readonly record struct Segment
   public ReadOnlySpan<char> GetTextSpan(
     Template template )
   {
-    return _textLength != 0 ? template.Text.AsSpan( _textStart, _textLength ) : default;
+    return _textLength != 0
+      ? template.Text.AsSpan( _textStart, _textLength )
+      : ReadOnlySpan<char>.Empty;
   }
 
   /// <summary>
@@ -167,7 +169,9 @@ internal readonly record struct Segment
   public ReadOnlySpan<char> GetArgumentSpan(
     Template template )
   {
-    return _argumentLength != 0 ? template.Text.AsSpan( _argumentStart, _argumentLength ) : default;
+    return _argumentLength != 0
+      ? template.Text.AsSpan( _argumentStart, _argumentLength )
+      : ReadOnlySpan<char>.Empty;
   }
 
   /// <summary>
