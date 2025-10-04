@@ -1,205 +1,303 @@
 // Module Name: MacroProcessor.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine;
 
-using System.Collections.Frozen;
 using System.Text;
 
 /// <summary>
 ///   Processes macros in a template.
 /// </summary>
-public class MacroProcessor
+public static class MacroProcessor
 {
-  #region Fields
-
-  private readonly FrozenDictionary<string, MacroValueGenerator> _valueGenerators;
-  private readonly TemplateEngineOptions _options;
-
-#if NET9_0_OR_GREATER
-  private readonly FrozenDictionary<string, MacroValueGenerator>.AlternateLookup<ReadOnlySpan<char>> _alternate;
-#endif
-
-  #endregion
-
-  #region Constructors
-
-  /// <summary>
-  ///   Initializes a new instance of the <see cref="MacroProcessor" /> class.
-  /// </summary>
-  /// <param name="valueGenerators">Macros with their corresponding value generators.</param>
-  /// <param name="options">The Template Engine options.</param>
-  /// <remarks>
-  ///   The macro names in the <paramref name="valueGenerators" /> dictionary come surrounded by the delimiter character.
-  /// </remarks>
-  internal MacroProcessor(
-    FrozenDictionary<string, MacroValueGenerator> valueGenerators,
-    TemplateEngineOptions options )
-  {
-    _valueGenerators = valueGenerators;
-    _options = options;
-
-#if NET9_0_OR_GREATER
-    _alternate = _valueGenerators.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
-  }
-
-  #endregion
-
-  #region Properties
-
-  /// <summary>
-  ///   Gets the number of registered macros.
-  /// </summary>
-  public int MacroCount => _valueGenerators.Count;
-
-  #endregion
-
   #region Public Methods
 
   /// <summary>
-  ///   Gets the value of a macro or <c>null</c> if not found.
+  ///   Processes macros in the specified <see cref="Template" /> and writes the result to the provided
+  ///   <see cref="TextWriter" />.
   /// </summary>
-  /// <param name="macroName">
-  ///   The name of the macro. The macro name used here does not include the delimiter character.
-  /// </param>
-  /// <returns>The value of the macro, or null if the macro does not exist.</returns>
-  public string? GetMacroValue(
-    string macroName )
+  /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
+  /// <param name="writer">The <see cref="TextWriter" /> to which the processed template will be written.</param>
+  /// <param name="macroValues">The <see cref="MacroValues" /> providing values for the macros in the template.</param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="macroValues" /> is not associated with the same <see cref="MacroTable" /> as the
+  ///   <paramref name="template" />.
+  /// </exception>
+  /// <exception cref="InvalidOperationException">Thrown when an unknown segment kind is encountered during processing.</exception>
+  /// <remarks>
+  ///   This method iterates through the segments of the provided <see cref="Template" />, processes macros, and writes the
+  ///   result to the specified <see cref="TextWriter" />.
+  /// </remarks>
+  public static void ProcessMacros(
+    this Template template,
+    TextWriter writer,
+    MacroValues macroValues )
   {
-    return _valueGenerators.TryGetValue( macroName, out var generator ) ? generator( ReadOnlySpan<char>.Empty ) : null;
-  }
-
-  /// <summary>
-  ///   Gets the value of a macro or <c>null</c> if not found.
-  /// </summary>
-  /// <param name="macroName">
-  ///   The name of the macro. The macro name used here does not include the delimiter character.
-  /// </param>
-  /// <param name="argument">Data passed into the value generator.</param>
-  /// <returns>The value of the macro, or null if the macro does not exist.</returns>
-  public string? GetMacroValue(
-    string macroName,
-    ReadOnlySpan<char> argument )
-  {
-    return _valueGenerators.TryGetValue( macroName, out var generator ) ? generator( argument ) : null;
-  }
-
-  /// <summary>
-  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
-  /// </summary>
-  /// <param name="template">The template to process.</param>
-  /// <param name="writer">The <see cref="TextWriter" /> to write the processed template to.</param>
-  public void ProcessMacros(
-    Template template,
-    TextWriter writer )
-  {
-    foreach( var segment in template.Segments )
+    if( template.MacroTable != macroValues.MacroTable )
     {
-      switch( segment.Kind )
+      throw new ArgumentException(
+        "The MacroValues instance must be associated with the same MacroTable as the Template.",
+        nameof( macroValues )
+      );
+    }
+
+    var segments = template.Segments;
+    var length = segments.Length;
+
+    for( var index = 0; index < length; index++ )
+    {
+      var segment = segments[index];
+
+      if( segment.IsMacro )
       {
-        case SegmentKind.Macro:
+        string value;
+
+        try
         {
-#if NET9_0_OR_GREATER
-          if( _alternate.TryGetValue( segment.Memory.Span, out var generator ) )
-#else
-          if( _valueGenerators.TryGetValue( segment.Text, out var generator ) )
-#endif
-          {
-            string value;
-
-            try
-            {
-              value = generator( segment.ArgumentMemory.Span );
-            }
-            catch( Exception exception )
-            {
-              value = exception.Message;
-            }
-
-            writer.Write( value );
-          }
-
-          break;
+          value = macroValues.GetValue( segment.Slot, segment.GetArgumentSpan( template ) ) ??
+                  string.Empty;
+        }
+        catch( Exception exception )
+        {
+          value = exception.Message;
         }
 
-        case SegmentKind.Delimiter:
-          writer.Write( _options.MacroDelimiter );
-          break;
-
-        case SegmentKind.Constant:
-#if NET6_0_OR_GREATER
-          writer.Write( segment.Memory.Span );
-#else
-
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-          writer.Write( segment.Memory.ToString() );
-#endif
-          break;
-
-        default:
-          throw new InvalidOperationException( "Unknown segment kind" );
+        writer.Write( value );
+        continue;
       }
+
+#if NET6_0_OR_GREATER
+      writer.Write( segment.GetTextSpan( template ) );
+#else
+      // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
+      writer.Write( segment.GetText( template ) );
+#endif
     }
   }
 
   /// <summary>
-  ///   Processes macros in a template and writes the result to a <see cref="TextWriter" />.
+  ///   Processes macros in a template and writes the result to a <see cref="StringBuilder" />.
   /// </summary>
-  /// <param name="template">The template to process.</param>
-  /// <param name="builder">The <see cref="Stream" /> to write the processed template to.</param>
-  public void ProcessMacros(
-    Template template,
-    StringBuilder builder )
+  /// <param name="template">The template containing the macros to process.</param>
+  /// <param name="builder">The <see cref="StringBuilder" /> to write the processed template to.</param>
+  /// <param name="macroValues">The macro values to use for processing the template.</param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="macroValues" /> instance is not associated with the same
+  ///   <see cref="MacroTable" /> as the <paramref name="template" />.
+  /// </exception>
+  /// <exception cref="InvalidOperationException">
+  ///   Thrown when an unknown segment kind is encountered during processing.
+  /// </exception>
+  public static void ProcessMacros(
+    this Template template,
+    StringBuilder builder,
+    MacroValues macroValues )
   {
-    foreach( var segment in template.Segments )
+    if( template.MacroTable != macroValues.MacroTable )
     {
-      switch( segment.Kind )
+      throw new ArgumentException(
+        "The MacroValues instance must be associated with the same MacroTable as the Template.",
+        nameof( macroValues )
+      );
+    }
+
+    // Pre-allocate the StringBuilder capacity to avoid multiple allocations during appends
+    builder.EnsureCapacity( template.Text.Length );
+
+    var segments = template.Segments;
+    var length = segments.Length;
+
+    for( var index = 0; index < length; index++ )
+    {
+      var segment = segments[index];
+
+      if( segment.IsMacro )
       {
-        case SegmentKind.Macro:
+        string value;
+
+        try
         {
-#if NET9_0_OR_GREATER
-          if( _alternate.TryGetValue( segment.Memory.Span, out var generator ) )
-#else
-          if( _valueGenerators.TryGetValue( segment.Text, out var generator ) )
-#endif
-          {
-            string value;
-
-            try
-            {
-              value = generator( segment.ArgumentMemory.Span );
-            }
-            catch( Exception exception )
-            {
-              value = exception.Message;
-            }
-
-            builder.Append( value );
-          }
-
-          break;
+          value = macroValues.GetValue( segment.Slot, segment.GetArgumentSpan( template ) ) ??
+                  string.Empty;
+        }
+        catch( Exception exception )
+        {
+          value = exception.Message;
         }
 
-        case SegmentKind.Delimiter:
-          builder.Append( _options.MacroDelimiter );
-          break;
-
-        case SegmentKind.Constant:
-#if NET6_0_OR_GREATER
-          builder.Append( segment.Memory.Span );
-#else
-
-          // The .netstandard2.0 TextWriter.Write method does not have a Span overload.
-          builder.Append( segment.Memory.ToString() );
-#endif
-          break;
-
-        default:
-          throw new InvalidOperationException( "Unknown segment kind" );
+        builder.Append( value );
+        continue;
       }
+
+#if NET6_0_OR_GREATER
+      builder.Append( segment.GetTextSpan( template ) );
+#else
+      // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
+      builder.Append( segment.GetText( template ) );
+#endif
     }
+  }
+
+  /// <summary>
+  ///   Processes macros in the specified <see cref="Template" /> and returns the resulting string.
+  /// </summary>
+  /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
+  /// <param name="macroValues">The <see cref="MacroValues" /> providing values for the macros in the template.</param>
+  /// <returns>A string with the macros in the template replaced by their corresponding values.</returns>
+  /// <remarks>
+  ///   This method processes the macros in the provided template using the specified macro values.
+  ///   It utilizes a pooled <see cref="StringBuilder" /> for efficient string manipulation.
+  /// </remarks>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown if <paramref name="template" /> or <paramref name="macroValues" /> is <c>null</c>.
+  /// </exception>
+  public static string ProcessMacros(
+    this Template template,
+    MacroValues macroValues )
+  {
+    var pool = StringBuilderPool.Default;
+    var builder = pool.Get();
+
+    try
+    {
+      ProcessMacros( template, builder, macroValues );
+      return builder.ToString();
+    }
+    finally
+    {
+      pool.Return( builder );
+    }
+  }
+
+  /// <summary>
+  ///   Processes macros in a template and writes the result to a <see cref="StringBuilder" />.
+  /// </summary>
+  /// <param name="template">The template containing the macros to process.</param>
+  /// <param name="builder">The <see cref="StringBuilder" /> to write the processed template to.</param>
+  /// <param name="values">
+  ///   A span of string values to replace the macros in the template. The array must have at least as many elements
+  ///   as the <see cref="MacroTable" /> associated with the template.
+  /// </param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="values" /> array has fewer elements than the <see cref="MacroTable" /> requires.
+  /// </exception>
+  public static void ProcessMacros(
+    this Template template,
+    StringBuilder builder,
+    params ReadOnlySpan<string?> values )
+  {
+    if( values.Length < template.MacroTable.Count )
+    {
+      throw new ArgumentException(
+        "The values array must have at least as many elements as the MacroTable has slots.",
+        nameof( values )
+      );
+    }
+
+    // Pre-allocate the StringBuilder capacity to avoid multiple allocations during appends
+    builder.EnsureCapacity( template.Text.Length );
+
+    var segments = template.Segments;
+    var length = segments.Length;
+
+    for( var index = 0; index < length; index++ )
+    {
+      var segment = segments[index];
+
+      if( segment.IsMacro )
+      {
+        var slot = segment.Slot;
+
+        // Negative slots are standard macros.
+        var value = slot < MacroTable.MacroNotFoundSlot
+          ? StandardMacros.GetValue( slot )
+          : values[slot - 1];
+
+        if( value is not null )
+        {
+          builder.Append( value );
+        }
+
+        continue;
+      }
+
+#if NET6_0_OR_GREATER
+      builder.Append( segment.GetTextSpan( template ) );
+#else
+      // The .netstandard2.0 StringBuilder.Append method does not have a Span overload.
+      builder.Append( segment.GetText( template ) );
+#endif
+    }
+  }
+
+  /// <summary>
+  ///   Processes macros in a template and writes the result to a <see cref="StringBuilder" />.
+  /// </summary>
+  /// <param name="template">The template containing the macros to process.</param>
+  /// <param name="builder">The <see cref="StringBuilder" /> to write the processed template to.</param>
+  /// <param name="values">
+  ///   An array of string values to replace the macros in the template. The array must have at least as many elements
+  ///   as the <see cref="MacroTable" /> associated with the template.
+  /// </param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="values" /> array has fewer elements than the <see cref="MacroTable" /> requires.
+  /// </exception>
+  public static void ProcessMacros(
+    this Template template,
+    StringBuilder builder,
+    params string?[] values )
+  {
+    template.ProcessMacros( builder, values.AsSpan() );
+  }
+
+  /// <summary>
+  ///   Processes macros in the specified <see cref="Template" /> using the provided values and returns the result as a
+  ///   string.
+  /// </summary>
+  /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
+  /// <param name="values">
+  ///   An array of string values to replace the macros in the template. The array must have at least as many elements
+  ///   as the <see cref="MacroTable" /> associated with the template.
+  /// </param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="values" /> array has fewer elements than the <see cref="MacroTable" /> requires.
+  /// </exception>
+  public static string ProcessMacros(
+    this Template template,
+    params ReadOnlySpan<string?> values )
+  {
+    var pool = StringBuilderPool.Default;
+    var builder = pool.Get();
+
+    try
+    {
+      ProcessMacros( template, builder, values );
+      return builder.ToString();
+    }
+    finally
+    {
+      pool.Return( builder );
+    }
+  }
+
+  /// <summary>
+  ///   Processes macros in the specified <see cref="Template" /> using the provided values and writes the result to the
+  ///   specified <see cref="StringBuilder" />.
+  /// </summary>
+  /// <param name="template">The <see cref="Template" /> containing the macros to process.</param>
+  /// <param name="values">
+  ///   An array of string values to replace the macros in the template. The array must have at least as many elements
+  ///   as the <see cref="MacroTable" /> associated with the template.
+  /// </param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the <paramref name="values" /> array has fewer elements than the <see cref="MacroTable" /> requires.
+  /// </exception>
+  public static string ProcessMacros(
+    this Template template,
+    params string?[] values )
+  {
+    return template.ProcessMacros( values.AsSpan() );
   }
 
   #endregion

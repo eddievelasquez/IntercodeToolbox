@@ -1,28 +1,7 @@
 # Intercode.Toolbox.TypedPrimitives
 
-## Updates
-
-- **Version 2.5.1**
-    - *Improvements*:
-        - Typed primitives now implement `IComparable<T>` with the underlying primitive type.
-        - Added the `Empty` static readonly instance.
-        - Added the `HasValue` property. It replaces the `IsDefault` property, which may be deprecated in the future.
-        - Added the `GetValueOrDefault()` method. It replaces the `ValueOrDefault` property, which may be deprecated in the future.
-        - Added the `GetValueOrDefault(defaultValue)` method, which returns the provided default value if `HasValue` returns `false`.
-        - `CompareTo(object?)` now supports comparisons with the underlying primitive type as well.
-        - The conversion operator to underlying primitive type is now implicit.
-        - No longer need to change the `DateParseHandling` setting for the Newtonsoft Json deserialization.
-        - Internal cleanup and refactoring to enable better unit testing and future enhancements.
-
-    - *Bugfix*: The EF Value converters were not properly supporting nullable fields.
-
-- **Version 2.5** 
-    - Added .NET 9 support.
-    - All primitives now implement the `CreateOrThrow` and `ValidateOrThrow` static methods for scenarios where handling a result value is not possible.
-    - All primitives (except `string` and `Uri`) implement the `IFormatable` and `IParsable` interfaces. For .NET 7+, `ISpanFormattable` and `ISpanParsable` are implemented as well.
-- **Version 2.4.3** - Added support for the following primitive types: **Byte**, **SByte**, **Int16**, **UInt16**, **UInt32**, **UInt64**, **Single**,
-  **Double**, **Decimal**, **TimeSpan**, and **Uri**.
-- **Version 2.3.1** - Moved the template processing engine to its own package: [Intercode.Toolbox.TemplateEngine](https://www.nuget.org/packages/Intercode.Toolbox.TemplateEngine/).
+TypedPrimitives empowers .NET developers to eliminate primitive obsession by generating robust, type-safe value objects for common primitives—such as `string`, `int`, `Guid`, and more —using a simple attribute.
+With seamless support for validation, normalization, and integration with JSON, EF Core, and type converters, TypedPrimitives streamlines domain modeling and enforces correctness at compile time.
 
 ## Table of contents
 <!--TOC-->

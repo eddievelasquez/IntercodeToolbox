@@ -3,14 +3,14 @@
 
 namespace $TypedPrimitiveNamespace$;
 
-public class $TypedPrimitiveName$ValueConverter: global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<$TypedPrimitiveQualifiedName$, $PrimitiveName$>
+public class $TypedPrimitiveName$EFCoreValueConverter: global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<$TypedPrimitiveQualifiedName$, $PrimitiveName$>
 {
-  public $TypedPrimitiveName$ValueConverter()
+  public $TypedPrimitiveName$EFCoreValueConverter()
     : this( null )
   {
   }
 
-  public $TypedPrimitiveName$ValueConverter(
+  public $TypedPrimitiveName$EFCoreValueConverter(
     global::Microsoft.EntityFrameworkCore.Storage.ValueConversion.ConverterMappingHints? mappingHints = null )
     : base(
       primitive => primitive.Value,

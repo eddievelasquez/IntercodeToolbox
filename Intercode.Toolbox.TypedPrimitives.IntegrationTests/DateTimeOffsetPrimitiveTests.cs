@@ -6,7 +6,6 @@ namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests;
 
 using FluentResults;
 using Intercode.Toolbox.TypedPrimitives.IntegrationTests.Fixtures;
-using Newtonsoft.Json;
 
 [TypedPrimitive<DateTimeOffset>]
 public readonly partial struct UnvalidatedDateTimeOffsetPrimitive;
@@ -221,7 +220,8 @@ public class DateTimeOffsetPrimitiveTests
     : ValuePrimitiveValidationTests<DateTimeOffset, DateTimeOffsetPrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<DateTimeOffsetPrimitive, DateTimeOffsetPrimitiveValueConverter, ValueConverter>,
+    : ValueConverterTests<DateTimeOffsetPrimitive, DateTimeOffsetPrimitiveEFCoreValueConverter,
+        ValueConverter>,
       ITestDataFactory
   {
     #region Public Methods

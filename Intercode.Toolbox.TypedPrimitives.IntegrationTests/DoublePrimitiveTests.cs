@@ -220,7 +220,7 @@ public class DoublePrimitiveTests
     : ValuePrimitiveValidationTests<double, DoublePrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<DoublePrimitive, DoublePrimitiveValueConverter, PrimitiveFactory>;
+    : ValueConverterTests<DoublePrimitive, DoublePrimitiveEFCoreValueConverter, PrimitiveFactory>;
 
   public class ValueFactory: ITestDataFactory
   {

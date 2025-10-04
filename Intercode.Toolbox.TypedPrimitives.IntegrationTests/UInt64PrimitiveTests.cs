@@ -220,7 +220,7 @@ public class UInt64PrimitiveTests
     : ValuePrimitiveValidationTests<ulong, UInt64Primitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<UInt64Primitive, UInt64PrimitiveValueConverter, PrimitiveFactory>;
+    : ValueConverterTests<UInt64Primitive, UInt64PrimitiveEFCoreValueConverter, PrimitiveFactory>;
 
   public class ValueFactory: ITestDataFactory
   {

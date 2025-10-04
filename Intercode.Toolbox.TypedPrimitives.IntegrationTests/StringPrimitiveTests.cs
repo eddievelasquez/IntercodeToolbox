@@ -210,7 +210,7 @@ public class StringPrimitiveTests
     : ReferencePrimitiveValidationTests<string, StringPrimitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<StringPrimitive, StringPrimitiveValueConverter, ValueConverter>,
+    : ValueConverterTests<StringPrimitive, StringPrimitiveEFCoreValueConverter, ValueConverter>,
       ITestDataFactory
   {
     #region Public Methods

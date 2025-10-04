@@ -22,10 +22,9 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
 
     // Get errors from failed results
     var failures = modelResults.Where( result => result.IsFailed )
-                               .SelectMany(
-                                 static (
-                                   modelResult,
-                                   _ ) => modelResult.Errors
+                               .SelectMany( static (
+                                              modelResult,
+                                              _ ) => modelResult.Errors
                                );
 
     // Report diagnostics for failures
@@ -41,23 +40,22 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
 
     // Get models and check if they are supported
     var successes = modelResults.Where( result => result.IsSuccess )
-                                .Select(
-                                  static (
-                                    result,
-                                    _ ) =>
-                                  {
-                                    var model = result.Value;
-                                    TypeManager.TryGetSupportedTypeInfo( model.PrimitiveTypeName, out var typeInfo );
-                                    return ( Model: model, TypeInfo: typeInfo );
-                                  }
+                                .Select( static (
+                                           result,
+                                           _ ) =>
+                                         {
+                                           var model = result.Value;
+
+                                           return ( Model: model,
+                                             IsSupported: TypeManager.IsSupported( model.PrimitiveType ) );
+                                         }
                                 );
 
     // Get errors for unsupported types
-    var unsupported = successes.Where( tuple => tuple.TypeInfo is null )
-                               .SelectMany(
-                                 static (
-                                   tuple,
-                                   _ ) => Error.UnsupportedTypeFailure( tuple.Model.PrimitiveTypeName ).Errors
+    var unsupported = successes.Where( tuple => !tuple.IsSupported )
+                               .SelectMany( static (
+                                              tuple,
+                                              _ ) => Error.UnsupportedTypeFailure( tuple.Model.PrimitiveTypeName ).Errors
                                );
 
     // Report diagnostics for unsupported types
@@ -72,11 +70,10 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
     );
 
     // Get models for supported types
-    var supported = successes.Where( tuple => tuple.TypeInfo is not null )
-                             .Select(
-                               (
-                                 tuple,
-                                 _ ) => ( tuple.Model, TypeInfo: tuple.TypeInfo! )
+    var supported = successes.Where( tuple => tuple.IsSupported )
+                             .Select( (
+                                        tuple,
+                                        _ ) => ( tuple.Model )
                              );
 
     // Generate source code for supported type
@@ -84,7 +81,7 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
       supported,
       static (
         context,
-        tuple ) => GenerateSource( context, tuple.Model, tuple.TypeInfo )
+        model ) => GenerateSource( context, model )
     );
   }
 
@@ -120,8 +117,7 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
   private static void AddPostInitializationSources(
     IncrementalGeneratorInitializationContext context )
   {
-    context.RegisterPostInitializationOutput(
-      static context =>
+    context.RegisterPostInitializationOutput( static context =>
       {
         AddSource( typeof( TypedPrimitiveAttribute ) );
         return;
@@ -140,13 +136,12 @@ public sealed class TypedPrimitiveSourceGenerator: IIncrementalGenerator
 
   private static void GenerateSource(
     SourceProductionContext context,
-    GeneratorModel model,
-    SupportedTypeInfo typeInfo )
+    GeneratorModel model )
   {
     var processor = new TemplateProcessor();
 
     foreach( var (typeName, sourceText) in
-            processor.ProcessTemplate( model, typeInfo ) )
+            processor.GenerateTypes( model ) )
     {
       var hintName = $"{typeName}.g.cs";
       context.AddSource( hintName, sourceText );

@@ -220,7 +220,7 @@ public class Int64PrimitiveTests
     : ValuePrimitiveValidationTests<long, Int64Primitive, ValueFactory>;
 
   public class ValueConverter
-    : ValueConverterTests<Int64Primitive, Int64PrimitiveValueConverter, PrimitiveFactory>;
+    : ValueConverterTests<Int64Primitive, Int64PrimitiveEFCoreValueConverter, PrimitiveFactory>;
 
   public class ValueFactory: ITestDataFactory
   {

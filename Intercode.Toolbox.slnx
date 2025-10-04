@@ -1,9 +1,16 @@
 <Solution>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".github/copilot-instructions.md" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="GitVersion.yml" />
     <File Path="LICENSE" />
+    <File Path="nuget.config" />
     <File Path="README.md" />
+    <File Path="version.json" />
   </Folder>
   <Folder Name="/Core/" Id="f6a5b072-1ba0-4299-8474-4f404202cd73">
     <Project Path="Intercode.Toolbox.AspNetCore.Extensions/Intercode.Toolbox.AspNetCore.Extensions.csproj" />
@@ -29,9 +36,11 @@
   <Folder Name="/TypedPrimitives/Benchmarks/" Id="02ea681e-c7d8-13c7-8484-4ac65e1b71e8">
     <Project Path="Intercode.Toolbox.TemplateEngine.Benchmarks/Intercode.Toolbox.TemplateEngine.Benchmarks.csproj" />
   </Folder>
-  <Folder Name="/TypedPrimitives/Tests/" Id="2f02c1bb-f3eb-d4c3-5215-386545479d31">
+  <Folder Name="/TypedPrimitives/Tests/">
+    <Project Path="Intercode.Toolbox.TemplateEngine.Sample/Intercode.Toolbox.TemplateEngine.Sample.csproj" Id="d32b281a-0fc5-4731-b02c-e938ab7a02ba" />
     <Project Path="Intercode.Toolbox.TemplateEngine.Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj" />
     <Project Path="Intercode.Toolbox.TypedPrimitives.SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj" />
+    <Project Path="Intercode.Toolbox.TypedPrimitives.Tests/Intercode.Toolbox.TypedPrimitives.Tests.csproj" />
   </Folder>
 </Solution>

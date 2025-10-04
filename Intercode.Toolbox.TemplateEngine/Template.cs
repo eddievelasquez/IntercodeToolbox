@@ -1,36 +1,48 @@
 // Module Name: Template.cs
 // Author:      Eduardo Velasquez
-// Copyright (c) 2024, Intercode Consulting, Inc.
+// Copyright (c) 2025, Intercode Consulting, Inc.
 
 namespace Intercode.Toolbox.TemplateEngine;
-
-using System.Runtime.InteropServices;
 
 /// <summary>
 ///   Represents a template with text and segments within the text.
 /// </summary>
-public record Template
+public readonly record struct Template
 {
   #region Constructors
 
   /// <summary>
-  ///   Represents a template with text and segments within the text.
+  ///   Initializes a new instance of the <see cref="Template" /> class with the specified macro table and segments.
   /// </summary>
-  /// <param name="Segments">The text segments that have been identified by the <see cref="TemplateCompiler" />.</param>
-  public Template(
-    Segment[] Segments )
+  /// <param name="text">The template's text.</param>
+  /// <param name="macroTable">
+  ///   The <see cref="MacroTable" /> containing macro definitions used by the template.
+  /// </param>
+  /// <param name="segments">
+  ///   An array of <see cref="Segment" /> objects representing the segments of the template.
+  /// </param>
+  /// <exception cref="ArgumentNullException">
+  ///   Thrown when <paramref name="macroTable" /> or <paramref name="segments" /> is <c>null</c>.
+  /// </exception>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when <paramref name="segments" /> is empty.
+  /// </exception>
+  internal Template(
+    string text,
+    MacroTable macroTable,
+    Segment[] segments )
   {
-    if( Segments == null )
-    {
-      throw new ArgumentNullException( nameof( Segments ) );
-    }
+    Text = text ?? throw new ArgumentNullException( nameof( text ) );
+    Segments = segments ?? throw new ArgumentNullException( nameof( segments ) );
+    MacroTable = macroTable ?? throw new ArgumentNullException( nameof( macroTable ) );
 
     if( Segments.Length == 0 )
     {
-      throw new ArgumentException( "The template must have at least one segment.", nameof( Segments ) );
+      throw new ArgumentException(
+        "The template must have at least one segment.",
+        nameof( segments )
+      );
     }
-
-    this.Segments = Segments;
   }
 
   #endregion
@@ -38,36 +50,34 @@ public record Template
   #region Properties
 
   /// <summary>
-  ///   The template's text
+  ///   Gets the text content of the template.
   /// </summary>
-  public string Text
-  {
-    get
-    {
-      if( MemoryMarshal.TryGetString( Segments[0].Memory, out var text, out var start, out var length ) )
-      {
-        return text;
-      }
+  /// <value>
+  ///   A <see cref="string" /> representing the text of the template.
+  /// </value>
+  /// <remarks>
+  ///   The text serves as the base content of the template, which may include macro placeholders
+  /// </remarks>
+  public string Text { get; }
 
-      throw new InvalidOperationException( "Cannot get the template text" );
-    }
-  }
+  /// <summary>
+  ///   Gets the <see cref="MacroTable" /> associated with this template.
+  /// </summary>
+  public MacroTable MacroTable { get; }
 
   /// <summary>The text segments that have been identified by the <see cref="TemplateCompiler" />.</summary>
-  public Segment[] Segments { get; init; }
+  internal Segment[] Segments { get; init; }
 
   #endregion
 
   #region Public Methods
 
   /// <summary>
-  ///   Deconstructs the <see cref="Template" /> into its segments.
+  ///   Creates a new instance of <see cref="MacroValues" /> associated with the <see cref="MacroTable" /> of this template.
   /// </summary>
-  /// <param name="segments">The array of segments that make up the template.</param>
-  public void Deconstruct(
-    out Segment[] segments )
+  public MacroValues CreateValues()
   {
-    segments = Segments;
+    return MacroTable.CreateValues();
   }
 
   #endregion
