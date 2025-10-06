@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Intercode.Toolbox.UnitTesting\Intercode.Toolbox.UnitTesting.csproj" />
+    <ProjectReference Include="..\UnitTesting\Intercode.Toolbox.UnitTesting.csproj" />
   </ItemGroup>
 
 </Project>

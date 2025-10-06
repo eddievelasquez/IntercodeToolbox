@@ -13,35 +13,43 @@
     <File Path="README.md" />
     <File Path="version.json" />
   </Folder>
-  <Folder Name="/Core/" Id="f6a5b072-1ba0-4299-8474-4f404202cd73">
-    <Project Path="Intercode.Toolbox.AspNetCore.Extensions/Intercode.Toolbox.AspNetCore.Extensions.csproj" />
-    <Project Path="Intercode.Toolbox.Collections/Intercode.Toolbox.Collections.csproj" />
-    <Project Path="Intercode.Toolbox.Core/Intercode.Toolbox.Core.csproj" />
-    <Project Path="Intercode.Toolbox.UnitTesting.XUnit/Intercode.Toolbox.UnitTesting.XUnit.csproj" />
-    <Project Path="Intercode.Toolbox.UnitTesting/Intercode.Toolbox.UnitTesting.csproj" />
+  <Folder Name="/AspNetCore/">
+    <Project Path="src/AspNetCore/Extensions/Intercode.Toolbox.AspNetCore.Extensions.csproj" />
+    <Project Path="src/AspnetCore/Tests/Intercode.Toolbox.AspNetCore.Extensions.Tests.csproj" />
   </Folder>
-  <Folder Name="/Core/Benchmarks/">
-    <Project Path="Intercode.Toolbox.Core.Benchmarks/Intercode.Toolbox.Core.Benchmarks.csproj" />
+  <Folder Name="/Core/">
+    <Project Path="src/Core/Benchmarks/Intercode.Toolbox.Core.Benchmarks.csproj" />
+    <Project Path="src/Core/Core/Intercode.Toolbox.Core.csproj" />
+    <Project Path="src/Core/Tests/Intercode.Toolbox.Core.Tests.csproj" />
   </Folder>
-  <Folder Name="/Core/Tests/">
-    <Project Path="Intercode.Toolbox.AspNetCore.Extensions.Tests/Intercode.Toolbox.AspNetCore.Extensions.Tests.csproj" />
-    <Project Path="Intercode.Toolbox.Collections.Tests/Intercode.Toolbox.Collections.Tests.csproj" />
-    <Project Path="Intercode.Toolbox.Core.Tests/Intercode.Toolbox.Core.Tests.csproj" />
-    <Project Path="Intercode.Toolbox.UnitTesting.Tests/Intercode.Toolbox.UnitTesting.Tests.csproj" />
-    <Project Path="Intercode.Toolbox.UnitTesting.XUnit.Tests/Intercode.Toolbox.UnitTesting.XUnit.Tests.csproj" />
+  <Folder Name="/Collections/">
+    <Project Path="src/Collections/Collections/Intercode.Toolbox.Collections.csproj" />
+    <Project Path="src/Collections/Tests/Intercode.Toolbox.Collections.Tests.csproj" />
+  </Folder>
+  <Folder Name="/TemplateEngine/">
+    <Project Path="src/TemplateEngine/TemplateEngine/Intercode.Toolbox.TemplateEngine.csproj" />
+  </Folder>
+  <Folder Name="/TemplateEngine/Benchmarks/">
+    <Project Path="src/TemplateEngine/Benchmarks/Intercode.Toolbox.TemplateEngine.Benchmarks.csproj" />
+  </Folder>
+  <Folder Name="/TemplateEngine/Tests/">
+    <Project Path="src/TemplateEngine/Sample/Intercode.Toolbox.TemplateEngine.Sample.csproj" />
+    <Project Path="src/TemplateEngine/Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj" />
   </Folder>
   <Folder Name="/TypedPrimitives/">
-    <Project Path="Intercode.Toolbox.TemplateEngine/Intercode.Toolbox.TemplateEngine.csproj" />
-    <Project Path="Intercode.Toolbox.TypedPrimitives/Intercode.Toolbox.TypedPrimitives.csproj" />
-  </Folder>
-  <Folder Name="/TypedPrimitives/Benchmarks/" Id="02ea681e-c7d8-13c7-8484-4ac65e1b71e8">
-    <Project Path="Intercode.Toolbox.TemplateEngine.Benchmarks/Intercode.Toolbox.TemplateEngine.Benchmarks.csproj" />
+    <Project Path="src/TypedPrimitives/TypedPrimitives/Intercode.Toolbox.TypedPrimitives.csproj" />
   </Folder>
   <Folder Name="/TypedPrimitives/Tests/">
-    <Project Path="Intercode.Toolbox.TemplateEngine.Sample/Intercode.Toolbox.TemplateEngine.Sample.csproj" Id="d32b281a-0fc5-4731-b02c-e938ab7a02ba" />
-    <Project Path="Intercode.Toolbox.TemplateEngine.Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj" />
-    <Project Path="Intercode.Toolbox.TypedPrimitives.IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj" />
-    <Project Path="Intercode.Toolbox.TypedPrimitives.SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj" />
-    <Project Path="Intercode.Toolbox.TypedPrimitives.Tests/Intercode.Toolbox.TypedPrimitives.Tests.csproj" />
+    <Project Path="src/TypedPrimitives/IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj" />
+    <Project Path="src/TypedPrimitives/SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj" />
+    <Project Path="src/TypedPrimitives/Tests/Intercode.Toolbox.TypedPrimitives.Tests.csproj" />
+  </Folder>
+  <Folder Name="/UnitTesting/">
+    <Project Path="src/UnitTesting/XUnit/Intercode.Toolbox.UnitTesting.XUnit.csproj" />
+    <Project Path="src/UnitTesting/UnitTesting/Intercode.Toolbox.UnitTesting.csproj" />
+  </Folder>
+  <Folder Name="/UnitTesting/Tests/">
+    <Project Path="src/UnitTesting/Tests/Intercode.Toolbox.UnitTesting.Tests.csproj" />
+    <Project Path="src/UnitTesting/XUnit.Tests/Intercode.Toolbox.UnitTesting.XUnit.Tests.csproj" />
   </Folder>
 </Solution>

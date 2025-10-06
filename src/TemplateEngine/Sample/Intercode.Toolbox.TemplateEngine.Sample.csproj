@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Intercode.Toolbox.TemplateEngine\Intercode.Toolbox.TemplateEngine.csproj" />
+    <ProjectReference Include="..\TemplateEngine\Intercode.Toolbox.TemplateEngine.csproj" />
   </ItemGroup>
 
 </Project>
