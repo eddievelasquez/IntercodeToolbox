@@ -1,0 +1,29 @@
+# configuration file for dotnet-releaser
+
+artifacts_folder = "artifacts/template_engine"
+
+[msbuild]
+configuration = "Release"
+project = [
+  "src/TemplateEngine/TemplateEngine/Intercode.Toolbox.TemplateEngine.csproj",
+  "src/TemplateEngine/Tests/Intercode.Toolbox.TemplateEngine.Tests.csproj"
+]
+
+[test]
+enable = true
+run_tests = true
+
+[github]
+user = "eddievelasquez"
+repo = "IntercodeToolbox"
+publish = false
+
+[nuget]
+publish = false
+
+[coverage]
+enable = true
+include_test_assembly = false
+deterministic_report = true
+format = ["cobertura"]
+

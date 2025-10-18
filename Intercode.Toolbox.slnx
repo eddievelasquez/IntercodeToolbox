@@ -6,6 +6,8 @@
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
+    <File Path="dotnet-releaser.template_engine.toml" />
+    <File Path="dotnet-releaser.typed_primitives.toml" />
     <File Path="global.json" />
     <File Path="LICENSE" />
     <File Path="nuget.config" />

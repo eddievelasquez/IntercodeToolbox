@@ -1,0 +1,31 @@
+# configuration file for dotnet-releaser
+
+artifacts_folder = "artifacts/typed_primitives"
+
+[msbuild]
+configuration = "Release"
+project = [
+  "src/TypedPrimitives/IntegrationTests/Intercode.Toolbox.TypedPrimitives.IntegrationTests.csproj",
+  "src/TypedPrimitives/SourceGenerationTests/Intercode.Toolbox.TypedPrimitives.SourceGenerationTests.csproj",
+  "src/TypedPrimitives/Tests/Intercode.Toolbox.TypedPrimitives.Tests.csproj",
+  "src/TypedPrimitives/TypedPrimitives/Intercode.Toolbox.TypedPrimitives.csproj"
+]
+
+[test]
+enable = true
+run_tests = true
+
+[github]
+user = "eddievelasquez"
+repo = "IntercodeToolbox"
+publish = true
+
+[nuget]
+publish = true
+
+[coverage]
+enable = true
+include_test_assembly = false
+deterministic_report = true
+format = ["cobertura"]
+
