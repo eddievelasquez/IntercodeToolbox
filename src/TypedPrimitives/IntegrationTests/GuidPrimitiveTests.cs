@@ -166,9 +166,9 @@ public class GuidPrimitiveTests
 
     public static IEnumerable<object?[]> GetValidValues()
     {
-      yield return [s_primitiveA, "3fe7fbd6-ebd7-447c-95b3-0d5e5026d580", null, null!];
-      yield return [s_primitiveA, "3fe7fbd6-ebd7-447c-95b3-0d5e5026d580", "D", null!];
-      yield return [s_primitiveB, "{b8afdeb5-87d2-44e9-ba51-9369cd257170}", "B", null!];
+      yield return [s_primitiveA, null, null!];
+      yield return [s_primitiveA, "D", null!];
+      yield return [s_primitiveB, "B", null!];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

@@ -8,7 +8,7 @@ using FluentAssertions;
 
 public abstract class SpanFormattableTests<TSpanFormattable, TDataFactory>
   : FormattableTests<TSpanFormattable, TDataFactory>
-  where TSpanFormattable: ISpanFormattable
+  where TSpanFormattable: ISpanFormattable, ITypedPrimitive
   where TDataFactory: ITestDataFactory
 {
   #region Public Methods
@@ -17,10 +17,13 @@ public abstract class SpanFormattableTests<TSpanFormattable, TDataFactory>
   [MemberData( nameof( GetData ) )]
   public void TryFormat_WithSpan_ShouldSucceed(
     TSpanFormattable value,
-    string expected,
     string? format,
     IFormatProvider? formatProvider )
   {
+    // ToString of a typed primitive with value should return the ToString of the underlying value.
+    value.HasValue.Should().BeTrue();
+    var expected = ( ( IFormattable ) value.GetValueObject()! ).ToString( format, formatProvider );
+
     Span<char> destination = stackalloc char[expected.Length * 2];
     var succeeded = value.TryFormat( destination, out var charsWritten, format, formatProvider );
     succeeded.Should().BeTrue();

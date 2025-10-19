@@ -94,11 +94,13 @@ public class MacroProcessorTests
   [Fact]
   public void ProcessMacros_WithStringBuilder_ShouldReplaceMacrosWithDynamicValues()
   {
-    var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
+    var timestamp = _timeProvider.GetLocalNow();
+
+    var values = CreateDynamicMacroValues( ( "now", _ => timestamp.ToString() ) );
     var template = TemplateCompiler.Compile( "Timestamp: $now$", values.MacroTable );
     var builder = new StringBuilder();
     template.ProcessMacros( builder, values );
-    builder.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
+    builder.ToString().Should().Be( $"Timestamp: {timestamp}" );
   }
 
   [Fact]
@@ -184,11 +186,13 @@ public class MacroProcessorTests
   [Fact]
   public void ProcessMacros_WithStringWriter_ShouldReplaceMacrosWithDynamicValues()
   {
-    var values = CreateDynamicMacroValues( ( "now", _ => _timeProvider.GetLocalNow().ToString() ) );
+    var timestamp = _timeProvider.GetLocalNow();
+
+    var values = CreateDynamicMacroValues( ( "now", _ => timestamp.ToString() ) );
     var template = TemplateCompiler.Compile( "Timestamp: $now$", values.MacroTable );
     var writer = new StringWriter();
     template.ProcessMacros( writer, values );
-    writer.ToString().Should().Be( "Timestamp: 10/20/2024 10:30:00 AM -07:00" );
+    writer.ToString().Should().Be( $"Timestamp: {timestamp}" );
   }
 
   [Fact]

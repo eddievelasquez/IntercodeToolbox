@@ -155,9 +155,9 @@ public class DateTimePrimitiveTests
 
     public static IEnumerable<object?[]> GetValidValues()
     {
-      yield return [s_primitiveA, "12/1/1995 3:00:00 PM", null, null!];
-      yield return [s_primitiveA, "19951201", "yyyyMMdd", null!];
-      yield return [s_primitiveB, "2/6/2018", "d", null!];
+      yield return [s_primitiveA, null, null!];
+      yield return [s_primitiveA, "yyyyMMdd", null!];
+      yield return [s_primitiveB, "d", null!];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

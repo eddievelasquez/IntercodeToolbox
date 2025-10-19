@@ -155,9 +155,9 @@ public class SBytePrimitiveTests
 
     public static IEnumerable<object?[]> GetValidValues()
     {
-      yield return [s_primitiveA, "42", "G", null!];
-      yield return [s_primitiveA, "42", null, null!];
-      yield return [s_primitiveB, "2B", "X2", null!];
+      yield return [s_primitiveA, "G", null!];
+      yield return [s_primitiveA, null, null!];
+      yield return [s_primitiveB, "X2", null!];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

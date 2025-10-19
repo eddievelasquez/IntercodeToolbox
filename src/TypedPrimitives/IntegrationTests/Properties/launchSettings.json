@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Intercode.Toolbox.TypedPrimitives.IntegrationTests": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL",
+      "distributionName": "Ubuntu",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

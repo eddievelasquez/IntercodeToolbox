@@ -155,9 +155,9 @@ public class SinglePrimitiveTests
 
     public static IEnumerable<object?[]> GetValidValues()
     {
-      yield return [s_primitiveA, "42", "G", null!];
-      yield return [s_primitiveA, "42", null, null!];
-      yield return [s_primitiveB, "43.00", "F", null!];
+      yield return [s_primitiveA, "G", null!];
+      yield return [s_primitiveA, null, null!];
+      yield return [s_primitiveB, "F", null!];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

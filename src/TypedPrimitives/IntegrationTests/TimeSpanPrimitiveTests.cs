@@ -166,9 +166,9 @@ public class TimeSpanPrimitiveTests
 
     public static IEnumerable<object?[]> GetValidValues()
     {
-      yield return [s_primitiveA, "1.12:24:02", null, null!];
-      yield return [s_primitiveA, "1.12:24:02", "c", null!];
-      yield return [s_primitiveB, "3:3:14:56.1667", "g", null!];
+      yield return [s_primitiveA, null, null!];
+      yield return [s_primitiveA, "c", null!];
+      yield return [s_primitiveB, "g", null!];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

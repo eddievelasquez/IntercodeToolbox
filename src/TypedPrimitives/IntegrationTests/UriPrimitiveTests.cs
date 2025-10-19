@@ -167,9 +167,9 @@ public class UriPrimitiveTests
 
     public static IEnumerable<object?[]> GetValidValues()
     {
-      yield return [s_primitiveA, "http://example.com/", null, null!];
-      yield return [s_primitiveA, "http://example.com/", "g", null!];
-      yield return [s_primitiveB, "https://example.com/api/", "d", null!];
+      yield return [s_primitiveA, null, null!];
+      yield return [s_primitiveA, "g", null!];
+      yield return [s_primitiveB, "d", null!];
     }
 
     public static IEnumerable<object?[]> GetInvalidValues()

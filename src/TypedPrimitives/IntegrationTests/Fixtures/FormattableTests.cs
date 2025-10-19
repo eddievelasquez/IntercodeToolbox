@@ -8,7 +8,7 @@ using FluentAssertions;
 
 public abstract class FormattableTests<TFormattable, TDataFactory>
   : ToStringTests<TFormattable, TDataFactory>
-  where TFormattable: IFormattable
+  where TFormattable: IFormattable, ITypedPrimitive
   where TDataFactory: ITestDataFactory
 {
   #region Public Methods
@@ -17,10 +17,13 @@ public abstract class FormattableTests<TFormattable, TDataFactory>
   [MemberData( nameof( GetData ) )]
   public void ToString_WithFormatAndFormatProvider_Succeeds(
     TFormattable value,
-    string expected,
     string? format,
     IFormatProvider? formatProvider )
   {
+    // ToString of a typed primitive with value should return the ToString of the underlying value.
+    value.HasValue.Should().BeTrue();
+    var expected = ( ( IFormattable ) value.GetValueObject()! ).ToString( format, formatProvider );
+
     var actual = value.ToString( format, formatProvider );
     actual.Should().Be( expected );
   }

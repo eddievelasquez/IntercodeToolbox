@@ -7,7 +7,7 @@ namespace Intercode.Toolbox.TypedPrimitives.IntegrationTests.Fixtures;
 using FluentAssertions;
 
 public abstract class ToStringTests<T, TDataFactory>
-  where T: notnull
+  where T: ITypedPrimitive
   where TDataFactory: ITestDataFactory
 {
   #region Tests
@@ -26,9 +26,12 @@ public abstract class ToStringTests<T, TDataFactory>
   [Theory]
   [MemberData( nameof( GetToStringData ) )]
   public void ToString_Succeeds(
-    T value,
-    string expected )
+    T value )
   {
+    // ToString of a typed primitive with value should return the ToString of the underlying value.
+    value.HasValue.Should().BeTrue();
+    var expected = value.GetValueObject()!.ToString()!;
+
     var actual = value.ToString();
     actual.Should().Be( expected );
   }
@@ -39,7 +42,9 @@ public abstract class ToStringTests<T, TDataFactory>
 
   public static IEnumerable<object?[]> GetToStringData()
   {
-    return TDataFactory.GetValidValues().Take( 1 ).Select( parameters => parameters[..2] );
+    return TDataFactory.GetValidValues()
+                       .Take( 1 )
+                       .Select( parameters => parameters[..1] );
   }
 
   #endregion
