@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # NuGet Local Feed for test deployments
 .nuget-local-feed/
+
+# MacOS system files
+.DS_Store
